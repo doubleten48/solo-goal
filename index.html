@@ -950,7 +950,7 @@
         let timeDisplay;
         let liveBadge = '';
         if (isLive) {
-          timeDisplay = '';
+          timeDisplay = `<span class="score-card-time" style="visibility:hidden;">.</span>`;
           liveBadge = `<span class="score-live-badge">🔴 ${m.minute ? m.minute + "'" : 'สด'}</span>`;
         } else if (isFinished) {
           timeDisplay = `<span class="score-card-time">จบแล้ว</span>`;
