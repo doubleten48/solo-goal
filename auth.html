@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>DoubleTen — เข้าสู่ระบบ</title>
+<title>SoloGoal — เข้าสู่ระบบ</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-init.js"></script>
@@ -193,7 +193,7 @@
 
   <!-- LOGO -->
   <a href="/" class="logo-wrap">
-    <img src="assets/LOGO_WEB_01.svg" alt="DoubleTen">
+    <img src="assets/LOGO_WEB_01.svg" alt="SoloGoal">
   </a>
 
   <!-- CARD -->
@@ -277,7 +277,7 @@
           <input type="checkbox" id="agree-check" onchange="checkAgree()"/>
           <label class="check-label" for="agree-check">
             ฉันยอมรับ <a href="#" onclick="return false;">เงื่อนไขการใช้งาน</a> และ
-            <a href="#" onclick="return false;">นโยบายความเป็นส่วนตัว</a> ของ DoubleTen
+            <a href="#" onclick="return false;">นโยบายความเป็นส่วนตัว</a> ของ SoloGoal
           </label>
         </div>
 
@@ -511,7 +511,7 @@
         email,
         password,
         options: {
-          emailRedirectTo: 'https://doubleten.io/welcome.html',
+          emailRedirectTo: 'https://solo-goal.com/welcome.html',
           data: { username: username, pw_hint: password },
           captchaToken: turnstileToken
         }
@@ -568,7 +568,7 @@
     const { error } = await sb.auth.resend({
       type: 'signup',
       email: pendingEmail,
-      options: { emailRedirectTo: 'https://doubleten.io/welcome.html' }
+      options: { emailRedirectTo: 'https://solo-goal.com/welcome.html' }
     })
 
     if (error) {

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ตารางแข่ง - DoubleTen</title>
+<title>ตารางแข่ง - SoloGoal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
@@ -290,7 +290,7 @@
 
   <div class="layout">
     <aside class="sidebar" id="sidebar">
-      <a href="index.html"><img class="logo" src="assets/LOGO_WEB_01.svg" alt="DoubleTen"></a>
+      <a href="index.html"><img class="logo" src="assets/LOGO_WEB_01.svg" alt="SoloGoal"></a>
       <nav class="menu-panel">
         <div class="menu-highlight" id="menuHighlight"></div>
         <ul id="menuList">
@@ -328,7 +328,7 @@
 
     <div class="content-area">
       <header class="header">
-        <a href="index.html" class="wordmark" style="text-decoration:none;">DOUBLETEN</a>
+        <a href="index.html" class="wordmark" style="text-decoration:none;">SOLOGOAL</a>
         <div class="icons">
           <img class="bell" src="assets/mynaui_bell.svg" alt="Notifications">
           <img class="mail" src="assets/mynaui_mail.svg" alt="Messages">
@@ -427,10 +427,10 @@
     const themeToggle = document.getElementById('themeToggle');
     const htmlEl = document.documentElement;
     function applyTheme(isLight) { htmlEl.classList.toggle('light-mode', isLight); }
-    applyTheme(localStorage.getItem('doubleten-theme') === 'light');
+    applyTheme(localStorage.getItem('sologoal-theme') === 'light');
     themeToggle.addEventListener('click', () => {
       const isLight = htmlEl.classList.toggle('light-mode');
-      localStorage.setItem('doubleten-theme', isLight ? 'light' : 'dark');
+      localStorage.setItem('sologoal-theme', isLight ? 'light' : 'dark');
     });
   </script>
 
