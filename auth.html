@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DoubleTen — เข้าสู่ระบบ</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-init.js"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" defer></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #c0392b;
+    --red-dark: #922b21;
+    --bg: #1e1e1e;
+    --card: #242424;
+    --line: #2e2e2e;
+    --text: #e8e8e8;
+    --muted: #666;
+    --sub: #aaa;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  /* LOGO */
+  .logo-wrap {
+    display: block;
+    margin: 0 auto 2.5rem auto;
+    text-decoration: none;
+    text-align: center;
+  }
+  .logo-wrap img {
+    height: 110px;
+    width: auto;
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  /* TABS */
+  .tab-row {
+    display: flex;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 1.75rem;
+  }
+  .tab-btn {
+    flex: 1; padding: 9px; border: none; border-radius: 6px;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    background: transparent; color: var(--muted);
+    font-family: inherit; transition: all 0.15s;
+  }
+  .tab-btn.active { background: var(--red); color: #fff; }
+
+  /* FORM */
+  .form { display: flex; flex-direction: column; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 13px; font-weight: 500; color: var(--sub); }
+  input {
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 11px 14px;
+    font-size: 14px; color: var(--text); font-family: inherit;
+    outline: none; transition: border-color 0.15s;
+  }
+  input:focus { border-color: var(--red); }
+  input::placeholder { color: #3a3a3a; }
+  .input-hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* VALIDATION */
+  input.error { border-color: #e74c3c; }
+  input.ok { border-color: #27ae60; }
+  .field-error { font-size: 11px; color: #e74c3c; margin-top: 2px; display: none; }
+  .field-error.show { display: block; }
+
+  /* SUBMIT */
+  .btn-submit {
+    background: var(--red); color: #fff; border: none;
+    border-radius: 8px; padding: 13px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    font-family: inherit; margin-top: 4px;
+    transition: background 0.15s; width: 100%;
+  }
+  .btn-submit:hover { background: var(--red-dark); }
+  .btn-submit:disabled { background: #3a3a3a; color: #666; cursor: not-allowed; }
+
+  /* ALERT */
+  .alert {
+    border-radius: 8px; padding: 12px 14px;
+    font-size: 13px; line-height: 1.5;
+    display: none; margin-top: 4px;
+  }
+  .alert.show { display: block; }
+  .alert-success { background: rgba(39,174,96,.12); border: 1px solid rgba(39,174,96,.25); color: #27ae60; }
+  .alert-error { background: rgba(231,76,60,.12); border: 1px solid rgba(231,76,60,.25); color: #e74c3c; }
+
+  /* DIVIDER */
+  .divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 4px 0; color: var(--muted); font-size: 12px;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--line);
+  }
+
+  /* FOOTER NOTE */
+  .footer-note {
+    font-size: 12px; color: var(--muted);
+    text-align: center; margin-top: 1.5rem;
+  }
+  .footer-note a { color: var(--red); text-decoration: none; }
+
+  /* PASSWORD TOGGLE */
+  .pw-wrap { position: relative; }
+  .pw-wrap input { width: 100%; padding-right: 44px; }
+  .pw-toggle {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 16px; padding: 4px;
+    transition: color 0.15s;
+  }
+  .pw-toggle:hover { color: var(--sub); }
+
+  /* CHECKBOX */
+  .check-wrap {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 12px 14px;
+  }
+  .check-wrap input[type="checkbox"] {
+    width: 16px; height: 16px; accent-color: var(--red);
+    flex-shrink: 0; margin-top: 2px; cursor: pointer;
+  }
+  .check-label {
+    font-size: 13px; color: var(--sub); line-height: 1.5; cursor: pointer;
+  }
+  .check-label a { color: var(--red); text-decoration: none; }
+  .check-label a:hover { text-decoration: underline; }
+
+  /* TURNSTILE */
+  .turnstile-wrap { display: flex; justify-content: center; margin: 4px 0; }
+
+  /* BOTTOM LINK */
+  .bottom-link {
+    text-align: center; font-size: 13px; color: var(--muted);
+    margin-top: 1.25rem;
+  }
+  .bottom-link a { color: var(--red); text-decoration: none; font-weight: 500; }
+  .bottom-link a:hover { text-decoration: underline; }
+
+  /* SPINNER */
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block; vertical-align: middle; margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* SUCCESS SCREEN */
+  .success-screen {
+    text-align: center; display: none; padding: 1rem 0;
+  }
+  .success-screen.show { display: block; }
+  .success-icon { font-size: 48px; margin-bottom: 1rem; }
+  .success-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .success-text { font-size: 14px; color: var(--sub); line-height: 1.6; }
+  .success-email { color: var(--red); font-weight: 500; }
+</style>
+</head>
+<body>
+
+  <!-- LOGO -->
+  <a href="/" class="logo-wrap">
+    <img src="assets/LOGO_WEB_01.svg" alt="DoubleTen">
+  </a>
+
+  <!-- CARD -->
+  <div class="card">
+
+    <!-- TABS -->
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-register" onclick="switchTab('register')">สมัครสมาชิก</button>
+      <button class="tab-btn" id="tab-login" onclick="switchTab('login')">เข้าสู่ระบบ</button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="form-register">
+      <div id="register-success" class="success-screen">
+        <div class="success-icon">📬</div>
+        <div class="success-title">เช็ค email ของคุณ!</div>
+        <div class="success-text">
+          ส่งลิงค์ยืนยันไปที่<br>
+          <span class="success-email" id="confirm-email"></span><br><br>
+          กดลิงค์ใน email เพื่อยืนยันบัญชี
+        </div>
+        <div style="margin-top:1.5rem;text-align:center;border-top:1px solid #2e2e2e;padding-top:1rem;">
+          <p style="font-size:13px;color:#666;margin-bottom:8px;">ไม่ได้รับ email?</p>
+          <button id="btn-resend" onclick="resendVerification()"
+            style="background:none;border:none;color:#aaa;font-size:13px;cursor:pointer;
+            font-family:inherit;text-decoration:underline;padding:0;">
+            ส่ง email ยืนยันอีกครั้ง
+          </button>
+          <div id="resend-msg" style="font-size:12px;margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <div class="form" id="register-form-inner">
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="reg-email" placeholder="your@email.com" oninput="validateEmail()" onblur="checkEmailExists()"/>
+          <span class="field-error" id="err-email">รูปแบบ email ไม่ถูกต้อง</span>
+          <span class="field-error" id="err-email-dup"></span>
+        </div>
+
+
+
+        <div class="form-group">
+          <label>Password *</label>
+          <div class="pw-wrap">
+            <input type="password" id="reg-password" placeholder="อย่างน้อย 8 ตัวอักษร" oninput="validatePassword()"/>
+            <button type="button" class="pw-toggle" onclick="togglePw('reg-password', this)" tabindex="-1"></button>
+          </div>
+          <span class="field-error" id="err-password">Password 8-12 ตัว (ตัวอักษร, ตัวเลข หรืออักขระพิเศษ)</span>
+        </div>
+
+        <div class="form-group">
+          <label>ยืนยัน Password *</label>
+          <div class="pw-wrap">
+            <input type="password" id="reg-confirm" placeholder="พิมพ์ password อีกครั้ง" oninput="validateConfirm()"/>
+            <button type="button" class="pw-toggle" onclick="togglePw('reg-confirm', this)" tabindex="-1"></button>
+          </div>
+          <span class="field-error" id="err-confirm">Password ไม่ตรงกัน</span>
+          <div class="input-hint" style="line-height:1.7;">
+            · รองรับภาษาอังกฤษ (A-Z)(a-z) · ตัวเลข (0-9)<br>
+            · อักขระพิเศษ: ! @ # $ % ^ &amp; * ( ) _ + - = { } ; : , . /<br>
+            · ความยาว 8-12 ตัวอักษร
+          </div>
+        </div>
+
+        <div style="margin: 6px 0; border-top: 1px solid #2e2e2e;"></div>
+
+        <div class="form-group">
+          <label>Username (ชื่อที่แสดงในบอร์ด) *</label>
+          <input type="text" id="reg-username" placeholder="เช่น น้อนแดง" oninput="validateUsername()" onblur="checkUsernameExists()"/>
+          <div class="input-hint" style="line-height:1.7;">
+            · ห้ามตั้งชื่อหยาบคาย, คำผวน หรือชื่อบุคคลที่สามที่สื่อไปในทางไม่เหมาะสม<br>
+            · หากตรวจสอบภายหลังแล้วพบเป็นชื่อไม่เหมาะสม จะถูกบังคับเปลี่ยนชื่อใหม่<br>
+            · หากตั้งชื่อไม่เหมาะสมถึง 3 ครั้ง จะทำการลบบัญชีทันที
+          </div>
+          <span class="field-error" id="err-username">กรุณากรอก username อย่างน้อย 2 ตัวอักษร</span>
+          <span class="field-error" id="err-username-dup"></span>
+        </div>
+
+        <div class="check-wrap">
+          <input type="checkbox" id="agree-check" onchange="checkAgree()"/>
+          <label class="check-label" for="agree-check">
+            ฉันยอมรับ <a href="#" onclick="return false;">เงื่อนไขการใช้งาน</a> และ
+            <a href="#" onclick="return false;">นโยบายความเป็นส่วนตัว</a> ของ DoubleTen
+          </label>
+        </div>
+
+        <div class="turnstile-wrap" id="turnstile-wrap">
+        </div>
+
+        <div class="alert alert-error" id="reg-alert-error"></div>
+
+        <button class="btn-submit" id="btn-register" onclick="handleRegister()" disabled>
+          สมัครสมาชิก
+        </button>
+
+        <div class="footer-note">
+          1 email ต่อ 1 บัญชีเท่านั้น<br>
+          หลังสมัครต้องยืนยัน email ก่อนเข้าใช้งาน
+        </div>
+      </div>
+        <div class="bottom-link">
+          มีบัญชีอยู่แล้ว? <a href="#" onclick="switchTab('login');return false;">เข้าสู่ระบบ</a>
+        </div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login" style="display:none;">
+      <div id="login-success" class="success-screen">
+        <div class="success-icon">✅</div>
+        <div class="success-title">เข้าสู่ระบบสำเร็จ!</div>
+        <div class="success-text">กำลังพาคุณไปยังหน้าหลัก...</div>
+      </div>
+
+      <div class="form" id="login-form-inner">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="your@email.com"/>
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="login-password" placeholder="Password ของคุณ"/>
+            <button type="button" class="pw-toggle" onclick="togglePw('login-password', this)" tabindex="-1"></button>
+          </div>
+        </div>
+
+        <div class="check-wrap">
+          <input type="checkbox" id="remember-check"/>
+          <label class="check-label" for="remember-check">จดจำการเข้าสู่ระบบ</label>
+        </div>
+
+        <div class="turnstile-wrap" id="turnstile-wrap-login"></div>
+
+        <div class="alert alert-error" id="login-alert-error"></div>
+        <div class="alert alert-success" id="login-alert-success"></div>
+
+        <button class="btn-submit" id="btn-login" onclick="handleLogin()">
+          เข้าสู่ระบบ
+        </button>
+
+        <div class="divider">หรือ</div>
+
+        <div class="footer-note">
+          ลืม password? <a href="#" onclick="handleForgot()">รีเซ็ตที่นี่</a>
+        </div>
+        <div class="bottom-link">
+          ยังไม่มีบัญชี? <a href="#" onclick="switchTab('register');return false;">สมัครสมาชิก</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  // ── SUPABASE ──
+  // ตัวแปร sb มาจาก supabase-init.js (config กลาง + remember-me storage)
+
+  // ── CHECKBOX + TURNSTILE ──
+  function checkAgree() {
+    const checked = document.getElementById('agree-check').checked
+    const token = getTurnstileToken('turnstile-wrap')
+    document.getElementById('btn-register').disabled = !(checked && token)
+    if (checked && !token) {
+      // turnstile not yet verified, keep disabled but don't block
+      document.getElementById('btn-register').disabled = true
+    }
+  }
+
+  function getTurnstileToken(containerId) {
+    const wrap = document.getElementById(containerId)
+    const resp = wrap ? wrap.querySelector('[name="cf-turnstile-response"]') : null
+    return resp ? resp.value : null
+  }
+
+  // ── TAB SWITCH ──
+  function switchTab(tab) {
+    document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none'
+    document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none'
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register')
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login')
+  }
+
+  // ── VALIDATORS ──
+  async function checkEmailExists() {
+    const email = document.getElementById('reg-email').value.trim()
+    const errEl = document.getElementById('err-email-dup')
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = ''; errEl.classList.remove('show'); return
+    }
+    const { data } = await sb.from('profiles').select('id').eq('email', email).maybeSingle()
+    if (data) {
+      errEl.textContent = '❌ Email นี้มีบัญชีอยู่แล้ว'
+      errEl.classList.add('show')
+      document.getElementById('reg-email').style.borderColor = '#e74c3c'
+    } else {
+      errEl.textContent = ''
+      errEl.classList.remove('show')
+      document.getElementById('reg-email').style.borderColor = ''
+    }
+  }
+
+  async function checkUsernameExists() {
+    const username = document.getElementById('reg-username').value.trim()
+    const errEl = document.getElementById('err-username-dup')
+    if (!username || username.length < 2) { errEl.textContent = ''; errEl.classList.remove('show'); return }
+
+    const { data } = await sb.from('profiles').select('id').ilike('username', username).maybeSingle()
+    if (data) {
+      errEl.textContent = '❌ Username นี้ถูกใช้ไปแล้ว'
+      errEl.classList.add('show')
+      document.getElementById('reg-username').style.borderColor = '#e74c3c'
+    } else {
+      errEl.textContent = ''
+      errEl.classList.remove('show')
+      document.getElementById('reg-username').style.borderColor = ''
+    }
+  }
+
+  function validateEmail() {
+    const val = document.getElementById('reg-email').value
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
+    setField('reg-email', 'err-email', ok || val === '')
+    return ok
+  }
+  function validateID() {
+    const val = document.getElementById('reg-id').value
+    if (val === '') { setField('reg-id', 'err-id', true); return false; }
+    const lengthOk = val.length >= 8 && val.length <= 12
+    const charsOk = /^[a-zA-Z0-9._-]+$/.test(val)
+    const noStartEnd = !/^[._-]/.test(val) && !/[._-]$/.test(val)
+    const noDouble = !/[._-]{2}/.test(val)
+    const ok = lengthOk && charsOk && noStartEnd && noDouble
+    setField('reg-id', 'err-id', ok)
+    return ok
+  }
+  function validateUsername() {
+    const val = document.getElementById('reg-username').value
+    const ok = val.trim().length >= 2
+    setField('reg-username', 'err-username', ok || val === '')
+    return ok
+  }
+  function validatePassword() {
+    const val = document.getElementById('reg-password').value
+    // อนุญาตเฉพาะ A-Z a-z 0-9 และอักขระพิเศษที่กำหนด (ห้ามภาษาไทย/ภาษาอื่น)
+    const allowedChars = /^[A-Za-z0-9!@#$%^&*()_+\-={};:,./]+$/
+    const lengthOk = val.length >= 8 && val.length <= 12
+    const charsOk = allowedChars.test(val)
+    const ok = lengthOk && charsOk
+    const errEl = document.getElementById('err-password')
+    if (val !== '' && !charsOk) {
+      errEl.textContent = 'ใช้ได้เฉพาะภาษาอังกฤษ ตัวเลข และอักขระพิเศษที่กำหนด (ห้ามภาษาไทย)'
+    } else {
+      errEl.textContent = 'Password 8-12 ตัว (ตัวอักษร, ตัวเลข หรืออักขระพิเศษ)'
+    }
+    setField('reg-password', 'err-password', ok || val === '')
+    if (document.getElementById('reg-confirm').value) validateConfirm()
+    return ok
+  }
+  function validateConfirm() {
+    const p1 = document.getElementById('reg-password').value
+    const p2 = document.getElementById('reg-confirm').value
+    const ok = p1 === p2 && p2.length > 0
+    setField('reg-confirm', 'err-confirm', ok || p2 === '')
+    return ok
+  }
+  function setField(inputId, errId, valid) {
+    const input = document.getElementById(inputId)
+    const err = document.getElementById(errId)
+    if (document.getElementById(inputId).value === '') {
+      input.classList.remove('ok', 'error')
+      err.classList.remove('show')
+    } else {
+      input.classList.toggle('ok', valid)
+      input.classList.toggle('error', !valid)
+      err.classList.toggle('show', !valid)
+    }
+  }
+
+  // ── REGISTER ──
+  async function handleRegister() {
+    const email = document.getElementById('reg-email').value.trim()
+    const username = document.getElementById('reg-username').value.trim()
+    const password = document.getElementById('reg-password').value
+    const confirm = document.getElementById('reg-confirm').value
+
+    // validate all
+    const turnstileToken = getTurnstileToken('turnstile-wrap')
+    if (!turnstileToken) {
+      showError('reg-alert-error', 'กรุณายืนยัน Captcha ก่อนสมัครสมาชิก')
+      return
+    }
+
+    if (!validateEmail() || !validateUsername() || !validatePassword() || !validateConfirm()) {
+      showError('reg-alert-error', 'กรุณากรอกข้อมูลให้ถูกต้องทุกช่อง')
+      return
+    }
+
+    // บล็อกถ้ามี duplicate error แสดงอยู่
+    const emailDupErr = document.getElementById('err-email-dup')
+    const usernameDupErr = document.getElementById('err-username-dup')
+    if (emailDupErr?.classList.contains('show') || usernameDupErr?.classList.contains('show')) {
+      showError('reg-alert-error', 'กรุณาแก้ไขข้อมูลที่ซ้ำก่อนสมัคร')
+      return
+    }
+
+    const btn = document.getElementById('btn-register')
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner"></span>กำลังสมัคร...'
+
+    try {
+
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: 'https://doubleten.io/welcome.html',
+          data: { username: username, pw_hint: password },
+          captchaToken: turnstileToken
+        }
+      })
+
+      if (error) throw error
+
+      // ถ้า Supabase คืน identities: [] = email นี้มีอยู่แล้ว (verified)
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        throw new Error('EMAIL_EXISTS')
+      }
+
+      // success → แสดงหน้ารอ verify
+      pendingEmail = email
+      sessionStorage.setItem('pendingEmail', email)
+      document.getElementById('confirm-email').textContent = email
+      document.getElementById('register-form-inner').style.display = 'none'
+      document.getElementById('register-success').classList.add('show')
+
+    } catch (err) {
+      let msg = 'เกิดข้อผิดพลาด กรุณาลองใหม่'
+      if (err.message === 'EMAIL_EXISTS' || err.message.includes('already registered') || err.message.includes('User already registered')) msg = '❌ Email นี้มีบัญชีอยู่แล้ว กรุณาเข้าสู่ระบบ'
+      if (err.message.includes('invalid')) msg = 'ข้อมูลไม่ถูกต้อง'
+      showError('reg-alert-error', msg)
+      btn.disabled = false
+      btn.innerHTML = 'สมัครสมาชิก'
+      // token ใช้ได้ครั้งเดียว — รีเซ็ต Turnstile ให้ขอใหม่ก่อนลองสมัครอีกรอบ
+      if (window.turnstile && turnstileWidgetId) {
+        turnstile.reset(turnstileWidgetId)
+        document.getElementById('btn-register').disabled = true
+      }
+    }
+  }
+
+  // ── RESEND VERIFICATION ──
+  let resendCooldown = false
+
+  async function resendVerification() {
+    if (resendCooldown) return
+    const btn = document.getElementById('btn-resend')
+    const msg = document.getElementById('resend-msg')
+    if (!pendingEmail) pendingEmail = sessionStorage.getItem('pendingEmail') || ''
+    if (!pendingEmail) {
+      msg.style.color = '#e74c3c'
+      msg.textContent = 'ไม่พบ email กรุณาสมัครใหม่อีกครั้ง'
+      return
+    }
+
+    btn.style.pointerEvents = 'none'
+    btn.style.color = '#444'
+    msg.style.color = '#aaa'
+    msg.textContent = 'กำลังส่ง...'
+
+    const { error } = await sb.auth.resend({
+      type: 'signup',
+      email: pendingEmail,
+      options: { emailRedirectTo: 'https://doubleten.io/welcome.html' }
+    })
+
+    if (error) {
+      msg.style.color = '#e74c3c'
+      msg.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
+      btn.style.pointerEvents = ''
+      btn.style.color = '#aaa'
+    } else {
+      msg.style.color = '#27ae60'
+      msg.textContent = '✅ ส่ง email ใหม่แล้ว กรุณาตรวจสอบ inbox'
+      resendCooldown = true
+
+      // cooldown 60 วินาที
+      let secs = 60
+      btn.textContent = `ส่งอีกครั้งได้ใน ${secs} วินาที`
+      const timer = setInterval(() => {
+        secs--
+        btn.textContent = `ส่งอีกครั้งได้ใน ${secs} วินาที`
+        if (secs <= 0) {
+          clearInterval(timer)
+          btn.textContent = 'ส่ง email ยืนยันอีกครั้ง'
+          btn.style.pointerEvents = ''
+          btn.style.color = '#aaa'
+          resendCooldown = false
+          msg.textContent = ''
+        }
+      }, 1000)
+    }
+  }
+
+  // ── VERIFY OTP ──
+  let pendingEmail = ''
+
+  async function handleOTP() {
+    const token = document.getElementById('otp-input').value.trim()
+    if (token.length !== 8) {
+      showError('otp-alert-error', 'กรุณากรอกรหัส 8 หลักให้ครบ')
+      return
+    }
+    const btn = document.getElementById('btn-otp')
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner"></span>กำลังยืนยัน...'
+
+    try {
+      const { data, error } = await sb.auth.verifyOtp({
+        email: pendingEmail,
+        token: token,
+        type: 'signup'
+      })
+      if (error) throw error
+      // verify สำเร็จ → ไป welcome.html
+      window.location.href = '/welcome.html'
+    } catch (err) {
+      let msg = 'รหัสไม่ถูกต้องหรือหมดอายุ กรุณาลองใหม่'
+      showError('otp-alert-error', msg)
+      btn.disabled = false
+      btn.innerHTML = 'ยืนยันบัญชี'
+    }
+  }
+
+  // ── LOGIN (email) ──
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim()
+    const password = document.getElementById('login-password').value
+
+    if (!email || !password) {
+      showError('login-alert-error', 'กรุณากรอก email และ password')
+      return
+    }
+
+    const btn = document.getElementById('btn-login')
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner"></span>กำลังเข้าสู่ระบบ...'
+
+    // บันทึกตัวเลือก "จดจำการเข้าสู่ระบบ" ก่อน Supabase จะเขียน session ลง storage
+    const remember = document.getElementById('remember-check').checked
+    localStorage.setItem('rememberMe', remember ? '1' : '0')
+
+    const loginCaptchaToken = getTurnstileToken('turnstile-wrap-login')
+    if (!loginCaptchaToken) {
+      showError('login-alert-error', 'กรุณายืนยัน Captcha ก่อนเข้าสู่ระบบ')
+      btn.disabled = false
+      btn.innerHTML = 'เข้าสู่ระบบ'
+      return
+    }
+
+    try {
+      const { data, error } = await sb.auth.signInWithPassword({
+        email,
+        password,
+        options: { captchaToken: loginCaptchaToken }
+      })
+      if (error) throw error
+
+      document.getElementById('login-form-inner').style.display = 'none'
+      document.getElementById('login-success').classList.add('show')
+
+      setTimeout(() => { window.location.href = '/profile.html' }, 1500)
+
+    } catch (err) {
+      let msg = err.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่'
+      if (err.message.includes('Invalid login')) msg = 'Email หรือ Password ไม่ถูกต้อง'
+      if (err.message.includes('Email not confirmed')) msg = 'กรุณายืนยัน email ก่อนเข้าใช้งาน'
+      showError('login-alert-error', msg)
+      btn.disabled = false
+      btn.innerHTML = 'เข้าสู่ระบบ'
+      // token ใช้ได้ครั้งเดียว — รีเซ็ต Turnstile ให้ขอใหม่ก่อนลองอีกรอบ
+      if (window.turnstile && turnstileWidgetIdLogin) {
+        turnstile.reset(turnstileWidgetIdLogin)
+      }
+    }
+  }
+
+  // ── FORGOT PASSWORD ──
+  async function handleForgot() {
+    const email = document.getElementById('login-email').value.trim()
+    if (!email) {
+      showError('login-alert-error', 'กรุณากรอก email ก่อน แล้วกดรีเซ็ต')
+      return
+    }
+    const { error } = await sb.auth.resetPasswordForEmail(email)
+    if (!error) {
+      document.getElementById('login-alert-error').classList.remove('show')
+      const s = document.getElementById('login-alert-success')
+      s.textContent = `ส่ง link รีเซ็ต password ไปที่ ${email} แล้ว`
+      s.classList.add('show')
+    }
+  }
+
+  function showError(id, msg) {
+    const el = document.getElementById(id)
+    el.textContent = msg
+    el.classList.add('show')
+    setTimeout(() => el.classList.remove('show'), 5000)
+  }
+
+  // ── PASSWORD TOGGLE ──
+  const eyeOpen = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+  </svg>`
+
+  const eyeOff = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
+  </svg>`
+
+  function togglePw(id, btn) {
+    const input = document.getElementById(id)
+    const isHidden = input.type === 'password'
+    input.type = isHidden ? 'text' : 'password'
+    btn.innerHTML = isHidden ? eyeOff : eyeOpen
+  }
+
+  // init all toggle buttons
+  document.querySelectorAll('.pw-toggle').forEach(btn => { btn.innerHTML = eyeOpen })
+
+  // ── TURNSTILE ──
+  let turnstileWidgetId = null
+  let turnstileWidgetIdLogin = null
+
+  function onloadTurnstileCallback() {
+    // เรนเดอร์เฉพาะ widget ของแท็บที่กำลังโชว์อยู่ (ไม่เรนเดอร์ลง container ที่ display:none)
+    const loginVisible = document.getElementById('form-login').style.display !== 'none'
+    if (loginVisible) {
+      renderTurnstileLogin()
+    } else {
+      renderTurnstile()
+    }
+  }
+
+  function renderTurnstile() {
+    const wrap = document.getElementById('turnstile-wrap')
+    if (!wrap || !window.turnstile) return
+    wrap.innerHTML = ''
+    turnstileWidgetId = turnstile.render(wrap, {
+      sitekey: '0x4AAAAAADscnTpczkQNL7LX',
+      theme: 'dark',
+      appearance: 'always',
+      callback: onTurnstileSuccess,
+      'error-callback': onTurnstileError,
+      'expired-callback': () => {
+        document.getElementById('btn-register').disabled = true
+      }
+    })
+  }
+
+  function renderTurnstileLogin() {
+    const wrap = document.getElementById('turnstile-wrap-login')
+    if (!wrap || !window.turnstile) return
+    wrap.innerHTML = ''
+    turnstileWidgetIdLogin = turnstile.render(wrap, {
+      sitekey: '0x4AAAAAADscnTpczkQNL7LX',
+      theme: 'dark',
+      appearance: 'always',
+      callback: () => console.log('Turnstile (login) verified ✅'),
+      'error-callback': () => {
+        console.warn('Turnstile (login) error — retrying')
+        if (window.turnstile && turnstileWidgetIdLogin) turnstile.reset(turnstileWidgetIdLogin)
+      }
+    })
+  }
+
+  // ── TURNSTILE CALLBACKS ──
+  function onTurnstileSuccess(token) {
+    console.log('Turnstile verified ✅')
+    // enable submit if checkbox also checked
+    if (document.getElementById('agree-check').checked) {
+      document.getElementById('btn-register').disabled = false
+    }
+  }
+
+  function onTurnstileError() {
+    console.warn('Turnstile error — retrying')
+    if (window.turnstile && turnstileWidgetId) turnstile.reset(turnstileWidgetId)
+  }
+
+  // Re-render the relevant widget when switching tabs
+  const _origSwitch = switchTab
+  window.switchTab = function(tab) {
+    _origSwitch(tab)
+    if (tab === 'register') {
+      setTimeout(renderTurnstile, 150)
+    } else if (tab === 'login') {
+      setTimeout(renderTurnstileLogin, 150)
+    }
+  }
+
+  // ── CHECK IF ALREADY LOGGED IN ──
+  sb.auth.getSession().then(({ data }) => {
+    if (data.session) window.location.href = '/profile.html'
+  })
+
+  // ── READ QUERY PARAMS (redirect หลังสมัคร) ──
+  ;(function() {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('tab') === 'login') {
+      switchTab('login')
+      if (params.get('registered') === '1') {
+        const email = params.get('email') || ''
+        const s = document.getElementById('login-alert-success')
+        s.textContent = '✅ สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบ email' + (email ? ' ที่ ' + email : '') + ' แล้วเข้าสู่ระบบ'
+        s.classList.add('show')
+      }
+    }
+  })()
+</script>
+</body>
+</html>

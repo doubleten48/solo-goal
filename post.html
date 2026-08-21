@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DoubleTen — กระทู้</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --red: #c0392b; --red-dark: #922b21;
+    --bg: #1e1e1e; --card: #242424; --line: #2e2e2e;
+    --text: #e8e8e8; --muted: #666; --sub: #aaa;
+  }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh; padding-bottom: 3rem;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  header {
+    background: var(--card); border-bottom: 1px solid var(--line);
+    padding: 14px 1.5rem; display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .back-btn { font-size: 14px; color: var(--sub); cursor: pointer; }
+
+  .container { max-width: 680px; margin: 0 auto; padding: 1.5rem; }
+
+  .post-card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 1.5rem; margin-bottom: 1.25rem;
+  }
+  .post-board-tag {
+    display: inline-block; font-size: 12px; color: var(--red);
+    background: rgba(192,57,43,0.12); padding: 3px 10px; border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  .post-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 10px; line-height: 1.4; }
+  .post-author-row {
+    display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted);
+    margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--line);
+  }
+  .post-content {
+    font-size: 15px; line-height: 1.8; color: var(--text);
+    margin-bottom: 1.5rem; word-break: break-word;
+  }
+  .post-actions { display: flex; align-items: center; gap: 12px; }
+  .btn-like {
+    display: flex; align-items: center; gap: 6px; background: var(--bg);
+    border: 1px solid var(--line); border-radius: 20px; padding: 8px 16px;
+    cursor: pointer; font-size: 14px; color: var(--sub); font-family: inherit;
+    transition: all 0.15s;
+  }
+  .btn-like:hover { border-color: var(--red); }
+  .btn-like.liked { background: rgba(192,57,43,0.15); border-color: var(--red); color: var(--red); }
+  .post-stat { font-size: 13px; color: var(--muted); }
+
+  .comments-section { margin-top: 1.5rem; }
+  .comments-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 1rem; }
+
+  .comment-form { margin-bottom: 1.5rem; }
+  .comment-form textarea {
+    width: 100%; background: var(--card); border: 1px solid var(--line);
+    border-radius: 8px; padding: 12px; color: var(--text); font-size: 14px;
+    font-family: inherit; outline: none; min-height: 80px; resize: vertical;
+  }
+  .comment-form textarea:focus { border-color: var(--red); }
+  .comment-toolbar {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px;
+  }
+  .ctb-btn {
+    background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+    padding: 5px 9px; font-size: 11px; color: var(--sub); cursor: pointer;
+    font-family: inherit; white-space: nowrap;
+  }
+  .ctb-btn:hover { border-color: var(--red); color: #fff; }
+  .ctb-select {
+    background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+    padding: 5px 6px; font-size: 11px; color: var(--sub); font-family: inherit;
+  }
+  .comment-url-row { display: none; gap: 6px; margin-bottom: 8px; }
+  .comment-url-row.show { display: flex; }
+  .comment-url-row input {
+    flex: 1; background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+    padding: 8px; color: var(--text); font-size: 12px; font-family: inherit; outline: none;
+  }
+  .comment-url-row button {
+    background: var(--red); color: #fff; border: none; border-radius: 6px;
+    padding: 0 12px; font-size: 12px; cursor: pointer; font-family: inherit;
+  }
+  .comment-upload-progress { font-size: 11px; color: var(--muted); margin-bottom: 6px; min-height: 14px; }
+  .comment-submit-row { display: flex; justify-content: flex-end; margin-top: 8px; }
+  .btn-comment {
+    background: var(--red); color: #fff; padding: 8px 20px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; border: none; cursor: pointer; font-family: inherit;
+  }
+  .btn-comment:hover { background: var(--red-dark); }
+  .btn-comment:disabled { background: #444; cursor: not-allowed; }
+
+  .comment-item {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; padding: 14px; margin-bottom: 10px;
+  }
+  .comment-author-row {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+  }
+  .comment-author { font-size: 13px; font-weight: 600; color: #fff; }
+  .comment-time { font-size: 11px; color: var(--muted); }
+  .comment-content { font-size: 14px; color: var(--sub); line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+  .comment-delete { font-size: 11px; color: var(--muted); cursor: pointer; }
+  .comment-delete:hover { color: var(--red); }
+
+  .login-prompt {
+    text-align: center; padding: 1.25rem; background: var(--card);
+    border: 1px solid var(--line); border-radius: 10px; margin-bottom: 1.5rem;
+    font-size: 13px; color: var(--sub);
+  }
+  .login-prompt a { color: var(--red); text-decoration: underline; }
+
+  .empty-comments { text-align: center; padding: 2rem; color: var(--muted); font-size: 13px; }
+  .loading { text-align: center; padding: 3rem; color: var(--muted); }
+  .spinner {
+    width: 28px; height: 28px; border: 3px solid #2e2e2e;
+    border-top-color: var(--red); border-radius: 50%;
+    animation: spin 0.7s linear infinite; margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="back-btn" onclick="history.back()">← กลับ</span>
+</header>
+
+<div class="container" id="container">
+  <div class="loading"><div class="spinner"></div></div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://dnrcardbuuwnvuridubb.supabase.co'
+  const SUPABASE_KEY = 'sb_publishable_uz4Tj8HDZef7T2OLEzyvUw_wcGsn0ZW'
+  const { createClient } = supabase
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+  let currentUser = null
+  let post = null
+  let hasLiked = false
+
+  const params = new URLSearchParams(window.location.search)
+  const postId = params.get('id')
+
+  async function init() {
+    if (!postId) {
+      document.getElementById('container').innerHTML = '<div class="loading">ไม่พบกระทู้</div>'
+      return
+    }
+
+    const { data: { session } } = await sb.auth.getSession()
+    currentUser = session?.user || null
+
+    await loadPost()
+    await incrementViews()
+  }
+
+  async function loadPost() {
+    const { data, error } = await sb.from('posts').select('*, boards(name, icon)').eq('id', postId).single()
+
+    if (error || !data) {
+      document.getElementById('container').innerHTML = '<div class="loading">ไม่พบกระทู้นี้</div>'
+      return
+    }
+    post = data
+
+    const { data: authorProfile } = await sb.from('profiles').select('username').eq('user_id', post.author_id).maybeSingle()
+    post.authorName = authorProfile?.username || 'ผู้ใช้'
+
+    if (currentUser) {
+      const { data: like } = await sb.from('post_likes').select('id').eq('post_id', postId).eq('user_id', currentUser.id).maybeSingle()
+      hasLiked = !!like
+    }
+
+    renderPost()
+    await loadComments()
+  }
+
+  async function incrementViews() {
+    await sb.from('posts').update({ views_count: (post.views_count || 0) + 1 }).eq('id', postId)
+  }
+
+  function renderPost() {
+    const timeAgo = formatTimeAgo(post.created_at)
+    document.getElementById('container').innerHTML = `
+      <div class="post-card">
+        ${post.boards ? `<span class="post-board-tag">${post.boards.icon} ${post.boards.name}</span>` : ''}
+        <div class="post-title">${escapeHtml(post.title)}</div>
+        <div class="post-author-row">
+          <span>👤 ${escapeHtml(post.authorName)}</span>
+          <span>·</span>
+          <span>🕐 ${timeAgo}</span>
+          <span>·</span>
+          <span>👁 ${post.views_count || 0} ครั้ง</span>
+        </div>
+        <div class="post-content">${renderContent(post.content)}</div>
+        <div class="post-actions">
+          <button class="btn-like ${hasLiked ? 'liked' : ''}" id="btn-like" onclick="toggleLike()">
+            ${hasLiked ? '❤️' : '🤍'} <span id="like-count">${post.likes_count || 0}</span>
+          </button>
+          <span class="post-stat">💬 ${post.comments_count || 0} ความคิดเห็น</span>
+        </div>
+      </div>
+
+      <div class="comments-section">
+        <div class="comments-title">ความคิดเห็น (${post.comments_count || 0})</div>
+        <div id="comment-form-wrap"></div>
+        <div id="comments-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    `
+    renderCommentForm()
+  }
+
+  function renderCommentForm() {
+    const wrap = document.getElementById('comment-form-wrap')
+    if (!currentUser) {
+      wrap.innerHTML = `
+        <div class="login-prompt">
+          🔒 <a href="/auth.html?tab=login">เข้าสู่ระบบ</a> เพื่อแสดงความคิดเห็น
+        </div>
+      `
+      return
+    }
+    wrap.innerHTML = `
+      <div class="comment-form">
+        <div class="comment-toolbar">
+          <button type="button" class="ctb-btn" onclick="wrapCommentSelection('**','**')"><b>B</b></button>
+          <button type="button" class="ctb-btn" onclick="wrapCommentSelection('*','*')"><i>I</i></button>
+          <button type="button" class="ctb-btn" onclick="wrapCommentSelection('__','__')"><u>U</u></button>
+          <select class="ctb-select" onchange="applyCommentColor(this.value)">
+            <option value="">สี</option>
+            <option value="#e74c3c">แดง</option>
+            <option value="#3498db">น้ำเงิน</option>
+            <option value="#2ecc71">เขียว</option>
+            <option value="#f1c40f">เหลือง</option>
+            <option value="#9b59b6">ม่วง</option>
+          </select>
+          <button type="button" class="ctb-btn" onclick="document.getElementById('comment-file-input').click()">ฝากรูป</button>
+          <input type="file" id="comment-file-input" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" onchange="handleCommentFileSelect(event)"/>
+          <button type="button" class="ctb-btn" onclick="toggleCommentUrlInput()">URL รูป</button>
+        </div>
+        <div class="comment-url-row" id="comment-url-row">
+          <input type="url" id="comment-external-url" placeholder="วาง URL รูป..."/>
+          <button type="button" onclick="insertCommentExternalUrl()">แทรก</button>
+        </div>
+        <div class="comment-upload-progress" id="comment-upload-progress"></div>
+        <textarea id="comment-input" placeholder="แสดงความคิดเห็น..." maxlength="1000"></textarea>
+        <div class="comment-submit-row">
+          <button class="btn-comment" id="btn-comment-submit" onclick="submitComment()">ส่งความคิดเห็น</button>
+        </div>
+      </div>
+    `
+  }
+
+  function getCommentTextarea() { return document.getElementById('comment-input') }
+
+  function wrapCommentSelection(before, after) {
+    const ta = getCommentTextarea()
+    const start = ta.selectionStart, end = ta.selectionEnd
+    const selected = ta.value.substring(start, end) || 'ขอความ'
+    ta.value = ta.value.substring(0, start) + before + selected + after + ta.value.substring(end)
+    ta.focus()
+    ta.selectionStart = start + before.length
+    ta.selectionEnd = start + before.length + selected.length
+  }
+
+  function applyCommentColor(color) {
+    if (!color) return
+    const ta = getCommentTextarea()
+    const start = ta.selectionStart, end = ta.selectionEnd
+    const selected = ta.value.substring(start, end) || 'ขอความ'
+    const tag = `[color=${color}]${selected}[/color]`
+    ta.value = ta.value.substring(0, start) + tag + ta.value.substring(end)
+    ta.focus()
+  }
+
+  async function handleCommentFileSelect(event) {
+    const file = event.target.files[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      alert('ไฟลใหญเกิน 5MB')
+      return
+    }
+    const progressEl = document.getElementById('comment-upload-progress')
+    progressEl.textContent = 'กำลังอัปโหลด...'
+
+    const ext = file.name.split('.').pop()
+    const fileName = `${currentUser.id}/${Date.now()}_c.${ext}`
+    const { error } = await sb.storage.from('post-images').upload(fileName, file)
+
+    if (error) {
+      progressEl.textContent = 'อัปโหลดไมสำเร็จ'
+      setTimeout(() => progressEl.textContent = '', 3000)
+      return
+    }
+    const { data: urlData } = sb.storage.from('post-images').getPublicUrl(fileName)
+    insertCommentImageTag(urlData.publicUrl)
+    progressEl.textContent = 'อัปโหลดสำเร็จ'
+    setTimeout(() => progressEl.textContent = '', 2000)
+    event.target.value = ''
+  }
+
+  function toggleCommentUrlInput() {
+    document.getElementById('comment-url-row').classList.toggle('show')
+  }
+
+  function insertCommentExternalUrl() {
+    const input = document.getElementById('comment-external-url')
+    const url = input.value.trim()
+    if (!url) return
+    insertCommentImageTag(url)
+    input.value = ''
+    document.getElementById('comment-url-row').classList.remove('show')
+  }
+
+  function insertCommentImageTag(url) {
+    const ta = getCommentTextarea()
+    const tag = `\n[img]${url}[/img]\n`
+    const pos = ta.selectionStart
+    ta.value = ta.value.substring(0, pos) + tag + ta.value.substring(pos)
+    ta.focus()
+  }
+
+  async function toggleLike() {
+    if (!currentUser) {
+      window.location.href = '/auth.html?tab=login'
+      return
+    }
+    const btn = document.getElementById('btn-like')
+    btn.style.pointerEvents = 'none'
+
+    if (hasLiked) {
+      await sb.from('post_likes').delete().eq('post_id', postId).eq('user_id', currentUser.id)
+      post.likes_count = Math.max(0, (post.likes_count || 1) - 1)
+      hasLiked = false
+    } else {
+      await sb.from('post_likes').insert({ post_id: postId, user_id: currentUser.id })
+      post.likes_count = (post.likes_count || 0) + 1
+      hasLiked = true
+    }
+    await sb.from('posts').update({ likes_count: post.likes_count }).eq('id', postId)
+
+    btn.classList.toggle('liked', hasLiked)
+    btn.innerHTML = `${hasLiked ? '❤️' : '🤍'} <span id="like-count">${post.likes_count}</span>`
+    btn.style.pointerEvents = ''
+  }
+
+  async function loadComments() {
+    const { data: comments, error } = await sb.from('comments')
+      .select('*').eq('post_id', postId).order('created_at', { ascending: true })
+
+    const listEl = document.getElementById('comments-list')
+
+    if (error || !comments || comments.length === 0) {
+      listEl.innerHTML = '<div class="empty-comments">ยังไม่มีความคิดเห็น เป็นคนแรกเลยสิ!</div>'
+      return
+    }
+
+    const authorIds = [...new Set(comments.map(c => c.author_id))]
+    const { data: profiles } = await sb.from('profiles').select('user_id, username').in('user_id', authorIds)
+    const profileMap = {}
+    ;(profiles || []).forEach(p => profileMap[p.user_id] = p.username)
+
+    listEl.innerHTML = comments.map(c => {
+      const author = profileMap[c.author_id] || 'ผู้ใช้'
+      const isOwn = currentUser && c.author_id === currentUser.id
+      return `
+        <div class="comment-item" id="comment-${c.id}">
+          <div class="comment-author-row">
+            <span class="comment-author">👤 ${escapeHtml(author)}</span>
+            <span style="display:flex;align-items:center;gap:8px;">
+              <span class="comment-time">${formatTimeAgo(c.created_at)}</span>
+              ${isOwn ? `<span class="comment-delete" onclick="deleteComment('${c.id}')">ลบ</span>` : ''}
+            </span>
+          </div>
+          <div class="comment-content">${renderContent(c.content)}</div>
+        </div>
+      `
+    }).join('')
+  }
+
+  async function submitComment() {
+    const input = document.getElementById('comment-input')
+    const content = input.value.trim()
+    if (content.length < 1) return
+
+    const btn = document.getElementById('btn-comment-submit')
+    btn.disabled = true
+    btn.textContent = 'กำลังส่ง...'
+
+    const { error } = await sb.from('comments').insert({
+      post_id: postId,
+      author_id: currentUser.id,
+      content: content
+    })
+
+    if (!error) {
+      post.comments_count = (post.comments_count || 0) + 1
+      await sb.from('posts').update({ comments_count: post.comments_count }).eq('id', postId)
+      input.value = ''
+      document.querySelector('.comments-title').textContent = `ความคิดเห็น (${post.comments_count})`
+      await loadComments()
+    }
+
+    btn.disabled = false
+    btn.textContent = 'ส่งความคิดเห็น'
+  }
+
+  async function deleteComment(commentId) {
+    if (!confirm('ต้องการลบความคิดเห็นนี้ใช่ไหม?')) return
+    await sb.from('comments').delete().eq('id', commentId)
+    post.comments_count = Math.max(0, (post.comments_count || 1) - 1)
+    await sb.from('posts').update({ comments_count: post.comments_count }).eq('id', postId)
+    document.querySelector('.comments-title').textContent = `ความคิดเห็น (${post.comments_count})`
+    document.getElementById(`comment-${commentId}`).remove()
+  }
+
+  function renderContent(raw) {
+    let html = escapeHtml(raw)
+    html = html.replace(/\[img\](.*?)\[\/img\]/g, '<img src="$1" loading="lazy" style="max-width:100%;border-radius:8px;margin:8px 0;"/>')
+    html = html.replace(/\[color=(#[0-9a-fA-F]{3,6})\](.*?)\[\/color\]/g, '<span style="color:$1">$2</span>')
+    html = html.replace(/\[size=(\d+px)\](.*?)\[\/size\]/g, '<span style="font-size:$1">$2</span>')
+    html = html.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    html = html.replace(/\*(.+?)\*/g, '<i>$1</i>')
+    html = html.replace(/__(.+?)__/g, '<u>$1</u>')
+    html = html.replace(/^&gt; (.+)$/gm, '<blockquote style="border-left:3px solid #c0392b;padding-left:10px;color:#aaa;margin:8px 0;">$1</blockquote>')
+    html = html.replace(
+      /(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})\S*)/g,
+      '<div style="position:relative;padding-bottom:56.25%;height:0;margin:8px 0;"><iframe src="https://www.youtube.com/embed/$2" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:8px;" allowfullscreen></iframe></div>'
+    )
+    return html.replace(/\n/g, '<br>')
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div')
+    div.textContent = str
+    return div.innerHTML
+  }
+
+  function formatTimeAgo(dateStr) {
+    const diff = Date.now() - new Date(dateStr).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 1) return 'เมื่อสักครู่'
+    if (mins < 60) return `${mins} นาทีที่แล้ว`
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24) return `${hrs} ชม.ที่แล้ว`
+    const days = Math.floor(hrs / 24)
+    if (days < 7) return `${days} วันที่แล้ว`
+    return new Date(dateStr).toLocaleDateString('th-TH')
+  }
+
+  init()
+</script>
+</body>
+</html>

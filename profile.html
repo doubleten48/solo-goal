@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DoubleTen — Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-init.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --red: #c0392b; --red-dark: #922b21; --red-glow: rgba(192,57,43,0.12);
+    --bg: #1e1e1e; --card: #242424; --line: #2e2e2e;
+    --text: #e8e8e8; --muted: #666; --sub: #aaa;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+  a { color: inherit; text-decoration: none; }
+
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(30,30,30,0.95); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+    padding: 0 1rem; display: flex; align-items: center;
+    justify-content: space-between; height: 54px;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 8px; }
+  .nav-wordmark { font-size: 15px; font-weight: 700; color: #fff; }
+  .nav-sub { font-size: 10px; color: var(--muted); }
+  .nav-right { display: flex; gap: 8px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 7px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none; font-family: inherit; transition: all 0.15s;
+  }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-red:hover { background: var(--red-dark); }
+  .btn-outline { background: transparent; color: var(--sub); border: 1px solid var(--line); }
+  .btn-outline:hover { border-color: var(--muted); color: var(--text); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  .center-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 12px; color: var(--muted); }
+  .spinner-lg { width: 40px; height: 40px; border: 3px solid var(--line); border-top-color: var(--red); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .profile-header { background: var(--card); border-bottom: 1px solid var(--line); padding: 20px 16px 0; max-width: 640px; margin: 0 auto; }
+  .profile-top { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px; }
+
+  .avatar-wrap { position: relative; flex-shrink: 0; }
+  .avatar {
+    width: 76px; height: 76px; border-radius: 50%;
+    background: var(--red); display: flex; align-items: center; justify-content: center;
+    font-size: 30px; font-weight: 700; color: #fff; border: 2px solid var(--line);
+  }
+  .avatar-overlay {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: rgba(0,0,0,0.5); display: none; align-items: center;
+    justify-content: center; font-size: 20px; cursor: pointer;
+  }
+  .avatar-wrap:hover .avatar-overlay { display: flex; }
+
+  .profile-info { flex: 1; }
+  .profile-username { font-size: 19px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+  .profile-email { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .badge-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 9px; border-radius: 999px; }
+  .badge-green { background: rgba(39,174,96,.12); border: 1px solid rgba(39,174,96,.25); color: #27ae60; }
+  .badge-red { background: var(--red-glow); border: 1px solid rgba(192,57,43,.25); color: #e74c3c; }
+  .badge-gray { background: #2a2a2a; border: 1px solid var(--line); color: var(--sub); }
+
+  .stars-row { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; }
+  .stars { color: #f1c40f; font-size: 15px; letter-spacing: 1px; }
+  .stars-count { font-size: 13px; color: var(--sub); }
+
+  .stats-row { display: flex; border-top: 1px solid var(--line); margin: 0 -16px; }
+  .stat-item { flex: 1; text-align: center; padding: 10px 4px; border-right: 1px solid var(--line); }
+  .stat-item:last-child { border-right: none; }
+  .stat-n { font-size: 16px; font-weight: 700; color: #fff; }
+  .stat-l { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  .meta-row { display: flex; gap: 16px; padding: 10px 0 12px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+
+  .cards-row { display: flex; gap: 8px; padding-bottom: 14px; }
+  .card-badge { flex: 1; background: #1e1e1e; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; text-align: center; }
+  .card-n { font-size: 17px; font-weight: 700; }
+  .card-l { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  .tabs { display: flex; background: var(--card); border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; max-width: 640px; margin: 0 auto; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex-shrink: 0; padding: 11px 14px; font-size: 13px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: color .15s; }
+  .tab.active { color: var(--red); border-bottom-color: var(--red); font-weight: 500; }
+  .tab:hover:not(.active) { color: var(--sub); }
+
+  .tab-content { display: none; padding: 16px; max-width: 640px; margin: 0 auto; }
+  .tab-content.active { display: block; }
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+  .empty-icon { font-size: 36px; margin-bottom: 8px; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 200; padding: 1rem; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 1.5rem; width: 100%; max-width: 400px; }
+  .modal-title { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 1.25rem; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .form-group label { font-size: 13px; color: var(--sub); }
+  .form-group input[type="text"] { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: 14px; color: var(--text); font-family: inherit; outline: none; }
+  .form-group input[type="text"]:focus { border-color: var(--red); }
+  .avatar-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .avatar-opt { width: 44px; height: 44px; border-radius: 50%; background: var(--bg); border: 2px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; transition: border-color .15s; }
+  .avatar-opt:hover, .avatar-opt.selected { border-color: var(--red); }
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1rem; }
+  .alert-sm { font-size: 12px; margin-top: 4px; display: none; }
+  .alert-sm.show { display: block; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <svg width="34" height="24" viewBox="0 0 140 100">
+      <rect x="2" y="10" width="58" height="80" rx="10" fill="#c0392b"/>
+      <text x="31" y="63" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-family="'DM Sans',sans-serif" font-size="36" font-weight="700" letter-spacing="-1">10</text>
+      <rect x="80" y="10" width="58" height="80" rx="10" fill="#2a2a2a" stroke="#c0392b" stroke-width="2"/>
+      <text x="109" y="63" text-anchor="middle" dominant-baseline="middle" fill="#c0392b" font-family="'DM Sans',sans-serif" font-size="36" font-weight="700" letter-spacing="-1">10</text>
+    </svg>
+    <div>
+      <div class="nav-wordmark">DoubleTen</div>
+      <div class="nav-sub">By น้อนแดง</div>
+    </div>
+  </a>
+  <div class="nav-right" id="nav-right">
+    <a href="/" class="btn btn-outline btn-sm">🏠 หน้าหลัก</a>
+  </div>
+</nav>
+
+<div class="center-state" id="loading-state">
+  <div class="spinner-lg"></div>
+  <div>กำลังโหลดโปรไฟล์...</div>
+</div>
+
+<div class="center-state" id="error-state" style="display:none;">
+  <div style="font-size:40px;">😕</div>
+  <div style="font-size:16px;color:#ddd;">ไม่พบโปรไฟล์นี้</div>
+  <a href="/" class="btn btn-outline" style="margin-top:8px;">กลับหน้าหลัก</a>
+</div>
+
+<div id="profile-wrap" style="display:none;">
+  <div class="profile-header">
+    <div class="profile-top">
+      <div class="avatar-wrap" id="avatar-wrap">
+        <div class="avatar" id="avatar-display">น</div>
+        <div class="avatar-overlay" id="avatar-overlay" onclick="openEditModal()">✏️</div>
+      </div>
+      <div class="profile-info">
+        <div class="profile-username" id="profile-username">—</div>
+        <div class="profile-email" id="profile-email"></div>
+        <div class="badge-row">
+          <span class="badge badge-green">ใช้งาน</span>
+          <span class="badge badge-gray" id="badge-class">Bronze I <span style="color:#3a3a3a;">[Under Development]</span></span>
+          <span class="badge badge-red" id="badge-team" style="display:none;"></span>
+        </div>
+        <div id="edit-btn-wrap" style="display:none; margin-top:6px; display:none; gap:6px; flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="openEditModal()">✏️ แก้ไขโปรไฟล์</button>
+          <button class="btn btn-outline btn-sm" onclick="handleLogout()">ออกจากระบบ</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stars-row">
+      <span class="stars" id="profile-stars">☆☆☆☆☆</span>
+      <span class="stars-count" id="profile-stars-count">0.0</span>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-item"><div class="stat-n" id="stat-reply">0</div><div class="stat-l">ตอบ</div></div>
+      <div class="stat-item"><div class="stat-n" id="stat-handsome">0</div><div class="stat-l">หล่อ</div></div>
+      <div class="stat-item"><div class="stat-n" id="stat-loser">0</div><div class="stat-l">กุย</div></div>
+      <div class="stat-item"><div class="stat-n" id="stat-coins">300</div><div class="stat-l">เหรียญ</div></div>
+    </div>
+
+    <div class="meta-row">
+      <span id="meta-joined">📅 —</span>
+      <span id="meta-no">🔢 No.—</span>
+    </div>
+
+    <div class="cards-row">
+      <div class="card-badge"><div class="card-n" style="color:#27ae60;" id="card-green">🟩 0</div><div class="card-l">ใบเขียว</div></div>
+      <div class="card-badge"><div class="card-n" style="color:#c0392b;" id="card-red">🟥 0</div><div class="card-l">ใบแดง</div></div>
+      <div class="card-badge"><div class="card-n" style="color:#f39c12;" id="card-coins">🏅 300</div><div class="card-l">เหรียญ/เดือน</div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="sw(0)">รีวิว</div>
+    <div class="tab" onclick="sw(1)">บทความของคุณ</div>
+    <div class="tab" onclick="sw(2)">เก็บไว้อ่าน</div>
+    <div class="tab" onclick="sw(3)">ประวัติตั้งกระทู้</div>
+    <div class="tab" onclick="sw(4)">ประวัติตอบกระทู้</div>
+    <div class="tab" onclick="sw(5)">ประวัติทำฟาวล์</div>
+  </div>
+
+  <div class="tab-content active" id="tc0"><div class="empty-state"><div class="empty-icon">⭐</div><div>ยังไม่มีรีวิว</div></div></div>
+  <div class="tab-content" id="tc1"><div class="empty-state"><div class="empty-icon">📝</div><div>ยังไม่มีบทความ</div></div></div>
+  <div class="tab-content" id="tc2"><div class="empty-state"><div class="empty-icon">🔖</div><div>ยังไม่มีรายการที่บันทึกไว้</div></div></div>
+  <div class="tab-content" id="tc3"><div class="empty-state"><div class="empty-icon">💬</div><div>ยังไม่มีประวัติตั้งกระทู้</div></div></div>
+  <div class="tab-content" id="tc4"><div class="empty-state"><div class="empty-icon">↩️</div><div>ยังไม่มีประวัติตอบกระทู้</div></div></div>
+  <div class="tab-content" id="tc5"><div class="empty-state"><div class="empty-icon">🟩</div><div style="color:var(--muted);">ไม่มีประวัติฟาวล์</div></div></div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title">✏️ แก้ไขโปรไฟล์</div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="edit-username" placeholder="ชื่อที่แสดงในบอร์ด" maxlength="30"/>
+      <span class="alert-sm" id="err-edit-username" style="color:#e74c3c;">กรุณากรอก username อย่างน้อย 2 ตัวอักษร</span>
+    </div>
+    <div class="form-group">
+      <label>ทีมโปรด</label>
+      <input type="text" id="edit-team" placeholder="เช่น Liverpool, Manchester United" maxlength="30"/>
+    </div>
+    <div class="form-group">
+      <label>Avatar</label>
+      <div class="avatar-grid" id="avatar-grid"></div>
+    </div>
+    <span class="alert-sm" id="save-alert"></span>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeEditModal()">ยกเลิก</button>
+      <button class="btn btn-red" onclick="saveProfile()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ตัวแปร sb มาจาก supabase-init.js (config กลาง + remember-me storage)
+
+  const AVATARS = ['⚽','🏆','🥅','👟','🦁','🐯','🦅','🔥','⚡','🌟','💎','🛡️','🎯','🏅','👑']
+  let currentUser = null
+  let profileData = null
+  let isOwnProfile = false
+  let selectedAvatar = ''
+
+  async function init() {
+    const params = new URLSearchParams(window.location.search)
+    const targetId = params.get('id')
+    const { data: { session } } = await sb.auth.getSession()
+    currentUser = session?.user || null
+
+    if (currentUser) {
+      document.getElementById('nav-right').innerHTML = `
+        <a href="/profile.html" class="btn btn-outline btn-sm">👤 โปรไฟล์</a>
+        <a href="/" class="btn btn-outline btn-sm">🏠</a>
+      `
+    }
+
+    let profileId = targetId
+    if (!profileId) {
+      if (!currentUser) { window.location.href = '/auth.html'; return }
+      profileId = currentUser.id
+    }
+
+    isOwnProfile = currentUser && currentUser.id === profileId
+    await loadProfile(profileId)
+  }
+
+  async function loadProfile(userId) {
+    const { data, error } = await sb.from('profiles').select('*').eq('id', userId).single()
+    document.getElementById('loading-state').style.display = 'none'
+    if (error || !data) { document.getElementById('error-state').style.display = 'flex'; return }
+    profileData = data
+    renderProfile(data)
+    document.getElementById('profile-wrap').style.display = 'block'
+  }
+
+  function renderProfile(p) {
+    const avatarEl = document.getElementById('avatar-display')
+    if (p.avatar_url && AVATARS.includes(p.avatar_url)) {
+      avatarEl.textContent = p.avatar_url
+      avatarEl.style.fontSize = '36px'
+    } else {
+      avatarEl.textContent = (p.username || 'U')[0].toUpperCase()
+      avatarEl.style.fontSize = '30px'
+    }
+
+    document.getElementById('profile-username').textContent = p.username || 'ไม่ระบุชื่อ'
+    if (isOwnProfile && currentUser?.email) {
+      document.getElementById('profile-email').textContent = currentUser.email
+    }
+
+    document.getElementById('badge-class').innerHTML = (p.class || 'Bronze I') + ' <span style="color:#3a3a3a;">[Under Development]</span>'
+
+    if (p.favorite_team) {
+      const t = document.getElementById('badge-team')
+      t.textContent = '⚽ ' + p.favorite_team
+      t.style.display = 'inline-flex'
+    }
+
+    const avg = parseFloat(p.star_avg) || 0
+    document.getElementById('profile-stars').textContent = '★'.repeat(Math.floor(avg)) + '☆'.repeat(5 - Math.floor(avg))
+    document.getElementById('profile-stars-count').textContent = avg.toFixed(1)
+
+    document.getElementById('stat-reply').textContent = p.reply_count || 0
+    document.getElementById('stat-handsome').textContent = p.handsome_count || 0
+    document.getElementById('stat-loser').textContent = p.loser_count || 0
+    document.getElementById('stat-coins').textContent = p.coins || 300
+
+    const joined = p.created_at ? new Date(p.created_at).toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'}) : '—'
+    document.getElementById('meta-joined').textContent = '📅 เข้าร่วม ' + joined
+
+    loadMemberNo(p.id, p.created_at)
+
+    document.getElementById('card-green').textContent = '🟩 ' + (p.yellow_cards || 0)
+    document.getElementById('card-red').textContent = '🟥 ' + (p.red_cards || 0)
+    document.getElementById('card-coins').textContent = '🏅 ' + (p.coins || 300)
+
+    if (isOwnProfile) {
+      const editWrap = document.getElementById('edit-btn-wrap')
+      editWrap.style.display = 'flex'
+      document.getElementById('avatar-overlay').style.display = 'flex'
+    }
+  }
+
+  async function loadMemberNo(userId, createdAt) {
+    const { count } = await sb.from('profiles').select('*', {count:'exact',head:true}).lte('created_at', createdAt)
+    document.getElementById('meta-no').textContent = '🔢 No.' + String(count || 1).padStart(3, '0')
+  }
+
+  function sw(i) {
+    document.querySelectorAll('.tab').forEach((t,x) => t.classList.toggle('active', x===i))
+    document.querySelectorAll('.tab-content').forEach((c,x) => c.classList.toggle('active', x===i))
+  }
+
+  function openEditModal() {
+    if (!isOwnProfile) return
+    document.getElementById('edit-username').value = profileData?.username || ''
+    document.getElementById('edit-team').value = profileData?.favorite_team || ''
+    selectedAvatar = profileData?.avatar_url || ''
+    const grid = document.getElementById('avatar-grid')
+    grid.innerHTML = AVATARS.map(a => `<div class="avatar-opt ${a===selectedAvatar?'selected':''}" onclick="selectAvatar('${a}',this)">${a}</div>`).join('')
+    document.getElementById('edit-modal').classList.add('show')
+  }
+
+  function closeEditModal() {
+    document.getElementById('edit-modal').classList.remove('show')
+    document.getElementById('save-alert').style.display = 'none'
+  }
+
+  function selectAvatar(emoji, el) {
+    selectedAvatar = emoji
+    document.querySelectorAll('.avatar-opt').forEach(e => e.classList.remove('selected'))
+    el.classList.add('selected')
+  }
+
+  async function saveProfile() {
+    const username = document.getElementById('edit-username').value.trim()
+    const team = document.getElementById('edit-team').value.trim()
+    const errEl = document.getElementById('err-edit-username')
+    const saveAlert = document.getElementById('save-alert')
+
+    if (username.length < 2) { errEl.classList.add('show'); return }
+    errEl.classList.remove('show')
+
+    const { error } = await sb.from('profiles').update({ username, favorite_team: team, avatar_url: selectedAvatar }).eq('id', currentUser.id)
+
+    if (error) {
+      saveAlert.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่'
+      saveAlert.style.color = '#e74c3c'
+      saveAlert.style.display = 'block'
+      return
+    }
+
+    profileData.username = username
+    profileData.favorite_team = team
+    profileData.avatar_url = selectedAvatar
+    renderProfile(profileData)
+
+    saveAlert.textContent = '✅ บันทึกสำเร็จ!'
+    saveAlert.style.color = '#27ae60'
+    saveAlert.style.display = 'block'
+    setTimeout(closeEditModal, 1200)
+  }
+
+  async function handleLogout() {
+    await sb.auth.signOut()
+    window.location.href = '/'
+  }
+
+  init()
+</script>
+</body>
+</html>

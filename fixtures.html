@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตารางแข่ง - DoubleTen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sidebar-w: 198px;
+    --header-h: 60px;
+    --main-bg: #2c2b2b;
+    --main-text: #fff;
+    --body-bg: #2c2b2b;
+  }
+
+  html.light-mode {
+    --main-bg: #E5E5EA;
+    --main-text: #1a1a1a;
+    --body-bg: #E5E5EA;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--body-bg);
+    font-family: 'Kanit', sans-serif;
+    color: #fff;
+    transition: background 0.2s ease;
+  }
+
+  .layout { display: flex; min-height: 100vh; position: relative; }
+
+  /* ===== Sidebar (เหมือน index.html) ===== */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: linear-gradient(to bottom, #872929 0%, #0d0a0a 100%);
+    display: flex;
+    flex-direction: column;
+    padding: 14px 0 0 0;
+    transition: width 0.2s ease;
+    overflow: hidden;
+  }
+
+  .sidebar .logo { display: block; width: 127px; height: 92px; margin: 0 0 34px 36px; }
+
+  .sidebar .menu-panel { margin: 0 15px; position: relative; height: 403px; }
+  .sidebar .menu-panel ul { list-style: none; position: relative; height: 100%; }
+
+  .menu-highlight {
+    position: absolute; left: 17px; width: 137px; height: 27px;
+    background: rgba(29, 28, 28, 0.33); border-radius: 5px; z-index: 0; opacity: 0;
+    transition: top 0.08s ease, opacity 0.1s ease; pointer-events: none;
+  }
+
+  .sidebar .menu-panel li { position: absolute; left: 0; right: 0; height: 40px; cursor: pointer; white-space: nowrap; }
+  .sidebar .menu-panel li img { position: absolute; top: 50%; transform: translateY(-50%) scale(1.3); transform-origin: left center; z-index: 1; display: block; }
+  .sidebar .menu-panel li span { position: absolute; top: 50%; transform: translateY(-50%); left: 52px; z-index: 1; font-weight: 400; font-size: 13px; color: #fff; }
+
+  .sidebar .menu-divider { width: 163px; height: 1px; background: rgba(255, 255, 255, 0.15); margin: 0 auto 18px auto; }
+  .sidebar .balance-box { margin: 0 15px; width: 170px; }
+  .sidebar .balance-box img { display: block; width: 100%; height: auto; }
+
+  .sidebar .menu-collapsed { display: none; flex-direction: column; align-items: center; gap: 5px; padding-top: 161px; }
+  .sidebar .menu-collapsed li { list-style: none; width: 35px; height: 35px; cursor: pointer; }
+  .sidebar .menu-collapsed li img { width: 35px; height: 35px; display: block; }
+
+  .sidebar.collapsed { width: 56px; }
+  .sidebar.collapsed .logo, .sidebar.collapsed .menu-panel, .sidebar.collapsed .menu-divider, .sidebar.collapsed .balance-box { display: none; }
+  .sidebar.collapsed .menu-collapsed { display: flex; }
+
+  .sidebar-toggle {
+    position: absolute; top: 108px; left: calc(var(--sidebar-w) - 5px); width: 10px; height: 30px;
+    background: #1a1a1a; border: none; border-radius: 4px; color: #fff; font-size: 10px; line-height: 30px;
+    text-align: center; padding: 0; cursor: pointer; z-index: 10; transition: left 0.2s ease;
+  }
+
+  .content-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+  .header { height: var(--header-h); background: #121214; display: flex; align-items: center; padding-left: 25px; flex-shrink: 0; position: relative; }
+  .header .wordmark { display: none; font-size: 20px; font-weight: 400; color: #fff; margin-right: 26px; white-space: nowrap; }
+  .sidebar.collapsed ~ .content-area .header { padding-left: 26px; }
+  .sidebar.collapsed ~ .content-area .header .wordmark { display: block; position: relative; top: 4px; }
+
+  .header .icons { position: absolute; top: 25px; left: 25px; }
+  .header .icons img { position: absolute; top: 0; width: 27px; height: 27px; cursor: pointer; }
+  .header .icons img.bell { left: 0; }
+  .header .icons img.mail { left: 38px; }
+  .sidebar.collapsed ~ .content-area .header .icons { left: 165px; }
+
+  .header .login-btn { position: absolute; right: 48px; top: 25px; width: 56px; height: 28px; display: block; }
+  .header .register-btn { position: absolute; right: 109px; top: 25px; width: 92px; height: 28px; display: block; }
+  .header .login-btn img, .header .register-btn img { width: 100%; height: 100%; display: block; cursor: pointer; }
+  .header .light-mode-btn { position: absolute; right: 14px; top: 26px; width: 25px; height: 25px; cursor: pointer; }
+
+  .main { flex: 1; background: var(--main-bg); color: var(--main-text); transition: background 0.2s ease, color 0.2s ease; padding: 20px; }
+
+  /* ===== Fixtures page content ===== */
+  .page-wrap { max-width: 1010px; margin: 0 auto; }
+
+  .page-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+  .page-tabs button {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: var(--main-text);
+    padding: 8px 18px; border-radius: 5px; font-family: 'Kanit', sans-serif; font-size: 14px; cursor: pointer;
+  }
+  html.light-mode .page-tabs button { background: #d9d9de; border-color: rgba(0,0,0,0.1); }
+  .page-tabs button.active { background: #872929; color: #fff; border-color: #872929; }
+
+  .league-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 16px; padding-bottom: 4px; }
+  .league-tabs button {
+    flex-shrink: 0; background: rgba(255,255,255,0.06); border: none; color: var(--main-text);
+    padding: 6px 14px; border-radius: 5px; font-family: 'Kanit', sans-serif; font-size: 13px; cursor: pointer; white-space: nowrap;
+  }
+  html.light-mode .league-tabs button { background: #d9d9de; }
+  .league-tabs button.active { background: #872929; color: #fff; }
+
+  .week-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+  .week-nav button {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--main-text);
+    width: 32px;
+    height: 32px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  html.light-mode .week-nav button { background: #d9d9de; border-color: rgba(0,0,0,0.1); }
+  .week-nav button:hover { background: rgba(255,255,255,0.14); }
+  .week-nav .week-label { font-size: 14px; font-weight: 600; min-width: 160px; text-align: center; }
+
+  .fixtures-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .fixture-date-header {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--main-text);
+    padding: 14px 4px 6px 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    margin-bottom: 4px;
+  }
+  html.light-mode .fixture-date-header { border-bottom-color: rgba(0,0,0,0.1); }
+  .fixture-date-header:first-child { padding-top: 0; }
+
+  .fixture-row {
+    display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.06);
+    border-left: 3px solid #872929; border-radius: 4px; padding: 10px 16px; font-size: 13px;
+  }
+  html.light-mode .fixture-row { background: #d9d9de; }
+  .fixture-row.is-live { border-left-color: #ff4d4d; }
+  .fixture-row.is-finished { border-left-color: #6a6a6a; }
+
+  .fixture-time { width: 60px; flex-shrink: 0; font-size: 12px; color: #9a9a9a; }
+  .fixture-teams { flex: 1; display: flex; align-items: center; justify-content: center; gap: 14px; min-width: 0; }
+  .fixture-team { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+  .fixture-team.away { flex-direction: row-reverse; text-align: right; }
+  .fixture-team img { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
+  .fixture-team span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fixture-score { flex-shrink: 0; font-weight: 600; min-width: 50px; text-align: center; }
+  .fixture-comp { width: 130px; flex-shrink: 0; font-size: 11px; color: #9a9a9a; text-align: right; }
+
+  .fixture-toggle-btn {
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--main-text);
+    font-family: 'Kanit', sans-serif;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+  }
+  html.light-mode .fixture-toggle-btn { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.12); }
+  .fixture-toggle-btn:hover { background: rgba(255,255,255,0.16); }
+  .fixture-toggle-btn.is-open { background: #872929; border-color: #872929; color: #fff; }
+
+  .fixture-details {
+    display: none;
+    background: rgba(0,0,0,0.18);
+    border-left: 3px solid #872929;
+    border-radius: 0 0 4px 4px;
+    margin-top: -4px;
+    padding: 10px 16px 12px 16px;
+    font-size: 12px;
+  }
+  html.light-mode .fixture-details { background: rgba(0,0,0,0.04); }
+  .fixture-details.is-open { display: flex; gap: 16px; }
+
+  .fixture-details-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .fixture-details-col.away { align-items: flex-end; text-align: right; }
+
+  .fixture-event-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .fixture-details-col.away .fixture-event-entry { flex-direction: row-reverse; }
+
+  .fixture-event-entry .evt-minute { color: #9a9a9a; flex-shrink: 0; font-size: 11px; padding-top: 1px; }
+  .fixture-event-entry .evt-names { display: flex; flex-direction: column; min-width: 0; }
+  .fixture-event-entry .evt-scorer { color: var(--main-text); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fixture-event-entry .evt-assist-name { color: #9a9a9a; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .fixture-details-empty { color: #9a9a9a; font-size: 12px; padding: 4px 0; flex: 1; }
+
+  .standings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .standings-table th, .standings-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  html.light-mode .standings-table th, html.light-mode .standings-table td { border-bottom: 1px solid rgba(0,0,0,0.08); }
+  .standings-table th { color: #9a9a9a; font-weight: 400; font-size: 12px; }
+  .standings-table td.center, .standings-table th.center { text-align: center; }
+  .standings-team { display: flex; align-items: center; gap: 8px; }
+  .standings-team img { width: 20px; height: 20px; object-fit: contain; }
+
+  .zone-bar { width: 4px; padding: 0 !important; }
+
+  .standings-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 5px;
+    font-size: 12px;
+  }
+  html.light-mode .standings-legend { background: rgba(0,0,0,0.03); }
+
+  .standings-legend-item { display: flex; align-items: center; gap: 8px; }
+  .standings-legend-dot { width: 4px; height: 16px; border-radius: 2px; flex-shrink: 0; }
+
+  .empty-state { text-align: center; padding: 40px; color: #9a9a9a; font-size: 13px; }
+
+  /* ===== Scorers/Assists tables ===== */
+  .scorers-tables { display: flex; gap: 20px; flex-wrap: wrap; }
+  .scorer-col { flex: 1; min-width: 280px; }
+  .scorer-col h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--main-text);
+  }
+  .scorer-rank { width: 26px; color: #9a9a9a; }
+  .scorer-player { display: flex; align-items: center; gap: 8px; }
+  .scorer-photo {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.08);
+  }
+  .scorer-photo-fallback {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--main-text);
+  }
+  .scorer-team-crest { width: 14px; height: 14px; object-fit: contain; flex-shrink: 0; }
+  .scorer-name { font-weight: 600; }
+  .scorer-team-name { font-size: 11px; color: #9a9a9a; }
+  .scorers-note { font-size: 11px; color: #9a9a9a; margin-top: 12px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <a href="index.html"><img class="logo" src="assets/LOGO_WEB_01.svg" alt="DoubleTen"></a>
+      <nav class="menu-panel">
+        <div class="menu-highlight" id="menuHighlight"></div>
+        <ul id="menuList">
+          <li style="top:9px"><a href="index.html" style="position:absolute;inset:0;display:block;"><img src="assets/HOME ICON_2.svg" alt="" style="left:29px;width:10px;height:12px"><span style="left:57px">หน้าแรก</span></a></li>
+          <li style="top:46px"><img src="assets/NEWS ICON_2.svg" alt="" style="left:28px;width:13px;height:10.6px"><span style="left:57px">อัพเดทข่าว</span></li>
+          <li style="top:79px"><img src="assets/ARTICLE ICON_2.svg" alt="" style="left:29px;width:10px;height:10px"><span style="left:57px">บทความ</span></li>
+          <li style="top:115px"><img src="assets/SOCIETY ICON_2.svg" alt="" style="left:29px;width:11px;height:10px"><span style="left:56px">บอร์ดโซไซตี้</span></li>
+          <li style="top:148px"><img src="assets/BALL_INTER ICON_2.svg" alt="" style="left:29px;width:11px;height:14px"><span style="left:56px">บอร์ดบอลนอก</span></li>
+          <li style="top:182px"><img src="assets/BALL_THAI ICON_2.svg" alt="" style="left:30px;width:9px;height:13px"><span style="left:56px">บอร์ดบอลไทย</span></li>
+          <li style="top:214px"><img src="assets/all sport icon_2.svg" alt="" style="left:30px;width:11px;height:15px"><span style="left:56px">ออลสปอร์ต</span></li>
+          <li style="top:250px"><img src="assets/games icon_2.svg" alt="" style="left:30px;width:12px;height:12px"><span style="left:56px">บอร์ดเกมส์</span></li>
+          <li style="top:282px"><img src="assets/deal icon_2.svg" alt="" style="left:29px;width:13px;height:13px"><span style="left:56px">เดลล่างมอ</span></li>
+          <li style="top:316px"><img src="assets/Prisoner Icon_2.svg" alt="" style="left:28px;width:12px;height:13px"><span style="left:56px">เรือนจำคนง่าว</span></li>
+          <li style="top:353px"><img src="assets/buy item icon_2.svg" alt="" style="left:29px;width:13px;height:13px"><span style="left:56px;color:#FFC107">ซื้อไอเท็มเว็บ</span></li>
+        </ul>
+      </nav>
+      <div class="menu-divider"></div>
+      <div class="balance-box"><img src="assets/balance.svg" alt="Balance"></div>
+      <ul class="menu-collapsed">
+        <li><img src="assets/HOME ICON.svg" alt="หน้าแรก"></li>
+        <li><img src="assets/NEWS ICON.svg" alt="อัพเดทข่าว"></li>
+        <li><img src="assets/ARTICLE ICON.svg" alt="บทความ"></li>
+        <li><img src="assets/SOCIETY ICON.svg" alt="บอร์ดโซไซตี้"></li>
+        <li><img src="assets/BALL_INTER ICON.svg" alt="บอร์ดบอลนอก"></li>
+        <li><img src="assets/BALL_THAI ICON.svg" alt="บอร์ดบอลไทย"></li>
+        <li><img src="assets/all sport icon.svg" alt="ออลสปอร์ต"></li>
+        <li><img src="assets/games icon.svg" alt="บอร์ดเกมส์"></li>
+        <li><img src="assets/deal icon.svg" alt="เดลล่างมอ"></li>
+        <li><img src="assets/Prisoner Icon.svg" alt="เรือนจำคนง่าว"></li>
+        <li><img src="assets/buy item icon.svg" alt="ซื้อไอเท็มเว็บ"></li>
+      </ul>
+    </aside>
+
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#10094;</button>
+
+    <div class="content-area">
+      <header class="header">
+        <a href="index.html" class="wordmark" style="text-decoration:none;">DOUBLETEN</a>
+        <div class="icons">
+          <img class="bell" src="assets/mynaui_bell.svg" alt="Notifications">
+          <img class="mail" src="assets/mynaui_mail.svg" alt="Messages">
+        </div>
+        <a class="login-btn" href="auth.html?tab=login"><img src="assets/Login Icon.svg" alt="Login"></a>
+        <a class="register-btn" href="auth.html?tab=register"><img src="assets/Register Icon.svg" alt="Register"></a>
+        <img class="light-mode-btn" id="themeToggle" src="assets/light_mode.svg" alt="Toggle light mode">
+      </header>
+
+      <main class="main">
+        <div class="page-wrap">
+          <div class="page-tabs">
+            <button class="active" data-page="fixtures">ตารางแข่ง</button>
+            <button data-page="standings">ตารางคะแนน</button>
+            <button data-page="scorers">ดาวซัลโว</button>
+          </div>
+
+          <div class="league-tabs" id="leagueTabs">
+            <button class="active" data-comp="ALL" id="allLeagueBtn">ทั้งหมด</button>
+            <button data-comp="PL">Premier League</button>
+            <button data-comp="PD">La Liga</button>
+            <button data-comp="BL1">Bundesliga</button>
+            <button data-comp="SA">Serie A</button>
+            <button data-comp="FL1">Ligue 1</button>
+            <button data-comp="CL">Champions League</button>
+          </div>
+
+          <div id="fixturesView">
+            <div class="week-nav">
+              <button id="weekPrev" aria-label="สัปดาห์ก่อน">&#10094;</button>
+              <span class="week-label" id="weekLabel">สัปดาห์นี้</span>
+              <button id="weekNext" aria-label="สัปดาห์ถัดไป">&#10095;</button>
+            </div>
+            <div class="fixtures-list" id="fixturesList">
+              <div class="empty-state">กำลังโหลด...</div>
+            </div>
+          </div>
+
+          <div id="standingsView" style="display:none;">
+            <table class="standings-table" id="standingsTable">
+              <thead>
+                <tr><th class="zone-bar"></th><th>#</th><th>ทีม</th><th class="center">P</th><th class="center">W</th><th class="center">D</th><th class="center">L</th><th class="center">F</th><th class="center">A</th><th class="center">GD</th><th class="center">PTS</th></tr>
+              </thead>
+              <tbody id="standingsBody"></tbody>
+            </table>
+            <div class="standings-legend" id="standingsLegend"></div>
+          </div>
+
+          <div id="scorersView" style="display:none;">
+            <div class="scorers-tables">
+              <div class="scorer-col">
+                <h3>ดาวซัลโว (ยิงประตูสูงสุด)</h3>
+                <table class="standings-table" id="scorersTable">
+                  <thead>
+                    <tr><th class="scorer-rank">#</th><th>นักเตะ</th><th class="center">G</th><th class="center">นัด</th></tr>
+                  </thead>
+                  <tbody id="scorersBody"></tbody>
+                </table>
+              </div>
+              <div class="scorer-col">
+                <h3>จ่ายบอลสูงสุด (แอสซิสต์)</h3>
+                <table class="standings-table" id="assistsTable">
+                  <thead>
+                    <tr><th class="scorer-rank">#</th><th>นักเตะ</th><th class="center">A</th></tr>
+                  </thead>
+                  <tbody id="assistsBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="scorers-note">ดาวซัลโวนับจากประตูล้วน ๆ (แหล่งข้อมูล football-data.org, อัปเดตทุก 1 ชม.) ส่วนแอสซิสต์คำนวณจากข้อมูลผู้จ่ายบอลจริงของทุกแมตช์ที่จบแล้วในฤดูกาล (แหล่งข้อมูล ESPN, อัปเดตทุก 6 ชม.) ทั้งสองตารางเป็นอิสระต่อกัน ไม่ได้มาจากชุดข้อมูลเดียวกัน</div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    toggleBtn.addEventListener('click', () => {
+      const collapsed = sidebar.classList.toggle('collapsed');
+      document.documentElement.style.setProperty('--sidebar-w', collapsed ? '56px' : '198px');
+      toggleBtn.innerHTML = collapsed ? '&#10095;' : '&#10094;';
+    });
+
+    const menuList = document.getElementById('menuList');
+    const highlight = document.getElementById('menuHighlight');
+    menuList.querySelectorAll('li').forEach((li) => {
+      li.addEventListener('mouseenter', () => {
+        highlight.style.top = (li.offsetTop + (li.offsetHeight - 27) / 2) + 'px';
+        highlight.style.opacity = '1';
+      });
+    });
+    menuList.addEventListener('mouseleave', () => { highlight.style.opacity = '0'; });
+
+    const themeToggle = document.getElementById('themeToggle');
+    const htmlEl = document.documentElement;
+    function applyTheme(isLight) { htmlEl.classList.toggle('light-mode', isLight); }
+    applyTheme(localStorage.getItem('doubleten-theme') === 'light');
+    themeToggle.addEventListener('click', () => {
+      const isLight = htmlEl.classList.toggle('light-mode');
+      localStorage.setItem('doubleten-theme', isLight ? 'light' : 'dark');
+    });
+  </script>
+
+  <script>
+    // ===== Fixtures & Standings from Supabase =====
+    const SUPABASE_URL = 'https://dnrcardbuuwnvuridubb.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_uz4Tj8HDZef7T2OLEzyvUw_wcGsn0ZW';
+
+    let currentPage = 'fixtures';
+    let currentComp = 'ALL';
+    let allMatches = [];
+    let allStandings = {};
+    let allScorers = {};
+    let allAssists = {};
+
+    const pageTabs = document.getElementById('page-tabs') || document.querySelector('.page-tabs');
+    const leagueTabs = document.getElementById('leagueTabs');
+    const fixturesView = document.getElementById('fixturesView');
+    const standingsView = document.getElementById('standingsView');
+    const scorersView = document.getElementById('scorersView');
+    const fixturesList = document.getElementById('fixturesList');
+    const standingsBody = document.getElementById('standingsBody');
+    const scorersBody = document.getElementById('scorersBody');
+    const assistsBody = document.getElementById('assistsBody');
+
+    async function sb(path) {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+        }
+      });
+      return res.json();
+    }
+
+    const ZONES = {
+      PL:  [{from:1,to:4,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:18,to:20,color:'#e11d48',label:'ตกชั้น'}],
+      PD:  [{from:1,to:4,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:6,to:6,color:'#22c55e',label:'คอนเฟอเรนซ์ลีก'},{from:18,to:20,color:'#e11d48',label:'ตกชั้น'}],
+      SA:  [{from:1,to:4,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:6,to:6,color:'#22c55e',label:'คอนเฟอเรนซ์ลีก'},{from:18,to:20,color:'#e11d48',label:'ตกชั้น'}],
+      BL1: [{from:1,to:4,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:6,to:6,color:'#22c55e',label:'คอนเฟอเรนซ์ลีก'},{from:16,to:16,color:'#9ca3af',label:'เพลย์ออฟตกชั้น'},{from:17,to:18,color:'#e11d48',label:'ตกชั้น'}],
+      FL1: [{from:1,to:3,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:4,to:4,color:'#7c3aed',label:'รอบคัดเลือกแชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:6,to:6,color:'#22c55e',label:'คอนเฟอเรนซ์ลีก'},{from:16,to:18,color:'#e11d48',label:'ตกชั้น'}],
+      CL:  [{from:1,to:8,color:'#3b82f6',label:'ผ่านตรงรอบ 16 ทีม'},{from:9,to:24,color:'#f97316',label:'เพลย์ออฟ'},{from:25,to:36,color:'#e11d48',label:'ตกรอบ'}],
+    };
+
+    function getZone(comp, position) {
+      const zones = ZONES[comp] || [];
+      return zones.find(z => position >= z.from && position <= z.to);
+    }
+
+    let weekOffset = 0;
+
+    function getWeekRange(offset) {
+      const now = new Date();
+      const day = now.getDay(); // 0=Sun..6=Sat
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      const monday = new Date(now);
+      monday.setHours(0,0,0,0);
+      monday.setDate(monday.getDate() + diffToMonday + offset * 7);
+      const sunday = new Date(monday);
+      sunday.setDate(sunday.getDate() + 6);
+      sunday.setHours(23,59,59,999);
+      return { start: monday, end: sunday };
+    }
+
+    function updateWeekLabel() {
+      const { start, end } = getWeekRange(weekOffset);
+      const label = document.getElementById('weekLabel');
+      if (weekOffset === 0) {
+        label.textContent = 'สัปดาห์นี้';
+      } else {
+        const fmt = (d) => d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' });
+        label.textContent = `${fmt(start)} - ${fmt(end)}`;
+      }
+    }
+
+    function startOfWeekFor(date) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      const day = d.getDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diffToMonday);
+      return d;
+    }
+
+    function getCompDateBounds() {
+      const compMatches = currentComp === 'ALL' ? allMatches : allMatches.filter(m => m.competition_code === currentComp);
+      if (!compMatches.length) return null;
+      const dates = compMatches.map(m => new Date(m.utc_date).getTime());
+      return { earliest: new Date(Math.min(...dates)), latest: new Date(Math.max(...dates)) };
+    }
+
+    function updateWeekNavButtons() {
+      const bounds = getCompDateBounds();
+      const prevBtn = document.getElementById('weekPrev');
+      const nextBtn = document.getElementById('weekNext');
+      const { start, end } = getWeekRange(weekOffset);
+
+      if (!bounds) {
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        return;
+      }
+
+      const earliestWeekStart = startOfWeekFor(bounds.earliest);
+      const latestWeekStart = startOfWeekFor(bounds.latest);
+      prevBtn.disabled = start <= earliestWeekStart;
+      nextBtn.disabled = start >= latestWeekStart;
+    }
+
+    function fmtDateTime(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' }) + ' ' +
+             d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function fmtDateHeader(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString('th-TH', { weekday: 'long', day: '2-digit', month: 'long' });
+    }
+
+    function fmtTimeOnly(iso) {
+      const d = new Date(iso);
+      return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function dateKey(iso) {
+      const d = new Date(iso);
+      return d.toISOString().slice(0, 10);
+    }
+
+    function renderFixtures() {
+      updateWeekLabel();
+      updateWeekNavButtons();
+      const { start, end } = getWeekRange(weekOffset);
+
+      let filtered = currentComp === 'ALL' ? allMatches : allMatches.filter(m => m.competition_code === currentComp);
+      filtered = filtered.filter(m => {
+        const d = new Date(m.utc_date);
+        return d >= start && d <= end;
+      });
+
+      if (!filtered.length) {
+        fixturesList.innerHTML = '<div class="empty-state">ไม่มีข้อมูลแมตช์ในสัปดาห์นี้</div>';
+        return;
+      }
+
+      let html = '';
+      let lastDateKey = null;
+
+      filtered.forEach(m => {
+        const key = dateKey(m.utc_date);
+        if (key !== lastDateKey) {
+          html += `<div class="fixture-date-header">${fmtDateHeader(m.utc_date)}</div>`;
+          lastDateKey = key;
+        }
+
+        const isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED';
+        const isFinished = m.status === 'FINISHED';
+        const rowClass = isLive ? 'is-live' : (isFinished ? 'is-finished' : '');
+        const timeLabel = isLive ? ('🔴 ' + (m.minute ? m.minute + "'" : 'สด')) : (isFinished ? 'จบแล้ว' : fmtTimeOnly(m.utc_date));
+        const score = (isLive || isFinished) ? `${m.home_score ?? '-'} - ${m.away_score ?? '-'}` : 'VS';
+        const toggleBtn = `<button class="fixture-toggle-btn" data-match-id="${m.id}" data-comp="${m.competition_code}" data-home="${m.home_team}" data-away="${m.away_team}" data-date="${m.utc_date}">ดูข้อมูล</button>`;
+
+        html += `<div class="fixture-row ${rowClass}">
+          <div class="fixture-time">${timeLabel}</div>
+          <div class="fixture-teams">
+            <div class="fixture-team home"><img src="${m.home_crest || ''}" onerror="this.style.visibility='hidden'"><span>${m.home_team}</span></div>
+            <div class="fixture-score">${score}</div>
+            <div class="fixture-team away"><img src="${m.away_crest || ''}" onerror="this.style.visibility='hidden'"><span>${m.away_team}</span></div>
+          </div>
+          <div class="fixture-comp">${m.competition_name || ''}</div>
+          ${toggleBtn}
+        </div>`;
+
+        html += `<div class="fixture-details" id="details-${m.id}" data-home="${m.home_team}" data-away="${m.away_team}"></div>`;
+      });
+
+      fixturesList.innerHTML = html;
+      restoreOpenDetails();
+    }
+
+    const eventsCache = {};
+
+    async function loadMatchEvents(matchId, comp, home, away, date) {
+      if (eventsCache[matchId]) return eventsCache[matchId];
+      const params = new URLSearchParams({ match_id: matchId, comp, home, away, date });
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/football-match-events?${params.toString()}`, {
+        headers: { 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+      });
+      const data = await res.json();
+      eventsCache[matchId] = data.events || [];
+      return eventsCache[matchId];
+    }
+
+    function renderEventEntry(ev) {
+      const typeLabel = ev.type === 'OWN' ? ' (เข้าประตูตัวเอง)' : (ev.type === 'PENALTY' ? ' (จุดโทษ)' : '');
+      const minuteLabel = ev.minute ? (typeof ev.minute === 'number' ? ev.minute + "'" : ev.minute) : '';
+      const assistLine = ev.assist ? `<div class="evt-assist-name">${ev.assist}</div>` : '';
+      return `<div class="fixture-event-entry">
+        <span class="evt-minute">${minuteLabel}</span>
+        <span class="evt-names">
+          <span class="evt-scorer">⚽ ${ev.scorer || 'ไม่ทราบชื่อ'}${typeLabel}</span>
+          ${assistLine}
+        </span>
+      </div>`;
+    }
+
+    function renderEventsColumns(events, homeTeam, awayTeam) {
+      const homeEvents = events.filter(ev => teamNameMatches(ev.team, homeTeam));
+      const awayEvents = events.filter(ev => teamNameMatches(ev.team, awayTeam));
+
+      const homeHtml = homeEvents.length
+        ? homeEvents.map(renderEventEntry).join('')
+        : '<div class="fixture-details-empty">ไม่มีข้อมูลผู้ยิงประตู</div>';
+      const awayHtml = awayEvents.length
+        ? awayEvents.map(renderEventEntry).join('')
+        : '<div class="fixture-details-empty">ไม่มีข้อมูลผู้ยิงประตู</div>';
+
+      return `<div class="fixture-details-col home">${homeHtml}</div><div class="fixture-details-col away">${awayHtml}</div>`;
+    }
+
+    function teamNameMatches(a, b) {
+      if (!a || !b) return false;
+      const na = a.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const nb = b.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return na.includes(nb) || nb.includes(na);
+    }
+
+    // เก็บรายการแมตช์ที่เปิดกล่องรายละเอียดค้างไว้ ไม่ให้ auto-close ตอน re-render ทุก 30 วิ
+    const openMatchIds = new Set();
+
+    async function openMatchDetails(matchId, comp, home, away, date, detailsEl, btn) {
+      detailsEl.classList.add('is-open');
+      btn.classList.add('is-open');
+      openMatchIds.add(matchId);
+
+      if (!detailsEl.dataset.loaded) {
+        detailsEl.innerHTML = '<div class="fixture-details-empty">กำลังโหลด...</div>';
+        try {
+          const events = await loadMatchEvents(matchId, comp, home, away, date);
+          detailsEl.innerHTML = renderEventsColumns(events, home, away);
+          detailsEl.dataset.loaded = '1';
+        } catch (err) {
+          detailsEl.innerHTML = '<div class="fixture-details-empty">โหลดข้อมูลไม่สำเร็จ ลองใหม่อีกครั้ง</div>';
+        }
+      }
+    }
+
+    function restoreOpenDetails() {
+      openMatchIds.forEach(matchId => {
+        const detailsEl = document.getElementById('details-' + matchId);
+        const btn = fixturesList.querySelector(`.fixture-toggle-btn[data-match-id="${matchId}"]`);
+        if (!detailsEl || !btn) return;
+        detailsEl.classList.add('is-open');
+        btn.classList.add('is-open');
+        if (eventsCache[matchId]) {
+          detailsEl.innerHTML = renderEventsColumns(eventsCache[matchId], detailsEl.dataset.home, detailsEl.dataset.away);
+          detailsEl.dataset.loaded = '1';
+        } else {
+          openMatchDetails(matchId, btn.dataset.comp, btn.dataset.home, btn.dataset.away, btn.dataset.date, detailsEl, btn);
+        }
+      });
+    }
+
+    fixturesList.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.fixture-toggle-btn');
+      if (!btn) return;
+      const matchId = btn.dataset.matchId;
+      const detailsEl = document.getElementById('details-' + matchId);
+      const isOpen = detailsEl.classList.contains('is-open');
+
+      if (isOpen) {
+        detailsEl.classList.remove('is-open');
+        btn.classList.remove('is-open');
+        openMatchIds.delete(matchId);
+        return;
+      }
+
+      await openMatchDetails(matchId, btn.dataset.comp, btn.dataset.home, btn.dataset.away, btn.dataset.date, detailsEl, btn);
+    });
+
+    function renderStandings() {
+      const comp = currentComp === 'ALL' ? 'PL' : currentComp;
+      const rows = allStandings[comp] || [];
+      const legendEl = document.getElementById('standingsLegend');
+
+      if (!rows.length) {
+        standingsBody.innerHTML = '<tr><td colspan="11" class="empty-state">ไม่มีข้อมูลตารางคะแนนลีกนี้</td></tr>';
+        legendEl.innerHTML = '';
+        return;
+      }
+
+      standingsBody.innerHTML = rows.map(r => {
+        const zone = getZone(comp, r.position);
+        const barColor = zone ? zone.color : 'transparent';
+        return `
+        <tr>
+          <td class="zone-bar" style="background:${barColor}"></td>
+          <td>${r.position}</td>
+          <td><div class="standings-team"><img src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'"><span>${r.team_name}</span></div></td>
+          <td class="center">${r.played}</td>
+          <td class="center">${r.won}</td>
+          <td class="center">${r.draw}</td>
+          <td class="center">${r.lost}</td>
+          <td class="center">${r.goals_for}</td>
+          <td class="center">${r.goals_against}</td>
+          <td class="center">${r.goal_diff > 0 ? '+' : ''}${r.goal_diff}</td>
+          <td class="center"><strong>${r.points}</strong></td>
+        </tr>`;
+      }).join('');
+
+      const zones = ZONES[comp] || [];
+      legendEl.innerHTML = zones.map(z => `
+        <div class="standings-legend-item">
+          <span class="standings-legend-dot" style="background:${z.color}"></span>
+          <span>${z.label}</span>
+        </div>`).join('');
+    }
+
+    function initials(name) {
+      if (!name) return '?';
+      const parts = name.trim().split(/\s+/);
+      const first = parts[0]?.[0] || '';
+      const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+      return (first + last).toUpperCase();
+    }
+
+    function scorerRow(r, statVal) {
+      const photoHtml = r.photo_url
+        ? `<img class="scorer-photo" src="${r.photo_url}" onerror="this.outerHTML='<div class=&quot;scorer-photo-fallback&quot;>${initials(r.player_name)}</div>'">`
+        : `<div class="scorer-photo-fallback">${initials(r.player_name)}</div>`;
+      return `
+        <tr>
+          <td class="scorer-rank">${r.rank}</td>
+          <td>
+            <div class="scorer-player">
+              ${photoHtml}
+              <span>
+                <div class="scorer-name">${r.player_name || 'ไม่ทราบชื่อ'}</div>
+                <div class="scorer-team-name"><img class="scorer-team-crest" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'"> ${r.team_name || ''}</div>
+              </span>
+            </div>
+          </td>
+          <td class="center"><strong>${statVal}</strong></td>
+          ${r.played_matches !== undefined ? `<td class="center">${r.played_matches ?? '-'}</td>` : ''}
+        </tr>`;
+    }
+
+    function renderScorers() {
+      const comp = currentComp === 'ALL' ? 'PL' : currentComp;
+      const scorerRows = allScorers[comp] || [];
+      const assistRows = allAssists[comp] || [];
+
+      scorersBody.innerHTML = scorerRows.length
+        ? scorerRows.map(r => scorerRow(r, r.goals ?? 0)).join('')
+        : '<tr><td colspan="4" class="empty-state">ยังไม่มีข้อมูลดาวซัลโวลีกนี้ (อาจยังไม่เริ่มฤดูกาล)</td></tr>';
+
+      assistsBody.innerHTML = assistRows.length
+        ? assistRows.map(r => scorerRow(r, r.assists ?? 0)).join('')
+        : '<tr><td colspan="3" class="empty-state">ยังไม่มีข้อมูลแอสซิสต์ลีกนี้ (อาจยังไม่มีแมตช์จบ)</td></tr>';
+    }
+
+    async function loadData() {
+      // ไม่ต้องสั่ง sync จากหน้าเว็บอีกต่อไป — cron job อัปเดต matches_archive/standings_archive/top_scorers_archive ให้อัตโนมัติทุก 15 นาทีแล้ว
+      // หน้านี้แค่อ่านข้อมูลจากตารางตรง ๆ (ไม่นับโควต้า Edge Function)
+
+      const now = new Date();
+      const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - 200);
+      const rangeEnd = new Date(now); rangeEnd.setDate(rangeEnd.getDate() + 30);
+      const matches = await sb(
+        `matches_archive?select=*&utc_date=gte.${rangeStart.toISOString()}&utc_date=lte.${rangeEnd.toISOString()}&order=utc_date.asc&limit=3000`
+      );
+      if (Array.isArray(matches)) allMatches = matches;
+
+      const standings = await sb('standings_archive?select=*&order=competition_code.asc,position.asc');
+      if (Array.isArray(standings)) {
+        allStandings = {};
+        standings.forEach(r => {
+          if (!allStandings[r.competition_code]) allStandings[r.competition_code] = [];
+          allStandings[r.competition_code].push(r);
+        });
+      }
+
+      const scorers = await sb('top_scorers_archive?select=*&order=competition_code.asc,rank.asc');
+      if (Array.isArray(scorers)) {
+        allScorers = {};
+        scorers.forEach(r => {
+          if (!allScorers[r.competition_code]) allScorers[r.competition_code] = [];
+          allScorers[r.competition_code].push(r);
+        });
+      }
+
+      const assists = await sb('top_assists_archive?select=*&order=competition_code.asc,rank.asc');
+      if (Array.isArray(assists)) {
+        allAssists = {};
+        assists.forEach(r => {
+          if (!allAssists[r.competition_code]) allAssists[r.competition_code] = [];
+          allAssists[r.competition_code].push(r);
+        });
+      }
+
+      if (currentPage === 'fixtures') renderFixtures();
+      else if (currentPage === 'standings') renderStandings();
+      else renderScorers();
+    }
+
+    document.querySelector('.page-tabs').addEventListener('click', (e) => {
+      if (e.target.tagName !== 'BUTTON') return;
+      document.querySelectorAll('.page-tabs button').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      currentPage = e.target.dataset.page;
+      fixturesView.style.display = currentPage === 'fixtures' ? 'block' : 'none';
+      standingsView.style.display = currentPage === 'standings' ? 'block' : 'none';
+      scorersView.style.display = currentPage === 'scorers' ? 'block' : 'none';
+
+      const allBtn = document.getElementById('allLeagueBtn');
+      if (currentPage === 'standings' || currentPage === 'scorers') {
+        allBtn.style.display = 'none';
+        if (currentComp === 'ALL') {
+          currentComp = 'PL';
+          leagueTabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          leagueTabs.querySelector('[data-comp="PL"]').classList.add('active');
+        }
+      } else {
+        allBtn.style.display = '';
+      }
+
+      if (currentPage === 'fixtures') renderFixtures();
+      else if (currentPage === 'standings') renderStandings();
+      else renderScorers();
+    });
+
+    leagueTabs.addEventListener('click', (e) => {
+      if (e.target.tagName !== 'BUTTON') return;
+      leagueTabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      currentComp = e.target.dataset.comp;
+      weekOffset = 0;
+      if (currentPage === 'fixtures') renderFixtures();
+      else if (currentPage === 'standings') renderStandings();
+      else renderScorers();
+    });
+
+    document.getElementById('weekPrev').addEventListener('click', () => {
+      if (document.getElementById('weekPrev').disabled) return;
+      weekOffset--;
+      renderFixtures();
+    });
+    document.getElementById('weekNext').addEventListener('click', () => {
+      if (document.getElementById('weekNext').disabled) return;
+      weekOffset++;
+      renderFixtures();
+    });
+
+    loadData();
+    setInterval(loadData, 30000);
+  </script>
+
+</body>
+</html>
