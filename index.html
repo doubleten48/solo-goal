@@ -591,6 +591,66 @@
     border-radius: 3px;
     white-space: nowrap;
   }
+  .news-tag-yellow { background: #d4a017; color: #1a1a1a; }
+  .news-tag-breaking { display: inline-flex; align-items: center; gap: 5px; }
+  .news-blink-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #fff;
+    animation: newsBlink 1s ease-in-out infinite;
+  }
+  @keyframes newsBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  /* ===== ตารางข่าวล่าสุด (อยู่นอก .news-grid ไม่กระทบความสูงคอลัมน์ขวา) ===== */
+  .news-recent {
+    width: 735px; max-width: 100%;
+    margin-top: 16px;
+    background: #1E1E1E;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .news-recent-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .news-recent-header h3 { font-size: 14px; font-weight: 600; color: #fff; }
+  .news-recent-header a {
+    font-size: 12px; color: #9a9a9a; text-decoration: none;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .news-recent-header a:hover { color: #fff; }
+
+  .news-recent-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px;
+    height: 44px;
+    text-decoration: none; color: inherit;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .news-recent-row:last-child { border-bottom: none; }
+  .news-recent-row:hover { background: rgba(255,255,255,0.03); }
+
+  .news-recent-row .news-tag { flex-shrink: 0; min-width: 78px; text-align: center; }
+  .news-recent-row .news-recent-headline {
+    flex: 1; min-width: 0;
+    font-size: 13px; color: #e8e8e8;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .news-recent-row .subtag { font-weight: 700; color: #e74c3c; }
+
+  .news-recent-stats {
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    font-size: 11px; color: #9a9a9a;
+  }
+  .news-recent-stats span { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+  .news-recent-date { font-size: 11px; color: #777; flex-shrink: 0; white-space: nowrap; }
+  .news-recent-poster {
+    display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+    font-size: 11px; color: #c9c9c9;
+  }
 
   .news-meta-stats {
     display: flex; align-items: center; gap: 10px;
@@ -807,7 +867,7 @@
                 </div>
                 <div class="news-text">
                   <div class="news-top-row">
-                    <span class="news-tag">HEAD</span>
+                    <span class="news-tag">TALK SPORT</span>
                     <div class="news-meta-stats">
                       <span>💬 —</span>
                       <span>👁 —</span>
@@ -824,7 +884,7 @@
                 </div>
                 <div class="news-text">
                   <div class="news-top-row">
-                    <span class="news-tag">HEAD</span>
+                    <span class="news-tag news-tag-yellow">OFFICIAL</span>
                     <div class="news-meta-stats">
                       <span>💬 —</span>
                       <span>👁 —</span>
@@ -834,7 +894,80 @@
                   <div class="news-headline">โซดี้กด สวมเสื้อทีมชาติไทยครั้งแรก เตรียมลุยศึกคัดบอลโลกนัดสำคัญ</div>
                 </div>
               </a>
+
+              <a class="news-card" href="#">
+                <div class="news-thumb">
+                  <span class="news-thumb-icon">🔥</span>
+                </div>
+                <div class="news-text">
+                  <div class="news-top-row">
+                    <span class="news-tag news-tag-breaking"><span class="news-blink-dot"></span>BREAKING NEWS</span>
+                    <div class="news-meta-stats">
+                      <span>💬 —</span>
+                      <span>👁 —</span>
+                      <span>น้อนบู้ <span class="news-avatar">🧑</span></span>
+                    </div>
+                  </div>
+                  <div class="news-headline">ด่วน!! ประธานสโมสรยืนยันเปลี่ยนตัวกุนซือกลางฤดูกาล หลังผลงานไม่เป็นไปตามเป้า</div>
+                </div>
+              </a>
             </div>
+          </div>
+
+          <!-- ตารางข่าวล่าสุด (ไม่นับรวมข่าวที่ขึ้นช่อง 1-4) -->
+          <div class="news-recent">
+            <div class="news-recent-header">
+              <h3>ข่าวล่าสุด</h3>
+              <a href="board.html?board=news">ดูข่าวทั้งหมด →</a>
+            </div>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-tag">TALK SPORT</span>
+              <span class="news-recent-headline">แมนยูฯ น้องใหม่ ออลลี่ 8-0 คาบาน มัดเปิดลัด</span>
+              <div class="news-recent-stats"><span>👁 2,340</span><span>💬 128</span></div>
+              <span class="news-recent-date">20.8.26 20:20</span>
+              <span class="news-recent-poster">แอดมินแดง <span class="news-avatar">🧑</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-tag">TRANSFER NEWS</span>
+              <span class="news-recent-headline"><span class="subtag">Here We Go!</span> ลิเวอร์พูลคว้าตัวปีกดาวรุ่งจากทีมเดสลิก้า</span>
+              <div class="news-recent-stats"><span>👁 890</span><span>💬 34</span></div>
+              <span class="news-recent-date">20.8.26 20:20</span>
+              <span class="news-recent-poster">แอดมินขาว <span class="news-avatar">🧑</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-tag news-tag-yellow">OFFICIAL</span>
+              <span class="news-recent-headline">ลือ! แคนเบียร่า มาดริด แตก นัดเตะฟาดกันเอง</span>
+              <div class="news-recent-stats"><span>👁 3,102</span><span>💬 210</span></div>
+              <span class="news-recent-date">20.8.26 20:20</span>
+              <span class="news-recent-poster">แอดมินฟ้า <span class="news-avatar">🧑</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-tag"><span class="news-thumb-icon" style="position:static;font-size:14px;opacity:1;">⚽</span></span>
+              <span class="news-recent-headline">OFFICIAL!! แมนฯ ยูไนเต็ด เตรียมเปิดตัวกุนซือใหม่สัปดาห์หน้า</span>
+              <div class="news-recent-stats"><span>👁 654</span><span>💬 19</span></div>
+              <span class="news-recent-date">20.8.26 20:20</span>
+              <span class="news-recent-poster">แอดมินดำ <span class="news-avatar">🧑</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-tag news-tag-breaking"><span class="news-blink-dot"></span>BREAKING</span>
+              <span class="news-recent-headline">ด่วน! นักเตะทีมชาติไทยบาดเจ็บหนัก หลุดโปรแกรมทัวร์นาเมนต์ใหญ่</span>
+              <div class="news-recent-stats"><span>👁 4,520</span><span>💬 301</span></div>
+              <span class="news-recent-date">20.8.26 20:20</span>
+              <span class="news-recent-poster">น้อนบู้ <span class="news-avatar">🧑</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-tag">TRANSFER NEWS</span>
+              <span class="news-recent-headline"><span class="subtag">Done Deal</span> เชลซีปิดดีลกองกลางฝรั่งเศสสำเร็จ 3 ปี</span>
+              <div class="news-recent-stats"><span>👁 1,208</span><span>💬 76</span></div>
+              <span class="news-recent-date">20.8.26 20:20</span>
+              <span class="news-recent-poster">แอดมินแดง <span class="news-avatar">🧑</span></span>
+            </a>
           </div>
         </div>
         <!-- ถัดจากนี้ลงไป = สิ่งที่ต้องทำในโปรเซสถัดไป -->
