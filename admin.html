@@ -41,8 +41,10 @@
   .staff-row {
     display: flex; align-items: center; justify-content: space-between;
     padding: 12px 0; border-bottom: 1px solid var(--line);
+    gap: 12px; flex-wrap: wrap;
   }
   .staff-row:last-child { border-bottom: none; }
+  .staff-actions { display: flex; gap: 8px; flex-shrink: 0; }
   .staff-info { display: flex; flex-direction: column; gap: 2px; }
   .staff-username { font-size: 15px; font-weight: 600; color: #fff; }
   .staff-email { font-size: 12px; color: var(--muted); }
@@ -59,6 +61,8 @@
   }
   .btn-red { background: var(--red); color: #fff; }
   .btn-red:hover { background: var(--red-dark); }
+  .btn-outline { background: transparent; border: 1px solid var(--line); color: var(--sub); }
+  .btn-outline:hover { border-color: var(--red); color: #fff; }
 
   .section-title { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
 
@@ -118,6 +122,19 @@
       <button class="btn btn-red" onclick="submitReset()">ยืนยัน</button>
     </div>
     <div class="modal-msg" id="reset-msg"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="rename-modal">
+  <div class="modal-box">
+    <h3>เปลี่ยนชื่อผู้ใช้</h3>
+    <div class="modal-sub" id="rename-target-label"></div>
+    <input type="text" id="new-username-input" placeholder="ชื่อใหม่ (2-20 ตัวอักษร)"/>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeRenameModal()">ยกเลิก</button>
+      <button class="btn btn-red" onclick="submitRename()">ยืนยัน</button>
+    </div>
+    <div class="modal-msg" id="rename-msg"></div>
   </div>
 </div>
 
@@ -199,7 +216,10 @@
           <div class="staff-email">${escapeHtml(s.email || '')}</div>
           <span class="staff-role-tag ${s.role}">${s.role === 'webmaster' ? 'WEBMASTER' : 'ADMIN'}</span>
         </div>
-        <button class="btn btn-red" onclick="openResetModal('${s.user_id}', '${escapeHtml(s.username || s.email)}')">รีเซ็ตรหัสผ่าน</button>
+        <div class="staff-actions">
+          <button class="btn btn-outline" onclick="openRenameModal('${s.user_id}', '${escapeHtml(s.username || '')}')">เปลี่ยนชื่อ</button>
+          <button class="btn btn-red" onclick="openResetModal('${s.user_id}', '${escapeHtml(s.username || s.email)}')">รีเซ็ตรหัสผ่าน</button>
+        </div>
       </div>
     `).join('')
   }
@@ -259,6 +279,65 @@
       msgEl.textContent = `ตั้งรหัสผ่านใหม่สำเร็จสำหรับ ${currentTargetLabel}`
       msgEl.className = 'modal-msg success'
       setTimeout(closeResetModal, 1500)
+    } catch (e) {
+      msgEl.textContent = 'เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง'
+      msgEl.className = 'modal-msg error'
+    }
+  }
+
+  let currentRenameUserId = null
+
+  function openRenameModal(userId, currentUsername) {
+    currentRenameUserId = userId
+    document.getElementById('rename-target-label').textContent = `ชื่อปัจจุบัน: ${currentUsername}`
+    document.getElementById('new-username-input').value = ''
+    document.getElementById('rename-msg').textContent = ''
+    document.getElementById('rename-modal').classList.add('open')
+  }
+
+  function closeRenameModal() {
+    document.getElementById('rename-modal').classList.remove('open')
+  }
+
+  async function submitRename() {
+    const newUsername = document.getElementById('new-username-input').value.trim()
+    const msgEl = document.getElementById('rename-msg')
+
+    if (newUsername.length < 2 || newUsername.length > 20) {
+      msgEl.textContent = 'ชื่อต้องยาว 2-20 ตัวอักษร'
+      msgEl.className = 'modal-msg error'
+      return
+    }
+
+    msgEl.textContent = 'กำลังดำเนินการ...'
+    msgEl.className = 'modal-msg'
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-update-username`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentSession.access_token}`,
+        },
+        body: JSON.stringify({
+          target_user_id: currentRenameUserId,
+          new_username: newUsername,
+        }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        msgEl.textContent = data.error || 'เกิดข้อผิดพลาด'
+        msgEl.className = 'modal-msg error'
+        return
+      }
+
+      msgEl.textContent = 'เปลี่ยนชื่อสำเร็จ'
+      msgEl.className = 'modal-msg success'
+      setTimeout(() => {
+        closeRenameModal()
+        loadStaffList()
+      }, 1000)
     } catch (e) {
       msgEl.textContent = 'เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง'
       msgEl.className = 'modal-msg error'
