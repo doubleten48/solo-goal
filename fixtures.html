@@ -842,6 +842,7 @@
       document.querySelectorAll('.page-tabs button').forEach(b => b.classList.remove('active'));
       e.target.classList.add('active');
       currentPage = e.target.dataset.page;
+      localStorage.setItem('fixtures-page', currentPage);
       fixturesView.style.display = currentPage === 'fixtures' ? 'block' : 'none';
       standingsView.style.display = currentPage === 'standings' ? 'block' : 'none';
       scorersView.style.display = currentPage === 'scorers' ? 'block' : 'none';
@@ -851,6 +852,7 @@
         allBtn.style.display = 'none';
         if (currentComp === 'ALL') {
           currentComp = 'PL';
+          localStorage.setItem('fixtures-comp', currentComp);
           leagueTabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
           leagueTabs.querySelector('[data-comp="PL"]').classList.add('active');
         }
@@ -868,6 +870,7 @@
       leagueTabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
       e.target.classList.add('active');
       currentComp = e.target.dataset.comp;
+      localStorage.setItem('fixtures-comp', currentComp);
       weekOffset = 0;
       if (currentPage === 'fixtures') renderFixtures();
       else if (currentPage === 'standings') renderStandings();
@@ -885,6 +888,41 @@
       renderFixtures();
     });
 
+    // จำแท็บที่เปิดค้างไว้ผ่าน localStorage กันรีเฟรชแล้วเด้งกลับหน้าแรก
+    function restoreTabState() {
+      const savedPage = localStorage.getItem('fixtures-page');
+      const savedComp = localStorage.getItem('fixtures-comp');
+
+      if (savedPage && ['fixtures', 'standings', 'scorers'].includes(savedPage)) {
+        currentPage = savedPage;
+      }
+      if (savedComp) {
+        currentComp = savedComp;
+      }
+
+      // sync page-tabs UI
+      document.querySelectorAll('.page-tabs button').forEach(b => {
+        b.classList.toggle('active', b.dataset.page === currentPage);
+      });
+      fixturesView.style.display = currentPage === 'fixtures' ? 'block' : 'none';
+      standingsView.style.display = currentPage === 'standings' ? 'block' : 'none';
+      scorersView.style.display = currentPage === 'scorers' ? 'block' : 'none';
+
+      const allBtn = document.getElementById('allLeagueBtn');
+      if (currentPage === 'standings' || currentPage === 'scorers') {
+        allBtn.style.display = 'none';
+        if (currentComp === 'ALL') currentComp = 'PL';
+      } else {
+        allBtn.style.display = '';
+      }
+
+      // sync league-tabs UI
+      leagueTabs.querySelectorAll('button').forEach(b => {
+        b.classList.toggle('active', b.dataset.comp === currentComp);
+      });
+    }
+
+    restoreTabState();
     loadData();
     setInterval(loadData, 30000);
   </script>
