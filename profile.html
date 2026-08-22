@@ -140,7 +140,11 @@
 <div class="center-state" id="error-state" style="display:none;">
   <div style="font-size:40px;">😕</div>
   <div style="font-size:16px;color:#ddd;">ไม่พบโปรไฟล์นี้</div>
-  <a href="/" class="btn btn-outline" style="margin-top:8px;">กลับหน้าหลัก</a>
+  <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; justify-content:center;">
+    <a href="/" class="btn btn-outline">กลับหน้าหลัก</a>
+    <a href="/admin.html" class="btn btn-outline">Admin Panel</a>
+    <button class="btn btn-outline" onclick="handleLogout()">ออกจากระบบ</button>
+  </div>
 </div>
 
 <div id="profile-wrap" style="display:none;">
@@ -256,6 +260,22 @@
     let profileId = targetId
     if (!profileId) {
       if (!currentUser) { window.location.href = '/auth.html'; return }
+
+      // เช็ค role ก่อน — ถ้าเป็น staff (admin/webmaster) ให้เด้งไป admin panel แทน
+      // เพราะโปรไฟล์แบบเกม (ดาว/เหรียญ/ระดับ) ไม่เหมาะกับบัญชี staff
+      try {
+        const roleRes = await fetch(`https://dnrcardbuuwnvuridubb.supabase.co/functions/v1/get-my-role`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+        })
+        const roleData = await roleRes.json()
+        if (roleRes.ok && (roleData.role === 'admin' || roleData.role === 'webmaster')) {
+          window.location.href = '/admin.html'
+          return
+        }
+      } catch (e) {
+        console.warn('role check failed, continue as member', e)
+      }
+
       profileId = currentUser.id
     }
 
@@ -264,7 +284,9 @@
   }
 
   async function loadProfile(userId) {
-    const { data, error } = await sb.from('profiles').select('*').eq('id', userId).single()
+    const { data, error } = await sb.from('profiles')
+      .select('id, user_id, username, favorite_team, class, status, star_avg, star_count, reply_count, handsome_count, loser_count, coins, yellow_cards, red_cards, created_at, avatar_url')
+      .eq('user_id', userId).single()
     document.getElementById('loading-state').style.display = 'none'
     if (error || !data) { document.getElementById('error-state').style.display = 'flex'; return }
     profileData = data
@@ -321,7 +343,7 @@
   }
 
   async function loadMemberNo(userId, createdAt) {
-    const { count } = await sb.from('profiles').select('*', {count:'exact',head:true}).lte('created_at', createdAt)
+    const { count } = await sb.from('profiles').select('id', {count:'exact',head:true}).lte('created_at', createdAt)
     document.getElementById('meta-no').textContent = '🔢 No.' + String(count || 1).padStart(3, '0')
   }
 
@@ -360,7 +382,7 @@
     if (username.length < 2) { errEl.classList.add('show'); return }
     errEl.classList.remove('show')
 
-    const { error } = await sb.from('profiles').update({ username, favorite_team: team, avatar_url: selectedAvatar }).eq('id', currentUser.id)
+    const { error } = await sb.from('profiles').update({ username, favorite_team: team, avatar_url: selectedAvatar }).eq('user_id', currentUser.id)
 
     if (error) {
       saveAlert.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่'

@@ -385,8 +385,19 @@
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errEl.textContent = ''; errEl.classList.remove('show'); return
     }
-    const { data } = await sb.from('profiles').select('id').eq('email', email).maybeSingle()
-    if (data) {
+    let exists = false
+    try {
+      const res = await fetch('https://dnrcardbuuwnvuridubb.supabase.co/functions/v1/check-email-exists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const result = await res.json()
+      exists = !!result.exists
+    } catch (e) {
+      console.warn('email check failed', e)
+    }
+    if (exists) {
       errEl.textContent = '❌ Email นี้มีบัญชีอยู่แล้ว'
       errEl.classList.add('show')
       document.getElementById('reg-email').style.borderColor = '#e74c3c'
