@@ -603,9 +603,35 @@
     50% { opacity: 0.2; }
   }
 
+  .news-recent-tag {
+    flex-shrink: 0;
+    width: 48px; height: 48px;
+    background: #872929;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 3px;
+  }
+  .news-recent-tag span {
+    color: #fff; font-size: 8.5px; font-weight: 700;
+    line-height: 1.2; word-break: break-word;
+  }
+  .news-recent-tag.tag-yellow { background: #d4a017; }
+  .news-recent-tag.tag-yellow span { color: #1a1a1a; }
+  .news-recent-tag.tag-breaking { position: relative; }
+  .news-recent-tag .news-blink-dot {
+    position: absolute; top: 4px; right: 4px;
+  }
+  .news-recent-tag .tag-icon { font-size: 20px; }
+
   /* ===== ตารางข่าวล่าสุด (อยู่นอก .news-grid ไม่กระทบความสูงคอลัมน์ขวา) ===== */
+  .news-left-col {
+    display: flex; flex-direction: column;
+    width: 735px; flex-shrink: 0; max-width: 100%;
+  }
+
   .news-recent {
-    width: 735px; max-width: 100%;
+    width: 100%;
     margin-top: 16px;
     background: #1E1E1E;
     border-radius: 12px;
@@ -624,31 +650,31 @@
   .news-recent-header a:hover { color: #fff; }
 
   .news-recent-row {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 16px;
-    height: 44px;
+    display: grid;
+    grid-template-columns: 48px 1fr 70px 60px 90px 130px;
+    align-items: center; gap: 12px;
+    padding: 8px 16px;
+    min-height: 56px;
     text-decoration: none; color: inherit;
     border-bottom: 1px solid rgba(255,255,255,0.05);
   }
   .news-recent-row:last-child { border-bottom: none; }
   .news-recent-row:hover { background: rgba(255,255,255,0.03); }
 
-  .news-recent-row .news-tag { flex-shrink: 0; min-width: 78px; text-align: center; }
-  .news-recent-row .news-recent-headline {
-    flex: 1; min-width: 0;
+  .news-recent-headline {
+    min-width: 0;
     font-size: 13px; color: #e8e8e8;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .news-recent-row .subtag { font-weight: 700; color: #e74c3c; }
 
-  .news-recent-stats {
-    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  .news-recent-views, .news-recent-comments {
     font-size: 11px; color: #9a9a9a;
+    display: flex; align-items: center; gap: 3px;
   }
-  .news-recent-stats span { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
-  .news-recent-date { font-size: 11px; color: #777; flex-shrink: 0; white-space: nowrap; }
+  .news-recent-date { font-size: 11px; color: #777; }
   .news-recent-poster {
-    display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+    display: flex; align-items: center; gap: 5px; justify-content: flex-end;
     font-size: 11px; color: #c9c9c9;
   }
 
@@ -841,6 +867,7 @@
           </div>
 
           <div class="news-grid">
+            <div class="news-left-col">
             <!-- ช่องที่ 1 = ข่าวใหญ่ -->
             <a class="news-card news-featured" href="#">
               <div class="news-thumb">
@@ -858,6 +885,70 @@
                 <div class="news-headline">แชมป์เก่าเปิดหัวโหด!! ไล่ถลุงโคเวนทรี น้องใหม่ไส้แตก 3-0</div>
               </div>
             </a>
+
+          <!-- ตารางข่าวล่าสุด (ไม่นับรวมข่าวที่ขึ้นช่อง 1-4) -->
+          <div class="news-recent">
+            <div class="news-recent-header">
+              <h3>ข่าวล่าสุด</h3>
+              <a href="board.html?board=news">ดูข่าวทั้งหมด →</a>
+            </div>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-recent-tag"><span>TALK<br>SPORT</span></span>
+              <span class="news-recent-headline">แมนยูฯ น้องใหม่ ออลลี่ 8-0 คาบาน มัดเปิดลัด</span>
+              <span class="news-recent-views">👁 2,340</span>
+              <span class="news-recent-comments">💬 128</span>
+              <span class="news-recent-date">20.8.26<br>20:20</span>
+              <span class="news-recent-poster">แอดมินแดง <span class="news-avatar">🧑</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-recent-tag"><span>TRANSFER<br>NEWS</span></span>
+              <span class="news-recent-headline"><span class="subtag">Here We Go!</span> ลิเวอร์พูลคว้าตัวปีกดาวรุ่งจากทีมเดสลิก้า</span>
+              <span class="news-recent-views">👁 890</span>
+              <span class="news-recent-comments">💬 34</span>
+              <span class="news-recent-date">20.8.26<br>20:20</span>
+              <span class="news-recent-poster">แอดมินขาว <span class="news-avatar">🧑</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-recent-tag tag-yellow"><span>OFFICIAL</span></span>
+              <span class="news-recent-headline">ลือ! แคนเบียร่า มาดริด แตก นักเตะฟาดกันเอง</span>
+              <span class="news-recent-views">👁 3,102</span>
+              <span class="news-recent-comments">💬 210</span>
+              <span class="news-recent-date">20.8.26<br>20:20</span>
+              <span class="news-recent-poster">แอดมินฟ้า <span class="news-avatar">🧑</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-recent-tag"><span><span class="tag-icon">⚽</span></span></span>
+              <span class="news-recent-headline">OFFICIAL!! แมนฯ ยูไนเต็ด เตรียมเปิดตัวกุนซือใหม่สัปดาห์หน้า</span>
+              <span class="news-recent-views">👁 654</span>
+              <span class="news-recent-comments">💬 19</span>
+              <span class="news-recent-date">20.8.26<br>20:20</span>
+              <span class="news-recent-poster">แอดมินดำ <span class="news-avatar">🧑</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-recent-tag tag-breaking"><span class="news-blink-dot"></span><span>BREAKING<br>NEWS</span></span>
+              <span class="news-recent-headline">ด่วน! นักเตะทีมชาติไทยบาดเจ็บหนัก หลุดโปรแกรมทัวร์นาเมนต์ใหญ่</span>
+              <span class="news-recent-views">👁 4,520</span>
+              <span class="news-recent-comments">💬 301</span>
+              <span class="news-recent-date">20.8.26<br>20:20</span>
+              <span class="news-recent-poster">น้อนบู้ <span class="news-avatar">🧑</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-recent-tag"><span>TRANSFER<br>NEWS</span></span>
+              <span class="news-recent-headline"><span class="subtag">Done Deal</span> เชลซีปิดดีลกองกลางฝรั่งเศสสำเร็จ 3 ปี</span>
+              <span class="news-recent-views">👁 1,208</span>
+              <span class="news-recent-comments">💬 76</span>
+              <span class="news-recent-date">20.8.26<br>20:20</span>
+              <span class="news-recent-poster">แอดมินแดง <span class="news-avatar">🧑</span></span>
+            </a>
+
+          </div>
+            </div><!-- /.news-left-col -->
 
             <!-- ช่องที่ 2-3 = ข่าวล่าสุด -->
             <div class="news-side">
@@ -912,62 +1003,6 @@
                 </div>
               </a>
             </div>
-          </div>
-
-          <!-- ตารางข่าวล่าสุด (ไม่นับรวมข่าวที่ขึ้นช่อง 1-4) -->
-          <div class="news-recent">
-            <div class="news-recent-header">
-              <h3>ข่าวล่าสุด</h3>
-              <a href="board.html?board=news">ดูข่าวทั้งหมด →</a>
-            </div>
-
-            <a class="news-recent-row" href="#">
-              <span class="news-tag">TALK SPORT</span>
-              <span class="news-recent-headline">แมนยูฯ น้องใหม่ ออลลี่ 8-0 คาบาน มัดเปิดลัด</span>
-              <div class="news-recent-stats"><span>👁 2,340</span><span>💬 128</span></div>
-              <span class="news-recent-date">20.8.26 20:20</span>
-              <span class="news-recent-poster">แอดมินแดง <span class="news-avatar">🧑</span></span>
-            </a>
-
-            <a class="news-recent-row" href="#">
-              <span class="news-tag">TRANSFER NEWS</span>
-              <span class="news-recent-headline"><span class="subtag">Here We Go!</span> ลิเวอร์พูลคว้าตัวปีกดาวรุ่งจากทีมเดสลิก้า</span>
-              <div class="news-recent-stats"><span>👁 890</span><span>💬 34</span></div>
-              <span class="news-recent-date">20.8.26 20:20</span>
-              <span class="news-recent-poster">แอดมินขาว <span class="news-avatar">🧑</span></span>
-            </a>
-
-            <a class="news-recent-row" href="#">
-              <span class="news-tag news-tag-yellow">OFFICIAL</span>
-              <span class="news-recent-headline">ลือ! แคนเบียร่า มาดริด แตก นัดเตะฟาดกันเอง</span>
-              <div class="news-recent-stats"><span>👁 3,102</span><span>💬 210</span></div>
-              <span class="news-recent-date">20.8.26 20:20</span>
-              <span class="news-recent-poster">แอดมินฟ้า <span class="news-avatar">🧑</span></span>
-            </a>
-
-            <a class="news-recent-row" href="#">
-              <span class="news-tag"><span class="news-thumb-icon" style="position:static;font-size:14px;opacity:1;">⚽</span></span>
-              <span class="news-recent-headline">OFFICIAL!! แมนฯ ยูไนเต็ด เตรียมเปิดตัวกุนซือใหม่สัปดาห์หน้า</span>
-              <div class="news-recent-stats"><span>👁 654</span><span>💬 19</span></div>
-              <span class="news-recent-date">20.8.26 20:20</span>
-              <span class="news-recent-poster">แอดมินดำ <span class="news-avatar">🧑</span></span>
-            </a>
-
-            <a class="news-recent-row" href="#">
-              <span class="news-tag news-tag-breaking"><span class="news-blink-dot"></span>BREAKING</span>
-              <span class="news-recent-headline">ด่วน! นักเตะทีมชาติไทยบาดเจ็บหนัก หลุดโปรแกรมทัวร์นาเมนต์ใหญ่</span>
-              <div class="news-recent-stats"><span>👁 4,520</span><span>💬 301</span></div>
-              <span class="news-recent-date">20.8.26 20:20</span>
-              <span class="news-recent-poster">น้อนบู้ <span class="news-avatar">🧑</span></span>
-            </a>
-
-            <a class="news-recent-row" href="#">
-              <span class="news-tag">TRANSFER NEWS</span>
-              <span class="news-recent-headline"><span class="subtag">Done Deal</span> เชลซีปิดดีลกองกลางฝรั่งเศสสำเร็จ 3 ปี</span>
-              <div class="news-recent-stats"><span>👁 1,208</span><span>💬 76</span></div>
-              <span class="news-recent-date">20.8.26 20:20</span>
-              <span class="news-recent-poster">แอดมินแดง <span class="news-avatar">🧑</span></span>
-            </a>
           </div>
         </div>
         <!-- ถัดจากนี้ลงไป = สิ่งที่ต้องทำในโปรเซสถัดไป -->
