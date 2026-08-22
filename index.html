@@ -616,11 +616,12 @@
     background: #1E1E1E;
     border-radius: 0 0 15px 15px;
     padding: 12px 18px;
-    display: flex; flex-direction: column; justify-content: space-between;
+    display: flex; flex-direction: column;
+    gap: 8px;
   }
   .news-featured .news-headline {
     font-family: 'Inter', 'Kanit', sans-serif;
-    font-size: 24px; font-weight: 700; line-height: 1.3; color: #fff;
+    font-size: 24px; font-weight: 500; line-height: 1.3; color: #fff;
     overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   }
 
@@ -643,16 +644,18 @@
   }
   .news-side .news-thumb-icon { position: absolute; top: 12px; left: 12px; font-size: 22px; opacity: 0.35; }
   .news-side .news-text {
-    width: 100%; height: 68px;
+    width: 100%; min-height: 84px;
     background: #1E1E1E;
     border-radius: 0 0 15px 15px;
-    padding: 8px 14px;
-    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 8px 14px 10px 14px;
+    display: flex; flex-direction: column;
+    gap: 6px;
   }
   .news-side .news-tag { font-size: 10px; padding: 2px 8px; }
   .news-side .news-meta-stats { font-size: 10px; gap: 6px; }
   .news-side .news-headline {
-    font-size: 13px; font-weight: 600; line-height: 1.3; color: #fff;
+    font-family: 'Inter', 'Kanit', sans-serif;
+    font-size: 13px; font-weight: 500; line-height: 1.35; color: #fff;
     overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   }
 </style>
@@ -802,7 +805,7 @@
                       <span>น้อนบู้ <span class="news-avatar">🧑</span></span>
                     </div>
                   </div>
-                  <div class="news-headline">เนื้อข่าวสั้น 1 บรรทัด</div>
+                  <div class="news-headline">ลิเวอร์พูลเปิดฉากเจรจา ทาบทามกองหน้าดาวรุ่งบราซิล เตรียมดันข้อเสนอมกราคมนี้</div>
                 </div>
               </a>
 
@@ -819,7 +822,7 @@
                       <span>น้อนบู้ <span class="news-avatar">🧑</span></span>
                     </div>
                   </div>
-                  <div class="news-headline">เนื้อข่าวสั้น 1 บรรทัด</div>
+                  <div class="news-headline">โซดี้กด สวมเสื้อทีมชาติไทยครั้งแรก เตรียมลุยศึกคัดบอลโลกนัดสำคัญ</div>
                 </div>
               </a>
             </div>
