@@ -635,16 +635,25 @@
   .news-side .news-avatar { width: 15px; height: 15px; font-size: 8px; }
 
   /* ===== ช่องที่ 2-3 (เล็ก) 360x206 + 360x68 ===== */
-  .news-side { display: flex; flex-direction: column; gap: 16px; flex: 1; min-width: 280px; }
+  /* ===== ช่องที่ 2-3 (เล็ก) — บังคับความสูงรวมให้เท่ากับคอลัมน์ซ้ายเป๊ะด้วย flex stretch ===== */
+  .news-side {
+    display: flex; flex-direction: column; gap: 16px;
+    flex: 1; min-width: 280px;
+  }
+  .news-side .news-card {
+    flex: 1 1 0;
+    display: flex; flex-direction: column;
+    min-height: 0;
+  }
   .news-side .news-thumb {
-    width: 100%; aspect-ratio: 360 / 206;
+    width: 100%; flex: 1 1 0; min-height: 0;
     border-radius: 15px 15px 0 0;
     background: linear-gradient(135deg, #444 0%, #1a1a1a 100%);
     position: relative;
   }
   .news-side .news-thumb-icon { position: absolute; top: 12px; left: 12px; font-size: 22px; opacity: 0.35; }
   .news-side .news-text {
-    width: 100%; min-height: 84px;
+    width: 100%; flex: 0 0 84px;
     background: #1E1E1E;
     border-radius: 0 0 15px 15px;
     padding: 8px 14px 10px 14px;
