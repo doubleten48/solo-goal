@@ -106,6 +106,7 @@
 
 <header>
   <a href="/" class="logo-wordmark">SoloGoal <span class="badge-role" id="role-badge" style="display:none;"></span></a>
+  <button class="btn btn-outline" id="logout-btn" style="display:none;" onclick="handleLogout()">ออกจากระบบ</button>
 </header>
 
 <div class="container" id="main-container">
@@ -192,6 +193,7 @@
     const badge = document.getElementById('role-badge')
     badge.textContent = 'WEBMASTER'
     badge.style.display = 'inline-block'
+    document.getElementById('logout-btn').style.display = 'inline-block'
 
     const others = staff.filter(s => s.user_id !== currentSession.user.id)
 
@@ -342,6 +344,11 @@
       msgEl.textContent = 'เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง'
       msgEl.className = 'modal-msg error'
     }
+  }
+
+  async function handleLogout() {
+    await sb.auth.signOut()
+    window.location.href = '/auth.html?tab=login'
   }
 
   init()
