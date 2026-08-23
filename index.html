@@ -231,20 +231,19 @@
 
   .header .icons {
     position: absolute;
-    top: 25px;
+    top: 50%;
     left: 25px;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 11px;
   }
 
   .header .icons img {
-    position: absolute;
-    top: 0;
     width: 27px;
     height: 27px;
     cursor: pointer;
   }
-
-  .header .icons img.bell { left: 0; }
-  .header .icons img.mail { left: 38px; }
 
   /* ===== Collapsed-only fix: logo vs bell/mail overlap ===== */
   .sidebar.collapsed ~ .content-area .header .icons {
@@ -258,7 +257,7 @@
 
   .header .auth-links {
     position: absolute;
-    right: 46px;
+    right: 62px; /* ← เพิ่มระยะห่างจากไอคอนพระอาทิตย์ตรงนี้ */
     top: 50%;
     transform: translateY(-50%);
     display: flex;
@@ -294,7 +293,8 @@
   .header .light-mode-btn {
     position: absolute;
     right: 14px;
-    top: 26px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 25px;
     height: 25px;
     cursor: pointer;
