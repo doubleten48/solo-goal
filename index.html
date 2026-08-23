@@ -675,30 +675,29 @@
   }
   .news-recent-row .subtag { font-weight: 700; color: #e74c3c; }
 
-  /* กลุ่มยอดวิว/คอมเมนต์/เวลาโพสต์/ผู้โพสต์ — แต่ละอย่างมีความกว้างคงที่ (width)
-     เพื่อให้ตัวเลข/ข้อความเรียงตรงกันทุกแถว ต่อให้เนื้อหายาวสั้นไม่เท่ากันก็ตาม */
+  /* ยอดวิว/คอมเมนต์/วันที่/อวตาร์/ชื่อผู้โพสต์ — ใช้ grid กำหนดความกว้างคอลัมน์ตายตัวทั้งหมด
+     (รวมอวตาร์แยกเป็นคอลัมน์ของตัวเองด้วย) เพื่อให้ทุกอย่างเรียงตรงกันเป๊ะทุกแถว ไม่มีที่ว่างเหลือ */
   .news-recent-stats {
-    display: flex; align-items: center; justify-content: flex-end;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: 48px 36px 44px 20px 58px;
+    align-items: center;
+    gap: 8px;
     flex-shrink: 0;
   }
 
   .news-recent-views, .news-recent-comments {
     font-size: 10px; color: #9a9a9a;
     display: flex; align-items: center; gap: 3px;
-    flex-shrink: 0;
   }
-  .news-recent-views { width: 54px; } /* ← กว้างพอสำหรับเลข 4-5 หลัก เช่น 4,520 */
-  .news-recent-comments { width: 40px; }
   .news-recent-date {
-    width: 58px; flex-shrink: 0;
     font-size: 10px; color: #777; line-height: 1.15;
   }
+  .news-recent-avatar-col {
+    display: flex; align-items: center; justify-content: center;
+  }
   .news-recent-poster {
-    width: 94px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: flex-end; gap: 5px;
     font-size: 10px; color: #c9c9c9;
-    overflow: hidden; white-space: nowrap;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
   }
 
   .news-meta-stats {
@@ -926,7 +925,7 @@
                 <span class="news-recent-views">👁 2,340</span>
                 <span class="news-recent-comments">💬 128</span>
                 <span class="news-recent-date">20.8.26<br>20:20</span>
-                <span class="news-recent-poster"><span class="news-avatar">🧑</span>แอดมินแดง</span></span>
+                <span class="news-recent-avatar-col"><span class="news-avatar">🧑</span></span><span class="news-recent-poster">แอดมินแดง</span></span>
             </a>
 
             <a class="news-recent-row" href="#">
@@ -936,7 +935,7 @@
                 <span class="news-recent-views">👁 890</span>
                 <span class="news-recent-comments">💬 34</span>
                 <span class="news-recent-date">20.8.26<br>20:20</span>
-                <span class="news-recent-poster"><span class="news-avatar">🧑</span>แอดมินขาว</span></span>
+                <span class="news-recent-avatar-col"><span class="news-avatar">🧑</span></span><span class="news-recent-poster">แอดมินขาว</span></span>
             </a>
 
             <a class="news-recent-row" href="#">
@@ -946,7 +945,7 @@
                 <span class="news-recent-views">👁 3,102</span>
                 <span class="news-recent-comments">💬 210</span>
                 <span class="news-recent-date">20.8.26<br>20:20</span>
-                <span class="news-recent-poster"><span class="news-avatar">🧑</span>แอดมินฟ้า</span></span>
+                <span class="news-recent-avatar-col"><span class="news-avatar">🧑</span></span><span class="news-recent-poster">แอดมินฟ้า</span></span>
             </a>
 
             <a class="news-recent-row" href="#">
@@ -956,7 +955,7 @@
                 <span class="news-recent-views">👁 654</span>
                 <span class="news-recent-comments">💬 19</span>
                 <span class="news-recent-date">20.8.26<br>20:20</span>
-                <span class="news-recent-poster"><span class="news-avatar">🧑</span>แอดมินดำ</span></span>
+                <span class="news-recent-avatar-col"><span class="news-avatar">🧑</span></span><span class="news-recent-poster">แอดมินดำ</span></span>
             </a>
 
             <a class="news-recent-row" href="#">
@@ -966,7 +965,7 @@
                 <span class="news-recent-views">👁 4,520</span>
                 <span class="news-recent-comments">💬 301</span>
                 <span class="news-recent-date">20.8.26<br>20:20</span>
-                <span class="news-recent-poster"><span class="news-avatar">🧑</span>น้อนบู้</span></span>
+                <span class="news-recent-avatar-col"><span class="news-avatar">🧑</span></span><span class="news-recent-poster">น้อนบู้</span></span>
             </a>
 
             <a class="news-recent-row" href="#">
@@ -976,7 +975,7 @@
                 <span class="news-recent-views">👁 1,208</span>
                 <span class="news-recent-comments">💬 76</span>
                 <span class="news-recent-date">20.8.26<br>20:20</span>
-                <span class="news-recent-poster"><span class="news-avatar">🧑</span>แอดมินแดง</span></span>
+                <span class="news-recent-avatar-col"><span class="news-avatar">🧑</span></span><span class="news-recent-poster">แอดมินแดง</span></span>
             </a>
 
           </div>
