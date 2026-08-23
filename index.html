@@ -403,7 +403,7 @@
   /* ===== Profile chip (แสดงแทน REGISTER/LOGIN หลัง login) ===== */
   .header .profile-chip {
     position: absolute;
-    right: 62px;
+    right: 20px; /* ← ชิดขวามากขึ้น (เดิม 62px) */
     top: 50%;
     transform: translateY(-50%);
     display: flex;
@@ -415,15 +415,15 @@
     display: flex; flex-direction: column; gap: 2px;
   }
   .profile-chip-name {
-    font-size: 15px; font-weight: 700; color: #fff; line-height: 1.15;
+    font-size: 16px; font-weight: 700; color: #fff; line-height: 1.15;
     white-space: nowrap;
   }
   .profile-chip-role {
-    font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #9a9a9a;
+    font-size: 8px; font-weight: 600; letter-spacing: 1px; color: #9a9a9a;
     text-transform: uppercase; line-height: 1.15;
   }
   .profile-chip-avatar {
-    width: 40px; height: 40px; border-radius: 50%;
+    width: 30px; height: 30px; border-radius: 50%;
     object-fit: cover; background: #3a3a3a; flex-shrink: 0;
   }
 
