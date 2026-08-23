@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&family=Inter:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --sidebar-w: 198px;
@@ -353,8 +354,8 @@
   }
 
   .sidebar.collapsed ~ .content-area .header .wordmark {
-    position: relative;
-    top: 10px; /* ปรับตัวเลขนี้ได้ถ้ายังไม่ตรงระดับกระดิ่งพอดี */
+    /* ไม่ต้อง offset เพิ่มแล้ว — header ใช้ align-items:center อยู่แล้ว
+       จะเรียงกึ่งกลางแนวตั้งตรงกับไอคอนกระดิ่ง/จดหมาย/พระอาทิตย์โดยอัตโนมัติ */
   }
 
   .header .auth-links {
@@ -392,14 +393,38 @@
     flex-shrink: 0;
   }
 
-  .header .light-mode-btn {
-    position: absolute;
-    right: 14px;
-    top: 50%;
-    transform: translateY(-50%);
+  .header .icons img.light-mode-btn {
     width: 25px;
     height: 25px;
     cursor: pointer;
+    display: block;
+  }
+
+  /* ===== Profile chip (แสดงแทน REGISTER/LOGIN หลัง login) ===== */
+  .header .profile-chip {
+    position: absolute;
+    right: 62px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+  }
+  .profile-chip-text {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .profile-chip-name {
+    font-size: 15px; font-weight: 700; color: #fff; line-height: 1.15;
+    white-space: nowrap;
+  }
+  .profile-chip-role {
+    font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #9a9a9a;
+    text-transform: uppercase; line-height: 1.15;
+  }
+  .profile-chip-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    object-fit: cover; background: #3a3a3a; flex-shrink: 0;
   }
 
   .main {
@@ -1017,13 +1042,23 @@
               </div>
             </div>
           </div>
+
+          <img class="light-mode-btn" id="themeToggle" src="assets/light_mode.svg" alt="Toggle light mode">
         </div>
-        <div class="auth-links">
+
+        <div class="auth-links" id="authLinks">
           <a class="auth-link" href="auth.html?tab=register">REGISTER</a>
           <span class="auth-divider"></span>
           <a class="auth-link" href="auth.html?tab=login">LOGIN</a>
         </div>
-        <img class="light-mode-btn" id="themeToggle" src="assets/light_mode.svg" alt="Toggle light mode">
+
+        <a class="profile-chip" id="profileChip" href="/profile.html" style="display:none;">
+          <div class="profile-chip-text">
+            <span class="profile-chip-name" id="profileChipName">สมาชิก</span>
+            <span class="profile-chip-role" id="profileChipRole"></span>
+          </div>
+          <img class="profile-chip-avatar" id="profileChipAvatar" src="assets/default-avatar.png" alt="avatar">
+        </a>
       </header>
 
       <main class="main">
@@ -1297,6 +1332,50 @@
     setupHeaderDropdown('mailBtn', 'mailPanel');
 
     document.addEventListener('click', closeAllHeaderDropdowns);
+
+    // ===== แสดง REGISTER/LOGIN หรือ profile chip ตามสถานะ login จริง =====
+    (async function initHeaderAuthState() {
+      const SUPABASE_URL_AUTH = 'https://dnrcardbuuwnvuridubb.supabase.co';
+      const SUPABASE_KEY_AUTH = 'sb_publishable_uz4Tj8HDZef7T2OLEzyvUw_wcGsn0ZW';
+      const sbAuth = supabase.createClient(SUPABASE_URL_AUTH, SUPABASE_KEY_AUTH);
+
+      const { data: { session } } = await sbAuth.auth.getSession();
+      if (!session) return; // ไม่ login → ปล่อย REGISTER/LOGIN ที่แสดงอยู่แล้ว ไม่ต้องทำอะไรต่อ
+
+      const authLinksEl = document.getElementById('authLinks');
+      const chipEl = document.getElementById('profileChip');
+      const nameEl = document.getElementById('profileChipName');
+      const roleEl = document.getElementById('profileChipRole');
+      const avatarEl = document.getElementById('profileChipAvatar');
+
+      // ดึง username + avatar จาก profiles (คอลัมน์ที่เปิด public read ได้)
+      const { data: profile } = await sbAuth
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('user_id', session.user.id)
+        .single();
+
+      nameEl.textContent = profile?.username || session.user.user_metadata?.username || 'สมาชิก';
+      if (profile?.avatar_url) avatarEl.src = profile.avatar_url;
+
+      // role (webmaster/admin) ถูกล็อกไว้ด้วย column-level RLS ต้องขอผ่าน edge function เท่านั้น
+      try {
+        const res = await fetch(`${SUPABASE_URL_AUTH}/functions/v1/get-my-role`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+        if (res.ok) {
+          const roleData = await res.json()
+          if (roleData?.role && roleData.role !== 'member') {
+            roleEl.textContent = roleData.role.toUpperCase()
+          }
+        }
+      } catch (e) {
+        // เงียบไว้ — ถ้าดึง role ไม่ได้ ก็แค่ไม่แสดงบรรทัด role เฉยๆ
+      }
+
+      authLinksEl.style.display = 'none';
+      chipEl.style.display = 'flex';
+    })();
   </script>
 
   <script>
