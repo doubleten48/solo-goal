@@ -239,10 +239,112 @@
     gap: 11px;
   }
 
+  .header .icon-wrap {
+    position: relative;
+    display: flex;
+  }
+
+  .header .icon-btn {
+    display: flex; align-items: center; justify-content: center;
+    background: transparent;
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    padding: 2px;
+    cursor: pointer;
+    line-height: 0;
+  }
+  .header .icon-btn.active {
+    border-color: rgba(255,255,255,0.6);
+  }
+
   .header .icons img {
     width: 27px;
     height: 27px;
     cursor: pointer;
+    display: block;
+  }
+
+  /* ===== Dropdown panels (แจ้งเตือน / ข้อความ) ===== */
+  .dropdown-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 14px);
+    left: 0;
+    width: 320px;
+    max-width: 90vw;
+    background: #1E1E1E;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+    z-index: 60;
+    overflow: hidden;
+  }
+  .dropdown-panel.open { display: block; }
+
+  .dropdown-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .dropdown-link {
+    font-size: 12px; color: #d99a3d; text-decoration: none; font-weight: 600;
+  }
+  .dropdown-link:hover { text-decoration: underline; }
+
+  .dropdown-footer {
+    text-align: center;
+    padding: 10px 14px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .dropdown-footer .dropdown-link { font-size: 13px; }
+
+  /* ── แจ้งเตือน: empty state ── */
+  .notif-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px;
+    padding: 36px 20px;
+  }
+  .notif-empty-icon { font-size: 30px; opacity: 0.5; }
+  .notif-empty-text { font-size: 13px; color: #9a9a9a; }
+
+  /* ── ข้อความ: list ── */
+  .mail-list {
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .mail-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s ease;
+  }
+  .mail-item:last-child { border-bottom: none; }
+  .mail-item:hover { background: rgba(255,255,255,0.03); }
+
+  .mail-avatar {
+    flex-shrink: 0;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #3a3a3a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    overflow: hidden;
+  }
+  .mail-avatar-accent { background: #872929; }
+
+  .mail-info {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .mail-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .mail-preview {
+    font-size: 12px; color: #9a9a9a;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .mail-time {
+    flex-shrink: 0;
+    font-size: 11px; color: #777;
+    padding-top: 2px;
   }
 
   /* ===== Collapsed-only fix: logo vs bell/mail overlap ===== */
@@ -844,8 +946,77 @@
       <header class="header">
         <a href="index.html" class="wordmark" style="text-decoration:none;">SOLOGOAL</a>
         <div class="icons">
-          <img class="bell" src="assets/mynaui_bell.svg" alt="Notifications">
-          <img class="mail" src="assets/mynaui_mail.svg" alt="Messages">
+          <div class="icon-wrap" id="bellWrap">
+            <button class="icon-btn" id="bellBtn" type="button" aria-label="การแจ้งเตือน">
+              <img class="bell" src="assets/mynaui_bell.svg" alt="Notifications">
+            </button>
+            <div class="dropdown-panel notif-panel" id="notifPanel">
+              <div class="notif-empty">
+                <div class="notif-empty-icon">🔕</div>
+                <div class="notif-empty-text">ไม่มีการแจ้งเตือน</div>
+              </div>
+              <div class="dropdown-footer">
+                <a href="#" class="dropdown-link">อ่านทั้งหมด</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="icon-wrap" id="mailWrap">
+            <button class="icon-btn" id="mailBtn" type="button" aria-label="ข้อความ">
+              <img class="mail" src="assets/mynaui_mail.svg" alt="Messages">
+            </button>
+            <div class="dropdown-panel mail-panel" id="mailPanel">
+              <div class="dropdown-header">
+                <a href="#" class="dropdown-link">ทำเป็นอ่านแล้วทั้งหมด</a>
+                <a href="#" class="dropdown-link">ข้อความใหม่</a>
+              </div>
+              <div class="mail-list">
+                <a class="mail-item" href="#">
+                  <span class="mail-avatar">🧑</span>
+                  <span class="mail-info">
+                    <span class="mail-name">จารสิน</span>
+                    <span class="mail-preview">ผมล้างเครื่องที่นี่ telegram มันรีเซ็ตครับ อย...</span>
+                  </span>
+                  <span class="mail-time">5 วันที่แล้ว</span>
+                </a>
+                <a class="mail-item" href="#">
+                  <span class="mail-avatar">🧑</span>
+                  <span class="mail-info">
+                    <span class="mail-name">Sulyvahn</span>
+                    <span class="mail-preview">ขอบพระคุณครับ</span>
+                  </span>
+                  <span class="mail-time">30 มิ.ย.</span>
+                </a>
+                <a class="mail-item" href="#">
+                  <span class="mail-avatar">🧑</span>
+                  <span class="mail-info">
+                    <span class="mail-name">ATQz</span>
+                    <span class="mail-preview">ขอบคุณครับ</span>
+                  </span>
+                  <span class="mail-time">27 มิ.ย.</span>
+                </a>
+                <a class="mail-item" href="#">
+                  <span class="mail-avatar mail-avatar-accent">⚽</span>
+                  <span class="mail-info">
+                    <span class="mail-name">monease</span>
+                    <span class="mail-preview">https://t.me/+RIojLIdXM8Q5NTFl</span>
+                  </span>
+                  <span class="mail-time">27 มิ.ย.</span>
+                </a>
+                <a class="mail-item" href="#">
+                  <span class="mail-avatar">🧑</span>
+                  <span class="mail-info">
+                    <span class="mail-name">taii</span>
+                    <span class="mail-preview">สวัสดีครับ อยากจะขอเข้ากลุ่ม telegram ทีครับ ข...</span>
+                  </span>
+                  <span class="mail-time">4 มิ.ย.</span>
+                </a>
+              </div>
+              <div class="dropdown-footer">
+                <a href="#" class="dropdown-link">ดูข้อความทั้งหมด</a>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="auth-links">
           <a class="auth-link" href="auth.html?tab=register">REGISTER</a>
@@ -1098,6 +1269,34 @@
     menuList.addEventListener('mouseleave', () => {
       highlight.style.opacity = '0';
     });
+
+    // ===== แจ้งเตือน / ข้อความ dropdown =====
+    function setupHeaderDropdown(btnId, panelId) {
+      const btn = document.getElementById(btnId);
+      const panel = document.getElementById(panelId);
+
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = panel.classList.contains('open');
+        closeAllHeaderDropdowns();
+        if (!isOpen) {
+          panel.classList.add('open');
+          btn.classList.add('active');
+        }
+      });
+
+      panel.addEventListener('click', (e) => e.stopPropagation());
+    }
+
+    function closeAllHeaderDropdowns() {
+      document.querySelectorAll('.dropdown-panel.open').forEach(p => p.classList.remove('open'));
+      document.querySelectorAll('.icon-btn.active').forEach(b => b.classList.remove('active'));
+    }
+
+    setupHeaderDropdown('bellBtn', 'notifPanel');
+    setupHeaderDropdown('mailBtn', 'mailPanel');
+
+    document.addEventListener('click', closeAllHeaderDropdowns);
   </script>
 
   <script>
