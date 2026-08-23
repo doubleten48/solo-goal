@@ -1111,7 +1111,7 @@
           <img class="light-mode-btn" id="themeToggle" src="assets/light_mode.svg" alt="Toggle light mode">
         </div>
 
-        <div class="auth-links" id="authLinks">
+        <div class="auth-links" id="authLinks" style="display:none;">
           <a class="auth-link" href="auth.html?tab=register">REGISTER</a>
           <span class="auth-divider"></span>
           <a class="auth-link" href="auth.html?tab=login">LOGIN</a>
@@ -1450,6 +1450,7 @@
     document.addEventListener('click', closeAllHeaderDropdowns);
 
     // ===== แสดง REGISTER/LOGIN หรือ profile chip ตามสถานะ login จริง =====
+    // ทั้งสองอย่างซ่อนไว้ก่อนตั้งแต่ใน HTML (display:none) เพื่อไม่ให้ขึ้นผิดอันแว้บนึงก่อนสลับ
     let sbAuthClient = null;
 
     (async function initHeaderAuthState() {
@@ -1458,11 +1459,16 @@
       const sbAuth = supabase.createClient(SUPABASE_URL_AUTH, SUPABASE_KEY_AUTH);
       sbAuthClient = sbAuth;
 
-      const { data: { session } } = await sbAuth.auth.getSession();
-      if (!session) return; // ไม่ login → ปล่อย REGISTER/LOGIN ที่แสดงอยู่แล้ว ไม่ต้องทำอะไรต่อ
-
       const authLinksEl = document.getElementById('authLinks');
       const chipEl = document.getElementById('profileChip');
+
+      const { data: { session } } = await sbAuth.auth.getSession();
+
+      if (!session) {
+        authLinksEl.style.display = 'flex'; // ไม่ login → ค่อยแสดง REGISTER/LOGIN ตอนนี้
+        return;
+      }
+
       const nameEl = document.getElementById('profileChipName');
       const roleEl = document.getElementById('profileChipRole');
       const avatarEl = document.getElementById('profileChipAvatar');
