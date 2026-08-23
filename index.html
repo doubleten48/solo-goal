@@ -427,6 +427,71 @@
     object-fit: cover; background: #3a3a3a; flex-shrink: 0;
   }
 
+  .avatar-btn {
+    position: relative;
+    display: flex;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    line-height: 0;
+    border-radius: 50%;
+  }
+  .avatar-btn.active .profile-chip-avatar {
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.6);
+  }
+
+  /* ===== เมนู dropdown เมื่อกดอวตาร์ ===== */
+  .profile-menu-panel {
+    left: auto;
+    right: 0;
+    width: 220px;
+    padding: 6px 0;
+  }
+
+  .profile-menu-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    font-size: 13px; color: #e8e8e8;
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .profile-menu-item:hover { background: rgba(255,255,255,0.05); }
+  .profile-menu-icon {
+    width: 18px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .profile-menu-logout { color: #e57373; }
+
+  .profile-menu-divider {
+    height: 1px;
+    margin: 4px 0;
+    background: rgba(255,255,255,0.08);
+  }
+
+  .profile-menu-social {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px 16px 6px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin-top: 4px;
+  }
+  .social-icon {
+    display: flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px;
+    color: #9a9a9a;
+    transition: color 0.15s ease;
+  }
+  .social-icon:hover { color: #fff; }
+
   .main {
     flex: 1;
     background: var(--main-bg);
@@ -1052,13 +1117,63 @@
           <a class="auth-link" href="auth.html?tab=login">LOGIN</a>
         </div>
 
-        <a class="profile-chip" id="profileChip" href="/profile.html" style="display:none;">
+        <div class="profile-chip" id="profileChip" style="display:none;">
           <div class="profile-chip-text">
             <span class="profile-chip-name" id="profileChipName">สมาชิก</span>
             <span class="profile-chip-role" id="profileChipRole"></span>
           </div>
-          <img class="profile-chip-avatar" id="profileChipAvatar" src="assets/default-avatar.png" alt="avatar">
-        </a>
+          <button class="avatar-btn" id="avatarBtn" type="button" aria-label="เมนูผู้ใช้">
+            <img class="profile-chip-avatar" id="profileChipAvatar" src="assets/default-avatar.png" alt="avatar">
+          </button>
+
+          <div class="dropdown-panel profile-menu-panel" id="profileMenuPanel">
+            <a href="/profile.html" class="profile-menu-item">
+              <span class="profile-menu-icon">👤</span><span>โปรไฟล์</span>
+            </a>
+            <a href="/admin.html" class="profile-menu-item" id="adminMenuItem" style="display:none;">
+              <span class="profile-menu-icon">🛠️</span><span>ระบบแอดมิน</span>
+            </a>
+            <a href="/board.html" class="profile-menu-item">
+              <span class="profile-menu-icon">📋</span><span>เว็บบอร์ด</span>
+            </a>
+            <a href="#" class="profile-menu-item">
+              <span class="profile-menu-icon">🎮</span><span>เล่นเกม</span>
+            </a>
+            <a href="#" class="profile-menu-item">
+              <span class="profile-menu-icon">➕</span><span>ชวนเพื่อน</span>
+            </a>
+            <a href="#" class="profile-menu-item">
+              <span class="profile-menu-icon">✉️</span><span>ติดต่อเรา</span>
+            </a>
+
+            <div class="profile-menu-divider"></div>
+
+            <button type="button" class="profile-menu-item profile-menu-logout" id="logoutMenuBtn">
+              <span class="profile-menu-icon">🚪</span><span>ออกจากระบบ</span>
+            </button>
+
+            <div class="profile-menu-social">
+              <a href="#" target="_blank" rel="noopener" aria-label="Facebook" class="social-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.5 9.9v-7H7.9V12h2.6V9.8c0-2.6 1.6-4 3.9-4 1.1 0 2.3.2 2.3.2v2.5h-1.3c-1.3 0-1.7.8-1.7 1.6V12h2.9l-.5 2.9h-2.4v7A10 10 0 0 0 22 12"/></svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener" aria-label="TikTok" class="social-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16.5 2h-3v13.5a2.5 2.5 0 1 1-2.5-2.5c.2 0 .5 0 .7.1V10a5.5 5.5 0 1 0 4.8 5.4V8.9a7.4 7.4 0 0 0 4.5 1.5V7.4a4.5 4.5 0 0 1-4.5-4.5V2z"/></svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener" aria-label="Twitter / X" class="social-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23 22h-7l-5.5-6.6L4.2 22H1l8.2-9.4L1.4 2H8.6l5 6z"/></svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener" aria-label="Telegram" class="social-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M21.9 4.3 2.6 11.7c-1 .4-1 1.7.1 2l4.7 1.5 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.5 4.9 3.6c.7.5 1.7.1 1.9-.7L23.9 5.4c.2-.9-.7-1.6-1.5-1.1zM8.9 15l-1.1 3.5-.7-3.5 10.5-9.5-8.7 9.5z"/></svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener" aria-label="Instagram" class="social-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.3" cy="6.7" r="1"/></svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener" aria-label="YouTube" class="social-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M23.5 6.5s-.2-1.6-.9-2.3c-.9-.9-1.9-.9-2.3-1C17.4 3 12 3 12 3h0s-5.4 0-8.3.2c-.5 0-1.5.1-2.3 1C.7 4.9.5 6.5.5 6.5S.3 8.3.3 10.2v1.6C.3 13.7.5 15.5.5 15.5s.2 1.6.9 2.3c.9.9 2 .9 2.5 1C5.6 19 12 19 12 19s5.4 0 8.3-.2c.5 0 1.5-.1 2.3-1 .7-.7.9-2.3.9-2.3s.2-1.8.2-3.7v-1.6c0-1.9-.2-3.7-.2-3.7zM9.7 14.1V7.9l6 3.1-6 3.1z"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
       </header>
 
       <main class="main">
@@ -1325,19 +1440,23 @@
 
     function closeAllHeaderDropdowns() {
       document.querySelectorAll('.dropdown-panel.open').forEach(p => p.classList.remove('open'));
-      document.querySelectorAll('.icon-btn.active').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.icon-btn.active, .avatar-btn.active').forEach(b => b.classList.remove('active'));
     }
 
     setupHeaderDropdown('bellBtn', 'notifPanel');
     setupHeaderDropdown('mailBtn', 'mailPanel');
+    setupHeaderDropdown('avatarBtn', 'profileMenuPanel');
 
     document.addEventListener('click', closeAllHeaderDropdowns);
 
     // ===== แสดง REGISTER/LOGIN หรือ profile chip ตามสถานะ login จริง =====
+    let sbAuthClient = null;
+
     (async function initHeaderAuthState() {
       const SUPABASE_URL_AUTH = 'https://dnrcardbuuwnvuridubb.supabase.co';
       const SUPABASE_KEY_AUTH = 'sb_publishable_uz4Tj8HDZef7T2OLEzyvUw_wcGsn0ZW';
       const sbAuth = supabase.createClient(SUPABASE_URL_AUTH, SUPABASE_KEY_AUTH);
+      sbAuthClient = sbAuth;
 
       const { data: { session } } = await sbAuth.auth.getSession();
       if (!session) return; // ไม่ login → ปล่อย REGISTER/LOGIN ที่แสดงอยู่แล้ว ไม่ต้องทำอะไรต่อ
@@ -1347,6 +1466,7 @@
       const nameEl = document.getElementById('profileChipName');
       const roleEl = document.getElementById('profileChipRole');
       const avatarEl = document.getElementById('profileChipAvatar');
+      const adminMenuItemEl = document.getElementById('adminMenuItem');
 
       // ดึง username + avatar จาก profiles (คอลัมน์ที่เปิด public read ได้)
       const { data: profile } = await sbAuth
@@ -1367,15 +1487,25 @@
           const roleData = await res.json()
           if (roleData?.role && roleData.role !== 'member') {
             roleEl.textContent = roleData.role.toUpperCase()
+            // เมนู "ระบบแอดมิน" โชว์เฉพาะ webmaster / admin เท่านั้น
+            if (roleData.role === 'webmaster' || roleData.role === 'admin') {
+              adminMenuItemEl.style.display = 'flex'
+            }
           }
         }
       } catch (e) {
-        // เงียบไว้ — ถ้าดึง role ไม่ได้ ก็แค่ไม่แสดงบรรทัด role เฉยๆ
+        // เงียบไว้ — ถ้าดึง role ไม่ได้ ก็แค่ไม่แสดงบรรทัด role/เมนูแอดมินเฉยๆ
       }
 
       authLinksEl.style.display = 'none';
       chipEl.style.display = 'flex';
     })();
+
+    // ออกจากระบบ
+    document.getElementById('logoutMenuBtn').addEventListener('click', async () => {
+      if (sbAuthClient) await sbAuthClient.auth.signOut();
+      window.location.href = '/auth.html?tab=login';
+    });
   </script>
 
   <script>
