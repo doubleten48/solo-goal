@@ -1176,6 +1176,20 @@
         </div>
       </header>
 
+      <script>
+        // เดาสถานะ login แบบ sync จาก token ที่เก็บไว้ใน storage (เร็วกว่ารอ getSession() มาก)
+        // เพื่อลดอาการ "แว้บว่างเปล่า" ก่อนโชว์ REGISTER/LOGIN หรืออวตาร์ตัวจริง
+        (function guessAuthStateEarly() {
+          try {
+            var tokenKey = 'sb-dnrcardbuuwnvuridubb-auth-token';
+            var hasToken = !!(localStorage.getItem(tokenKey) || sessionStorage.getItem(tokenKey));
+            document.getElementById(hasToken ? 'profileChip' : 'authLinks').style.display = 'flex';
+          } catch (e) {
+            document.getElementById('authLinks').style.display = 'flex';
+          }
+        })();
+      </script>
+
       <main class="main">
         <div class="ads-banner">
           <a href="#" target="_blank"><img src="assets/ads_001.png" alt="โฆษณา"></a>
@@ -1450,7 +1464,8 @@
     document.addEventListener('click', closeAllHeaderDropdowns);
 
     // ===== แสดง REGISTER/LOGIN หรือ profile chip ตามสถานะ login จริง =====
-    // ทั้งสองอย่างซ่อนไว้ก่อนตั้งแต่ใน HTML (display:none) เพื่อไม่ให้ขึ้นผิดอันแว้บนึงก่อนสลับ
+    // มีการ "เดา" แบบ sync ไปแล้วจาก token ใน storage (ดูสคริปต์เล็กๆ ก่อนหน้านี้ ใต้ </header>)
+    // โค้ดข้างล่างนี้คือการ "ยืนยันผลจริง" — ถ้าเดาถูกจะไม่มีอะไรเปลี่ยน ถ้าเดาผิดค่อยแก้ให้ถูก (เคสหายาก)
     let sbAuthClient = null;
 
     (async function initHeaderAuthState() {
@@ -1465,7 +1480,9 @@
       const { data: { session } } = await sbAuth.auth.getSession();
 
       if (!session) {
-        authLinksEl.style.display = 'flex'; // ไม่ login → ค่อยแสดง REGISTER/LOGIN ตอนนี้
+        // ยืนยันแล้วว่าไม่ได้ login จริง (เช่น token หมดอายุ) → เผื่อเดาไว้ผิดก่อนหน้านี้ ต้องแก้กลับ
+        chipEl.style.display = 'none';
+        authLinksEl.style.display = 'flex';
         return;
       }
 
@@ -1503,6 +1520,7 @@
         // เงียบไว้ — ถ้าดึง role ไม่ได้ ก็แค่ไม่แสดงบรรทัด role/เมนูแอดมินเฉยๆ
       }
 
+      // ยืนยันแล้วว่า login จริง (เผื่อเดาไว้ผิดก่อนหน้านี้ ต้องแก้กลับด้วยเช่นกัน)
       authLinksEl.style.display = 'none';
       chipEl.style.display = 'flex';
     })();
