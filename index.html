@@ -1684,15 +1684,15 @@
 
     async function fetchScores() {
       try {
-        const res = await fetch(`${SUPABASE_URL_SCORES}/rest/v1/live_scores?select=data&id=eq.1`, {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
-          }
+        // เรียก Edge Function ตรงๆ แทนอ่านตาราง live_scores เฉยๆ — เพราะฟังก์ชันนี้เช็ค cache สดแค่ 8 วิ
+        // ถ้าเก่ากว่านั้นจะไปดึงข้อมูลใหม่จาก football-data.org ให้เอง ทำให้ widget ได้ข้อมูลสดจริงในกรอบ ~15 วิ
+        // (ไม่ต้องกลัวโควตาหมด เพราะต่อให้มีคนเข้าเว็บพร้อมกันเป็นพัน ฟังก์ชันก็ยังยิง football-data.org แค่ทุก 8 วิสูงสุดอยู่ดี)
+        const res = await fetch(`${SUPABASE_URL_SCORES}/functions/v1/football-scores`, {
+          headers: { 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
         });
-        const rows = await res.json();
-        if (Array.isArray(rows) && rows[0]?.data) {
-          latestMatches = rows[0].data;
+        const data = await res.json();
+        if (Array.isArray(data.matches)) {
+          latestMatches = data.matches;
           renderMatches();
         }
       } catch (e) {
