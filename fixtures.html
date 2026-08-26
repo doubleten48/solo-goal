@@ -630,17 +630,17 @@
           </defs>
         </svg>
         <ul id="menuList">
-          <li style="top:9px"><a href="index.html" style="position:absolute;inset:0;display:block;"><img src="assets/HOME ICON_2.svg" alt="" style="left:29px;width:10px;height:12px"><span style="left:57px">หน้าแรก</span></a></li>
-          <li style="top:46px"><img src="assets/NEWS ICON_2.svg" alt="" style="left:28px;width:13px;height:10.6px"><span style="left:57px">อัพเดทข่าว</span></li>
-          <li style="top:79px"><img src="assets/ARTICLE ICON_2.svg" alt="" style="left:29px;width:10px;height:10px"><span style="left:57px">บทความ</span></li>
-          <li style="top:115px"><img src="assets/SOCIETY ICON_2.svg" alt="" style="left:29px;width:11px;height:10px"><span style="left:56px">บอร์ดโซไซตี้</span></li>
-          <li style="top:148px"><img src="assets/BALL_INTER ICON_2.svg" alt="" style="left:29px;width:11px;height:14px"><span style="left:56px">บอร์ดบอลนอก</span></li>
-          <li style="top:182px"><img src="assets/BALL_THAI ICON_2.svg" alt="" style="left:30px;width:9px;height:13px"><span style="left:56px">บอร์ดบอลไทย</span></li>
-          <li style="top:214px"><img src="assets/all sport icon_2.svg" alt="" style="left:30px;width:11px;height:15px"><span style="left:56px">ออลสปอร์ต</span></li>
-          <li style="top:250px"><img src="assets/games icon_2.svg" alt="" style="left:30px;width:12px;height:12px"><span style="left:56px">บอร์ดเกมส์</span></li>
-          <li style="top:282px"><img src="assets/deal icon_2.svg" alt="" style="left:29px;width:13px;height:13px"><span style="left:56px">เดลล่างมอ</span></li>
-          <li style="top:316px"><img src="assets/Prisoner Icon_2.svg" alt="" style="left:28px;width:12px;height:13px"><span style="left:56px">เรือนจำคนง่าว</span></li>
-          <li style="top:353px"><img src="assets/buy item icon_2.svg" alt="" style="left:29px;width:13px;height:13px"><span style="left:56px;color:#FFC107">ซื้อไอเท็มเว็บ</span></li>
+          <li style="top:9px"><a href="index.html" style="position:absolute;inset:0;display:block;"><img src="assets/HOME ICON_2.svg" alt="" style="left:28px;width:13px;height:16px"><span style="left:57px">หน้าแรก</span></a></li>
+          <li style="top:46px"><img src="assets/NEWS ICON_2.svg" alt="" style="left:27px;width:16px;height:13px"><span style="left:57px">อัพเดทข่าว</span></li>
+          <li style="top:79px"><img src="assets/ARTICLE ICON_2.svg" alt="" style="left:28px;width:13px;height:13px"><span style="left:57px">บทความ</span></li>
+          <li style="top:115px"><img src="assets/SOCIETY ICON_2.svg" alt="" style="left:28px;width:14px;height:13px"><span style="left:56px">บอร์ดโซไซตี้</span></li>
+          <li style="top:148px"><img src="assets/BALL_INTER ICON_2.svg" alt="" style="left:28px;width:14px;height:18px"><span style="left:56px">บอร์ดบอลนอก</span></li>
+          <li style="top:182px"><img src="assets/BALL_THAI ICON_2.svg" alt="" style="left:29px;width:12px;height:17px"><span style="left:56px">บอร์ดบอลไทย</span></li>
+          <li style="top:214px"><img src="assets/all sport icon_2.svg" alt="" style="left:29px;width:14px;height:19px"><span style="left:56px">ออลสปอร์ต</span></li>
+          <li style="top:250px"><img src="assets/games icon_2.svg" alt="" style="left:29px;width:15px;height:15px"><span style="left:56px">บอร์ดเกมส์</span></li>
+          <li style="top:282px"><img src="assets/deal icon_2.svg" alt="" style="left:28px;width:16px;height:16px"><span style="left:56px">เดลล่างมอ</span></li>
+          <li style="top:316px"><img src="assets/Prisoner Icon_2.svg" alt="" style="left:27px;width:15px;height:16px"><span style="left:56px">เรือนจำคนง่าว</span></li>
+          <li style="top:353px"><img src="assets/buy item icon_2.svg" alt="" style="left:28px;width:16px;height:16px"><span style="left:56px;color:#FFC107">ซื้อไอเท็มเว็บ</span></li>
         </ul>
       </nav>
       <div class="menu-divider"></div>
@@ -1197,6 +1197,20 @@
     }
 
     const eventsCache = {};
+    let teamAliasMap = null;
+
+    // โหลด alias จากฐานข้อมูลครั้งเดียว (แทนลิสต์ตายตัวในโค้ด) — ตารางเดียวกับที่ backend ใช้
+    async function loadTeamAliasMap() {
+      if (teamAliasMap) return teamAliasMap;
+      teamAliasMap = {};
+      try {
+        const rows = await sb('team_aliases?select=alias,canonical');
+        if (Array.isArray(rows)) rows.forEach(r => { teamAliasMap[r.alias] = r.canonical; });
+      } catch (err) {
+        // โหลดไม่สำเร็จ ก็ยังทำงานต่อได้ (แค่ไม่มี alias พิเศษ ใช้ชื่อตรงๆ)
+      }
+      return teamAliasMap;
+    }
 
     async function loadMatchEvents(matchId, comp, home, away, date) {
       if (eventsCache[matchId]) return eventsCache[matchId];
@@ -1223,8 +1237,10 @@
     }
 
     function renderEventsColumns(events, homeTeam, awayTeam) {
-      const homeEvents = events.filter(ev => teamNameMatches(ev.team, homeTeam));
-      const awayEvents = events.filter(ev => teamNameMatches(ev.team, awayTeam));
+      // backend แนบ ev.side ('home'/'away') มาให้ตรงๆ แล้ว ไม่ต้องเดาจากชื่อทีมอีกต่อไป
+      // เผื่อ cache เก่าก่อนหน้านี้ที่ยังไม่มี side ค่อย fallback ไปเทียบชื่อแบบเดิม
+      const homeEvents = events.filter(ev => ev.side ? ev.side === 'home' : teamNameMatches(ev.team, homeTeam));
+      const awayEvents = events.filter(ev => ev.side ? ev.side === 'away' : teamNameMatches(ev.team, awayTeam));
 
       const homeHtml = homeEvents.length
         ? homeEvents.map(renderEventEntry).join('')
@@ -1236,28 +1252,13 @@
       return `<div class="fixture-details-col home">${homeHtml}</div><div class="fixture-details-col away">${awayHtml}</div>`;
     }
 
-    // ต้องตรงกับ TEAM_SEARCH_ALIASES ใน football-match-events edge function เป๊ะๆ
-    // (ที่นี่ใช้แค่จับคู่ชื่อทีมเพื่อแบ่งคอลัมน์ซ้าย-ขวา ไม่ได้ยิง API เอง)
-    const TEAM_NAME_ALIASES = {
-      'barca': 'barcelona',
-      'man city': 'manchester city',
-      'man united': 'manchester united',
-      'man utd': 'manchester united',
-      'psg': 'paris saint germain',
-      'hsv': 'hamburg',
-      'mgladbach': 'monchengladbach',
-      'sporting cp': 'sporting',
-      'union sg': 'union saint gilloise',
-      'atleti': 'atletico madrid',
-      'spurs': 'tottenham',
-    };
-
+    // fallback เท่านั้น (ใช้กับ events เก่าที่ cache ไว้ก่อน backend เริ่มแนบ ev.side มาให้)
     function canonicalTeamName(name) {
       const stripped = (name || '')
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-zA-Z0-9\s]/g, '')
         .toLowerCase().trim().replace(/\s+/g, ' ');
-      return TEAM_NAME_ALIASES[stripped] || stripped;
+      return (teamAliasMap && teamAliasMap[stripped]) || stripped;
     }
 
     function teamNameMatches(a, b) {
@@ -1531,6 +1532,7 @@
     }
 
     restoreTabState();
+    loadTeamAliasMap();
     loadData();
     setInterval(loadData, 30000);
   </script>
