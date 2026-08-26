@@ -1236,10 +1236,34 @@
       return `<div class="fixture-details-col home">${homeHtml}</div><div class="fixture-details-col away">${awayHtml}</div>`;
     }
 
+    // ต้องตรงกับ TEAM_SEARCH_ALIASES ใน football-match-events edge function เป๊ะๆ
+    // (ที่นี่ใช้แค่จับคู่ชื่อทีมเพื่อแบ่งคอลัมน์ซ้าย-ขวา ไม่ได้ยิง API เอง)
+    const TEAM_NAME_ALIASES = {
+      'barca': 'barcelona',
+      'man city': 'manchester city',
+      'man united': 'manchester united',
+      'man utd': 'manchester united',
+      'psg': 'paris saint germain',
+      'hsv': 'hamburg',
+      'mgladbach': 'monchengladbach',
+      'sporting cp': 'sporting',
+      'union sg': 'union saint gilloise',
+      'atleti': 'atletico madrid',
+      'spurs': 'tottenham',
+    };
+
+    function canonicalTeamName(name) {
+      const stripped = (name || '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9\s]/g, '')
+        .toLowerCase().trim().replace(/\s+/g, ' ');
+      return TEAM_NAME_ALIASES[stripped] || stripped;
+    }
+
     function teamNameMatches(a, b) {
       if (!a || !b) return false;
-      const na = a.toLowerCase().replace(/[^a-z0-9]/g, '');
-      const nb = b.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const na = canonicalTeamName(a).replace(/\s+/g, '');
+      const nb = canonicalTeamName(b).replace(/\s+/g, '');
       return na.includes(nb) || nb.includes(na);
     }
 
