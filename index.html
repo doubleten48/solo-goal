@@ -1901,8 +1901,9 @@
       const carousel = document.getElementById('videoCarousel');
       const { data: videos, error } = await sbVideos
         .from('home_videos')
-        .select('video_id, title, thumbnail_url, channel_id, video_channels(display_name)')
+        .select('video_id, title, thumbnail_url, channel_id, is_highlight, video_channels(display_name)')
         .eq('is_active', true)
+        .order('is_highlight', { ascending: false })
         .order('published_at', { ascending: false })
         .limit(10);
 
