@@ -1017,15 +1017,38 @@
     padding: 0 20px;
   }
 
+  .video-carousel-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .video-nav-btn {
+    flex-shrink: 0;
+    width: 22px;
+    border: none;
+    background: transparent;
+    color: #9a9a9a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: color 0.15s ease;
+  }
+  .video-nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .video-nav-btn:hover:not(:disabled) { color: var(--main-text); }
+
   .video-carousel {
     display: flex;
     gap: 16px;
     overflow-x: auto;
-    padding-bottom: 6px;
     scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
-  .video-carousel::-webkit-scrollbar { height: 6px; }
-  .video-carousel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+  .video-carousel::-webkit-scrollbar { display: none; }
 
   .video-card {
     flex: 0 0 220px;
@@ -1590,8 +1613,12 @@
             <div class="bar"></div>
             <h2>วีดีโอไฮไลท์ & ข่าว</h2>
           </div>
-          <div class="video-carousel" id="videoCarousel">
-            <!-- การ์ดสร้างจาก JS โดยดึงจาก Supabase (home_videos) -->
+          <div class="video-carousel-wrap">
+            <button class="video-nav-btn" id="videoPrev" aria-label="เลื่อนซ้าย">&#10094;</button>
+            <div class="video-carousel" id="videoCarousel">
+              <!-- การ์ดสร้างจาก JS โดยดึงจาก Supabase (home_videos) -->
+            </div>
+            <button class="video-nav-btn" id="videoNext" aria-label="เลื่อนขวา">&#10095;</button>
           </div>
         </div>
 
@@ -1931,6 +1958,16 @@
           openVideoModal(card.dataset.videoId);
         });
       });
+
+      updateVideoNavButtons();
+    }
+
+    function updateVideoNavButtons() {
+      const carousel = document.getElementById('videoCarousel');
+      const prevBtn = document.getElementById('videoPrev');
+      const nextBtn = document.getElementById('videoNext');
+      prevBtn.disabled = carousel.scrollLeft <= 0;
+      nextBtn.disabled = carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 2;
     }
 
     function openVideoModal(videoId) {
@@ -1950,6 +1987,14 @@
     document.getElementById('videoModalOverlay').addEventListener('click', (e) => {
       if (e.target.id === 'videoModalOverlay') closeVideoModal();
     });
+
+    document.getElementById('videoPrev').addEventListener('click', () => {
+      document.getElementById('videoCarousel').scrollBy({ left: -456, behavior: 'smooth' });
+    });
+    document.getElementById('videoNext').addEventListener('click', () => {
+      document.getElementById('videoCarousel').scrollBy({ left: 456, behavior: 'smooth' });
+    });
+    document.getElementById('videoCarousel').addEventListener('scroll', updateVideoNavButtons);
 
     loadHomeVideos();
   </script>
