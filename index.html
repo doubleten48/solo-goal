@@ -1018,13 +1018,14 @@
   }
 
   .video-carousel-wrap {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    position: relative;
   }
 
   .video-nav-btn {
-    flex-shrink: 0;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
     width: 22px;
     border: none;
     background: transparent;
@@ -1036,6 +1037,8 @@
     font-size: 20px;
     transition: color 0.15s ease;
   }
+  .video-nav-btn.prev { left: -28px; }
+  .video-nav-btn.next { right: -28px; }
   .video-nav-btn:disabled { opacity: 0.3; cursor: default; }
   .video-nav-btn:hover:not(:disabled) { color: var(--main-text); }
 
@@ -1614,11 +1617,11 @@
             <h2>วีดีโอไฮไลท์ & ข่าว</h2>
           </div>
           <div class="video-carousel-wrap">
-            <button class="video-nav-btn" id="videoPrev" aria-label="เลื่อนซ้าย">&#10094;</button>
+            <button class="video-nav-btn prev" id="videoPrev" aria-label="เลื่อนซ้าย">&#10094;</button>
             <div class="video-carousel" id="videoCarousel">
               <!-- การ์ดสร้างจาก JS โดยดึงจาก Supabase (home_videos) -->
             </div>
-            <button class="video-nav-btn" id="videoNext" aria-label="เลื่อนขวา">&#10095;</button>
+            <button class="video-nav-btn next" id="videoNext" aria-label="เลื่อนขวา">&#10095;</button>
           </div>
         </div>
 
