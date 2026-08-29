@@ -1005,6 +1005,88 @@
     overflow: hidden; text-overflow: ellipsis;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   }
+
+  /* ===== วีดีโอไฮไลท์ & ข่าว (ต่อจาก .news-section) ===== */
+  .video-section {
+    width: 100%;
+    max-width: 1110px;
+    margin: 20px auto 0 auto;
+    padding: 0 20px;
+  }
+
+  .video-carousel {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x proximity;
+  }
+  .video-carousel::-webkit-scrollbar { height: 6px; }
+  .video-carousel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+
+  .video-card {
+    flex: 0 0 220px;
+    scroll-snap-align: start;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    display: block;
+    background: #1E1E1E;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: opacity 0.15s ease;
+    border: none;
+  }
+  .video-card:hover { opacity: 0.92; }
+
+  .video-thumb {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 220 / 124;
+    background: linear-gradient(135deg, #444 0%, #1a1a1a 100%);
+  }
+  .video-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .video-play-icon {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.9); font-size: 30px;
+  }
+  .video-duration {
+    position: absolute; bottom: 6px; right: 6px;
+    background: rgba(0,0,0,0.72); color: #fff;
+    font-size: 10px; padding: 1px 6px; border-radius: 3px;
+  }
+
+  .video-text { padding: 10px 12px 12px 12px; }
+  .video-headline {
+    font-family: 'Inter', 'Kanit', sans-serif;
+    font-size: 13px; font-weight: 500; line-height: 1.35; color: #fff;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    margin-bottom: 6px;
+    min-height: 35px;
+  }
+  .video-channel { font-size: 11px; color: #9a9a9a; }
+
+  .video-modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+    align-items: center; justify-content: center;
+  }
+  .video-modal-overlay.open { display: flex; }
+  .video-modal { position: relative; width: min(90vw, 900px); }
+  .video-modal-player { position: relative; width: 100%; padding-top: 56.25%; }
+  .video-modal-player iframe {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    border: 0; border-radius: 10px;
+  }
+  .video-modal-close {
+    position: absolute; top: -36px; right: 0;
+    background: none; border: none; color: #fff;
+    font-size: 28px; line-height: 1; cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -1498,10 +1580,30 @@
             </div>
           </div>
         </div>
+
+        <!-- วีดีโอไฮไลท์ & ข่าว -->
+        <div class="video-section">
+          <div class="section-title">
+            <div class="bar"></div>
+            <h2>วีดีโอไฮไลท์ & ข่าว</h2>
+          </div>
+          <div class="video-carousel" id="videoCarousel">
+            <!-- การ์ดสร้างจาก JS โดยดึงจาก Supabase (home_videos) -->
+          </div>
+        </div>
+
         <!-- ถัดจากนี้ลงไป = สิ่งที่ต้องทำในโปรเซสถัดไป -->
       </main>
     </div>
 
+  </div>
+
+  <!-- Modal เล่นวีดีโอ -->
+  <div class="video-modal-overlay" id="videoModalOverlay">
+    <div class="video-modal">
+      <button class="video-modal-close" id="videoModalClose" aria-label="ปิด">&times;</button>
+      <div class="video-modal-player" id="videoModalPlayer"></div>
+    </div>
   </div>
 
   <script>
@@ -1781,6 +1883,71 @@
 
     fetchScores();
     setInterval(fetchScores, POLL_INTERVAL_MS);
+  </script>
+
+  <script>
+    // วีดีโอไฮไลท์ & ข่าว (carousel + modal เล่น embed)
+    const SUPABASE_URL_VIDEOS = 'https://dnrcardbuuwnvuridubb.supabase.co';
+    const SUPABASE_ANON_KEY_VIDEOS = 'sb_publishable_uz4Tj8HDZef7T2OLEzyvUw_wcGsn0ZW';
+    const sbVideos = supabase.createClient(SUPABASE_URL_VIDEOS, SUPABASE_ANON_KEY_VIDEOS);
+
+    function escapeHtmlVideo(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    async function loadHomeVideos() {
+      const carousel = document.getElementById('videoCarousel');
+      const { data: videos, error } = await sbVideos
+        .from('home_videos')
+        .select('video_id, title, thumbnail_url, channel_id, video_channels(display_name)')
+        .eq('is_active', true)
+        .order('published_at', { ascending: false })
+        .limit(10);
+
+      if (error || !videos || !videos.length) return;
+
+      carousel.innerHTML = videos.map(v => `
+        <a class="video-card" href="#" data-video-id="${v.video_id}">
+          <div class="video-thumb">
+            <img src="${v.thumbnail_url}" alt="" loading="lazy">
+            <span class="video-play-icon">▶</span>
+          </div>
+          <div class="video-text">
+            <div class="video-headline">${escapeHtmlVideo(v.title)}</div>
+            <div class="video-channel">${escapeHtmlVideo(v.video_channels?.display_name)}</div>
+          </div>
+        </a>
+      `).join('');
+
+      carousel.querySelectorAll('.video-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          e.preventDefault();
+          openVideoModal(card.dataset.videoId);
+        });
+      });
+    }
+
+    function openVideoModal(videoId) {
+      const overlay = document.getElementById('videoModalOverlay');
+      const player = document.getElementById('videoModalPlayer');
+      player.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      overlay.classList.add('open');
+    }
+
+    function closeVideoModal() {
+      const overlay = document.getElementById('videoModalOverlay');
+      document.getElementById('videoModalPlayer').innerHTML = ''; // หยุดเล่นทันทีที่ปิด
+      overlay.classList.remove('open');
+    }
+
+    document.getElementById('videoModalClose').addEventListener('click', closeVideoModal);
+    document.getElementById('videoModalOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'videoModalOverlay') closeVideoModal();
+    });
+
+    loadHomeVideos();
   </script>
 
 </body>
