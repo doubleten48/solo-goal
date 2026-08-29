@@ -592,16 +592,21 @@
   }
 
   .scores-frame {
-    background: #3F3E3E;
-    border-radius: 10px;
-    padding: 14px;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
   }
 
   .scores-list-wrap {
-    position: relative;
     display: flex;
     align-items: stretch;
     gap: 6px;
+  }
+
+  .scores-carousel-inner {
+    position: relative;
+    flex: 1;
+    min-width: 0;
   }
 
   .scores-cta {
@@ -629,7 +634,10 @@
   }
 
   .scores-nav-btn {
-    flex-shrink: 0;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
     width: 22px;
     border: none;
     background: transparent;
@@ -641,6 +649,8 @@
     font-size: 20px;
     transition: color 0.15s ease;
   }
+  .scores-nav-btn.prev { left: -28px; }
+  .scores-nav-btn.next { right: -28px; }
 
   .scores-nav-btn:disabled {
     opacity: 0.3;
@@ -1446,11 +1456,13 @@
               <button data-comp="CL">Champions League</button>
             </div>
             <div class="scores-list-wrap">
-              <button class="scores-nav-btn" id="scoresPrev" aria-label="เลื่อนซ้าย">&#10094;</button>
-              <div class="scores-list" id="scoresList">
-                <div class="scores-empty">กำลังโหลดผลบอล...</div>
+              <div class="scores-carousel-inner">
+                <button class="scores-nav-btn prev" id="scoresPrev" aria-label="เลื่อนซ้าย">&#10094;</button>
+                <div class="scores-list" id="scoresList">
+                  <div class="scores-empty">กำลังโหลดผลบอล...</div>
+                </div>
+                <button class="scores-nav-btn next" id="scoresNext" aria-label="เลื่อนขวา">&#10095;</button>
               </div>
-              <button class="scores-nav-btn" id="scoresNext" aria-label="เลื่อนขวา">&#10095;</button>
               <a class="scores-cta" href="fixtures.html">
                 <span>ตารางคะแนน<br>ดาวซัลโว</span>
                 <span class="cta-arrow">&#10142;</span>
