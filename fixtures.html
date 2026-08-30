@@ -53,7 +53,7 @@
   }
 
   .logo-wrap { position: relative; width: fit-content; margin: 0 0 34px 0; }
-  .logo-svg { display: block; width: 70px; height: 78px; margin: 33px 0 0 59px; position: relative; z-index: 2; }
+  .logo-svg { display: block; width: 76px; height: 85px; margin: 33px 0 0 61px; position: relative; z-index: 2; }
 
   /* ===== เส้นความเร็ววิ่งอยู่ในตัวอักษรโลโก้ ===== */
   .solo-speed-lines .sl { animation: soloSpeedLine 2.2s linear infinite; }
@@ -89,6 +89,17 @@
   @keyframes logoSparklePop {
     0%   { opacity: 1; transform: translate(0, 0) scale(0.4); }
     100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.2); }
+  }
+
+  /* ===== ลูกบอลกลิ้งผ่านบน/ล่างโลโก้ (สุ่มตำแหน่งบน-ล่าง) ===== */
+  .logo-ball { position: absolute; left: -14px; width: 15px; height: 15px; opacity: 0; pointer-events: none; z-index: 3; }
+  .logo-ball.pos-top    { top: 14px; }
+  .logo-ball.pos-bottom { top: 122px; }
+  .logo-ball.roll { animation: logoBallRoll 2s linear; }
+  @keyframes logoBallRoll {
+    0%   { transform: translateX(0) rotate(0deg);    opacity: 1; }
+    92%  { opacity: 1; }
+    100% { transform: translateX(104px) rotate(720deg); opacity: 0; }
   }
 
   .sidebar .menu-panel { margin: 0 15px; position: relative; height: 403px; }
@@ -636,7 +647,7 @@
   <div class="layout">
     <aside class="sidebar" id="sidebar">
       <div class="logo-wrap">
-      <a href="index.html"><svg class="logo-svg" width="70" height="78" viewBox="0 0 76 85" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SoloGoal">
+      <a href="index.html"><svg class="logo-svg" width="76" height="85" viewBox="0 0 76 85" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SoloGoal">
 <g filter="url(#soloGoalShadowFixtures)">
 <mask id="soloGoalOutlineMaskFixtures" maskUnits="userSpaceOnUse" x="0" y="0" width="72" height="80" fill="black">
 <rect fill="white" width="72" height="80"/>
@@ -690,6 +701,9 @@
 </filter>
 </defs>
 </svg></a>
+      <svg class="logo-ball" viewBox="0 0 15 15" width="15" height="15" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M7.50002 0C3.36148 0 0 3.3611 0 7.49975C0 11.6384 3.36148 15 7.50002 15C11.6384 15 15 11.6389 15 7.49975C15 3.3611 11.639 0 7.50002 0ZM7.50002 0.533337C8.10315 0.533337 8.6855 0.617598 9.2439 0.761072L7.35223 2.16213L5.48135 0.831998C6.136 0.633975 6.81613 0.533348 7.50002 0.533337ZM9.87485 0.956278C11.0986 1.39995 12.1736 2.17782 12.9777 3.20158L11.9787 5.88747L9.9468 6.68107L7.74477 5.07463L7.63972 2.61442L9.87485 0.956278ZM4.8686 1.04958L7.10748 2.64267L7.21255 5.11038L5.11663 6.62775L2.84207 5.976L1.84205 3.44372C2.60553 2.3768 3.6546 1.54696 4.8686 1.04958ZM13.352 3.72587C14.0803 4.84975 14.4674 6.16055 14.4666 7.49975V7.50608L12.52 5.96265L13.352 3.72587ZM1.4858 3.99253L2.34598 6.1717L0.54185 7.66233C0.540783 7.60798 0.533317 7.55468 0.533317 7.49975C0.532317 6.26673 0.861533 5.05583 1.4858 3.99253ZM7.50155 5.55517L9.57293 7.06453L8.7773 9.49865L6.21465 9.49325L5.427 7.0549L7.50155 5.55517ZM12.1862 6.38023L14.3462 8.09222C14.372 8.11417 14.4019 8.13072 14.4341 8.14128C14.3164 9.42717 13.8412 10.6544 13.0624 11.6842C13.0364 11.6741 13.0088 11.6682 12.9809 11.6667L10.1383 11.3967L9.254 9.76267L10.0913 7.19782L12.1862 6.38023ZM2.77105 6.51148L4.88562 7.11733L5.71072 9.67357L4.48147 11.184L1.64685 11.1776C1.62923 11.1776 1.61163 11.1776 1.59355 11.1828C1.04978 10.3146 0.7051 9.33642 0.585583 8.3189L2.77105 6.51148ZM6.10643 10.0319L8.79595 10.0373L9.70252 11.712L8.6018 14.2528C8.58267 14.2906 8.5728 14.3325 8.57305 14.3749C8.22207 14.4294 7.8658 14.4667 7.50002 14.4667C6.90218 14.4667 6.32453 14.3829 5.77093 14.2417C5.76847 14.2191 5.76308 14.197 5.75498 14.1759L4.89688 11.5179L6.10643 10.0319ZM1.95943 11.7136L4.40093 11.7188L5.15548 14.0549C3.88608 13.6007 2.77573 12.7866 1.95943 11.7136ZM10.1873 11.936L12.6592 12.1707C11.7332 13.1954 10.5225 13.9207 9.18203 14.2539L10.1873 11.936Z" fill="#E5E5EA"/>
+      </svg>
     </div>
       <nav class="menu-panel">
         <div class="menu-highlight" id="menuHighlight"></div>
@@ -1010,14 +1024,16 @@
     (function () {
       const logoWrap = document.querySelector('.logo-wrap');
       const logo = logoWrap ? logoWrap.querySelector('.logo-svg') : null;
+      const ball = logoWrap ? logoWrap.querySelector('.logo-ball') : null;
       if (!logoWrap || !logo) return;
 
       const FX_CLASSES = ['fx-glow', 'fx-wiggle', 'fx-tilt'];
-      const FX_DURATIONS = { 'fx-glow': 900, 'fx-wiggle': 500, 'fx-tilt': 600, 'fx-sparkle': 750 };
+      const FX_DURATIONS = { 'fx-glow': 900, 'fx-wiggle': 500, 'fx-tilt': 600, 'fx-sparkle': 750, 'fx-ball': 2000 };
       let animating = false;
 
       function clearFx() {
         FX_CLASSES.forEach((c) => logo.classList.remove(c));
+        if (ball) ball.classList.remove('roll', 'pos-top', 'pos-bottom');
       }
 
       function spawnSparkles() {
@@ -1040,17 +1056,29 @@
         }
       }
 
+      function rollBall() {
+        if (!ball) return;
+        const posClass = Math.random() < 0.5 ? 'pos-top' : 'pos-bottom';
+        ball.classList.add(posClass);
+        void ball.offsetWidth;
+        ball.classList.add('roll');
+      }
+
       function playRandomEffect() {
         if (animating) return;
         animating = true;
         clearFx();
         void logo.offsetWidth;
 
-        const pool = ['fx-glow', 'fx-wiggle', 'fx-tilt', 'fx-sparkle'];
+        const pool = ball
+          ? ['fx-glow', 'fx-wiggle', 'fx-tilt', 'fx-sparkle', 'fx-ball']
+          : ['fx-glow', 'fx-wiggle', 'fx-tilt', 'fx-sparkle'];
         const pick = pool[Math.floor(Math.random() * pool.length)];
 
         if (pick === 'fx-sparkle') {
           spawnSparkles();
+        } else if (pick === 'fx-ball') {
+          rollBall();
         } else {
           logo.classList.add(pick);
         }
