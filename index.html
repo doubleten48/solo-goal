@@ -65,7 +65,7 @@
     display: block;
     width: 80px;
     height: auto;
-    margin: 0 0 0 59px;
+    margin: 33px 0 0 59px;
     position: relative;
     z-index: 2;
   }
@@ -80,27 +80,43 @@
     pointer-events: none;
     z-index: 1;
     overflow: visible;
+    transform: translateX(0);
   }
-  .header-mascot.path-behind { top: 42px; }
-  .header-mascot.path-above  { top: -8px; }
-  .header-mascot.path-below  { top: 78px; }
-  .header-mascot.run {
-    animation: headerMascotRun 6s ease-out forwards;
+  .header-mascot.path-behind { top: 75px; }
+  .header-mascot.path-above  { top: 25px; }
+  .header-mascot.path-below  { top: 111px; }
+  /* วิ่งเข้ามา */
+  .header-mascot.pos-run {
+    opacity: 1;
+    transform: translateX(270px);
+    transition: transform 0.7s linear, opacity 0.15s linear;
   }
-  @keyframes headerMascotRun {
-    0%   { transform: translateX(0);     opacity: 1; }
-    6%   { transform: translateX(270px); opacity: 1; }
-    90%  { transform: translateX(270px); opacity: 1; }
-    94%  { transform: translateX(290px); opacity: 1; }
-    100% { transform: translateX(290px); opacity: 0; }
+  /* หยุดค้าง (ควบคุมระยะเวลาด้วย JS setTimeout ให้แน่นอน) */
+  .header-mascot.pos-hold {
+    opacity: 1;
+    transform: translateX(270px);
+  }
+  /* เลื่อนไปข้างหน้าอีกนิด */
+  .header-mascot.pos-forward {
+    opacity: 1;
+    transform: translateX(290px);
+    transition: transform 0.35s linear;
+  }
+  /* จางหาย */
+  .header-mascot.pos-fade {
+    opacity: 0;
+    transform: translateX(290px);
+    transition: opacity 0.4s linear;
   }
   .header-mascot-ball-group {
     transform-box: fill-box;
     transform-origin: center;
   }
-  .header-mascot.run .header-mascot-ball-group {
-    animation: menuBallSpin 0.35s linear infinite;
+  .header-mascot.pos-run .header-mascot-ball-group,
+  .header-mascot.pos-forward .header-mascot-ball-group {
+    animation: menuBallSpin 0.5s linear infinite;
   }
+
 
   .sidebar .menu-panel {
     margin: 0 15px;
@@ -1168,7 +1184,7 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="logo-wrap">
-      <a href="index.html"><img class="logo" src="assets/LOGO_WEB_05.svg" alt="SoloGoal"></a>
+      <a href="index.html"><img class="logo" src="assets/LOGO_WEB_06.svg" alt="SoloGoal"></a>
       <svg class="header-mascot" id="headerMascotIndex" width="30" height="29" viewBox="0 0 28 27" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <g clip-path="url(#headerMascotClipIndex)">
           <g filter="url(#headerMascotFilterIndex)">
@@ -1705,31 +1721,61 @@
     // ===== Mascot วิ่งผ่าน logo (โหลดหน้า / ชี้เมาส์ / ทุก 5 นาที) =====
     (function () {
       const el = document.getElementById('headerMascotIndex');
-      const logoLink = document.querySelector('.logo-wrap a');
-      if (!el || !logoLink) return;
+      const logoWrap = document.querySelector('.logo-wrap');
+      const logoLink = logoWrap ? logoWrap.querySelector('a') : null;
+      if (!el || !logoWrap) return;
       const paths = ['path-behind', 'path-above', 'path-below'];
+
+      // ระยะเวลาแต่ละช่วง (ms) — ต้องตรงกับ transition ใน CSS ของแต่ละคลาส
+      const RUN_MS = 700;      // วิ่งเข้ามา
+      const HOLD_MS = 5000;    // หยุดค้าง ~5 วิ
+      const FORWARD_MS = 350;  // เลื่อนไปข้างหน้าอีกนิด
+      const FADE_MS = 400;     // จางหาย
+
       let running = false;
+      let timers = [];
+      function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+      function after(ms, fn) { timers.push(setTimeout(fn, ms)); }
+
+      function setPhase(cls) {
+        el.classList.remove('pos-run', 'pos-hold', 'pos-forward', 'pos-fade');
+        if (cls) el.classList.add(cls);
+      }
 
       function runMascot() {
         if (running || document.hidden) return;
         running = true;
-        el.classList.remove('path-behind', 'path-above', 'path-below', 'run');
-        void el.offsetWidth; // reflow เพื่อรีสตาร์ท animation
+        clearTimers();
+
+        el.classList.remove('path-behind', 'path-above', 'path-below');
+        setPhase(null);
+        void el.offsetWidth; // reflow เพื่อรีเซ็ตก่อนเริ่มรอบใหม่
         el.classList.add(paths[Math.floor(Math.random() * paths.length)]);
         void el.offsetWidth;
-        el.classList.add('run');
-      }
 
-      el.addEventListener('animationend', () => {
-        el.classList.remove('run', 'path-behind', 'path-above', 'path-below');
-        running = false;
-      });
+        setPhase('pos-run');
+        after(RUN_MS, () => {
+          setPhase('pos-hold');
+          after(HOLD_MS, () => {
+            setPhase('pos-forward');
+            after(FORWARD_MS, () => {
+              setPhase('pos-fade');
+              after(FADE_MS, () => {
+                setPhase(null);
+                el.classList.remove('path-behind', 'path-above', 'path-below');
+                running = false;
+              });
+            });
+          });
+        });
+      }
 
       // 1) ตอนโหลดหน้า (หน่วงเล็กน้อยแบบสุ่ม)
       setTimeout(runMascot, 400 + Math.random() * 600);
 
-      // 2) ชี้เมาส์ที่ logo
-      logoLink.addEventListener('mouseenter', runMascot);
+      // 2) ชี้เมาส์ที่ logo (ผูกทั้งกล่องและลิงก์ ให้ hover ได้ชัวร์)
+      logoWrap.addEventListener('mouseenter', runMascot);
+      if (logoLink) logoLink.addEventListener('mouseenter', runMascot);
 
       // 3) สุ่มวิ่งทุก 5 นาที (พักถ้าแท็บไม่ได้เปิดอยู่)
       setInterval(() => { if (!document.hidden) runMascot(); }, 5 * 60 * 1000);

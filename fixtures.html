@@ -53,23 +53,20 @@
   }
 
   .logo-wrap { position: relative; width: 198px; margin: 0 0 34px 0; }
-  .sidebar .logo { display: block; width: 80px; height: auto; margin: 0 0 0 59px; position: relative; z-index: 2; }
+  .sidebar .logo { display: block; width: 80px; height: auto; margin: 33px 0 0 59px; position: relative; z-index: 2; }
 
   /* ===== Mascot วิ่งผ่านหลัง logo (สุ่มวิ่งตอนโหลดหน้า / ชี้เมาส์ / ทุก 5 นาที) ===== */
-  .header-mascot { position: absolute; left: -36px; width: 30px; height: 29px; opacity: 0; pointer-events: none; z-index: 1; overflow: visible; }
-  .header-mascot.path-behind { top: 42px; }
-  .header-mascot.path-above  { top: -8px; }
-  .header-mascot.path-below  { top: 78px; }
-  .header-mascot.run { animation: headerMascotRun 6s ease-out forwards; }
-  @keyframes headerMascotRun {
-    0%   { transform: translateX(0);     opacity: 1; }
-    6%   { transform: translateX(270px); opacity: 1; }
-    90%  { transform: translateX(270px); opacity: 1; }
-    94%  { transform: translateX(290px); opacity: 1; }
-    100% { transform: translateX(290px); opacity: 0; }
-  }
+  .header-mascot { position: absolute; left: -36px; width: 30px; height: 29px; opacity: 0; pointer-events: none; z-index: 1; overflow: visible; transform: translateX(0); }
+  .header-mascot.path-behind { top: 75px; }
+  .header-mascot.path-above  { top: 25px; }
+  .header-mascot.path-below  { top: 111px; }
+  .header-mascot.pos-run { opacity: 1; transform: translateX(270px); transition: transform 0.7s linear, opacity 0.15s linear; }
+  .header-mascot.pos-hold { opacity: 1; transform: translateX(270px); }
+  .header-mascot.pos-forward { opacity: 1; transform: translateX(290px); transition: transform 0.35s linear; }
+  .header-mascot.pos-fade { opacity: 0; transform: translateX(290px); transition: opacity 0.4s linear; }
   .header-mascot-ball-group { transform-box: fill-box; transform-origin: center; }
-  .header-mascot.run .header-mascot-ball-group { animation: menuBallSpin 0.35s linear infinite; }
+  .header-mascot.pos-run .header-mascot-ball-group,
+  .header-mascot.pos-forward .header-mascot-ball-group { animation: menuBallSpin 0.5s linear infinite; }
 
   .sidebar .menu-panel { margin: 0 15px; position: relative; height: 403px; }
   .sidebar .menu-panel ul { list-style: none; position: relative; height: 100%; }
@@ -616,7 +613,7 @@
   <div class="layout">
     <aside class="sidebar" id="sidebar">
       <div class="logo-wrap">
-      <a href="index.html"><img class="logo" src="assets/LOGO_WEB_05.svg" alt="SoloGoal"></a>
+      <a href="index.html"><img class="logo" src="assets/LOGO_WEB_06.svg" alt="SoloGoal"></a>
       <svg class="header-mascot" id="headerMascotFixtures" width="30" height="29" viewBox="0 0 28 27" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <g clip-path="url(#headerMascotClipIndex)">
           <g filter="url(#headerMascotFilterIndex)">
@@ -964,28 +961,57 @@
     // ===== Mascot วิ่งผ่าน logo (โหลดหน้า / ชี้เมาส์ / ทุก 5 นาที) =====
     (function () {
       const el = document.getElementById('headerMascotFixtures');
-      const logoLink = document.querySelector('.logo-wrap a');
-      if (!el || !logoLink) return;
+      const logoWrap = document.querySelector('.logo-wrap');
+      const logoLink = logoWrap ? logoWrap.querySelector('a') : null;
+      if (!el || !logoWrap) return;
       const paths = ['path-behind', 'path-above', 'path-below'];
+
+      const RUN_MS = 700;
+      const HOLD_MS = 5000;
+      const FORWARD_MS = 350;
+      const FADE_MS = 400;
+
       let running = false;
+      let timers = [];
+      function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+      function after(ms, fn) { timers.push(setTimeout(fn, ms)); }
+
+      function setPhase(cls) {
+        el.classList.remove('pos-run', 'pos-hold', 'pos-forward', 'pos-fade');
+        if (cls) el.classList.add(cls);
+      }
 
       function runMascot() {
         if (running || document.hidden) return;
         running = true;
-        el.classList.remove('path-behind', 'path-above', 'path-below', 'run');
+        clearTimers();
+
+        el.classList.remove('path-behind', 'path-above', 'path-below');
+        setPhase(null);
         void el.offsetWidth;
         el.classList.add(paths[Math.floor(Math.random() * paths.length)]);
         void el.offsetWidth;
-        el.classList.add('run');
+
+        setPhase('pos-run');
+        after(RUN_MS, () => {
+          setPhase('pos-hold');
+          after(HOLD_MS, () => {
+            setPhase('pos-forward');
+            after(FORWARD_MS, () => {
+              setPhase('pos-fade');
+              after(FADE_MS, () => {
+                setPhase(null);
+                el.classList.remove('path-behind', 'path-above', 'path-below');
+                running = false;
+              });
+            });
+          });
+        });
       }
 
-      el.addEventListener('animationend', () => {
-        el.classList.remove('run', 'path-behind', 'path-above', 'path-below');
-        running = false;
-      });
-
       setTimeout(runMascot, 400 + Math.random() * 600);
-      logoLink.addEventListener('mouseenter', runMascot);
+      logoWrap.addEventListener('mouseenter', runMascot);
+      if (logoLink) logoLink.addEventListener('mouseenter', runMascot);
       setInterval(() => { if (!document.hidden) runMascot(); }, 5 * 60 * 1000);
     })();
 
