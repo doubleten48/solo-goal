@@ -2113,7 +2113,7 @@
         .eq('is_active', true)
         .eq('category', row.category)
         .order('published_at', { ascending: false })
-        .limit(10);
+        .limit(30);
 
       if (error || !videos || !videos.length) return;
 
