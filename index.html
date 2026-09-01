@@ -1694,18 +1694,33 @@
           </div>
         </div>
 
-        <!-- วีดีโอไฮไลท์ & ข่าว -->
+        <!-- วีดีโอไฮไลท์การแข่งขัน -->
         <div class="video-section">
           <div class="section-title">
             <div class="bar"></div>
-            <h2>วีดีโอไฮไลท์ & ข่าว</h2>
+            <h2>ไฮไลท์การแข่งขัน</h2>
           </div>
           <div class="video-carousel-wrap">
-            <button class="video-nav-btn prev" id="videoPrev" aria-label="เลื่อนซ้าย">&#10094;</button>
-            <div class="video-carousel" id="videoCarousel">
-              <!-- การ์ดสร้างจาก JS โดยดึงจาก Supabase (home_videos) -->
+            <button class="video-nav-btn prev" id="videoPrevHighlights" aria-label="เลื่อนซ้าย">&#10094;</button>
+            <div class="video-carousel" id="videoCarouselHighlights">
+              <!-- การ์ดสร้างจาก JS โดยดึงจาก Supabase (home_videos, category=official_highlights) -->
             </div>
-            <button class="video-nav-btn next" id="videoNext" aria-label="เลื่อนขวา">&#10095;</button>
+            <button class="video-nav-btn next" id="videoNextHighlights" aria-label="เลื่อนขวา">&#10095;</button>
+          </div>
+        </div>
+
+        <!-- ข่าวและวิเคราะห์วงการลูกหนัง -->
+        <div class="video-section">
+          <div class="section-title">
+            <div class="bar"></div>
+            <h2>ข่าวและวิเคราะห์วงการลูกหนัง</h2>
+          </div>
+          <div class="video-carousel-wrap">
+            <button class="video-nav-btn prev" id="videoPrevNews" aria-label="เลื่อนซ้าย">&#10094;</button>
+            <div class="video-carousel" id="videoCarouselNews">
+              <!-- การ์ดสร้างจาก JS โดยดึงจาก Supabase (home_videos, category=news_analysis) -->
+            </div>
+            <button class="video-nav-btn next" id="videoNextNews" aria-label="เลื่อนขวา">&#10095;</button>
           </div>
         </div>
 
@@ -2073,10 +2088,16 @@
   </script>
 
   <script>
-    // วีดีโอไฮไลท์ & ข่าว (carousel + modal เล่น embed)
+    // วีดีโอไฮไลท์การแข่งขัน + ข่าววงการลูกหนัง (carousel + modal เล่น embed)
     const SUPABASE_URL_VIDEOS = 'https://dnrcardbuuwnvuridubb.supabase.co';
     const SUPABASE_ANON_KEY_VIDEOS = 'sb_publishable_uz4Tj8HDZef7T2OLEzyvUw_wcGsn0ZW';
     const sbVideos = supabase.createClient(SUPABASE_URL_VIDEOS, SUPABASE_ANON_KEY_VIDEOS);
+
+    // แต่ละแถว: { category ที่ query, id ของ carousel/ปุ่ม }
+    const VIDEO_ROWS = [
+      { category: 'official_highlights', carouselId: 'videoCarouselHighlights', prevId: 'videoPrevHighlights', nextId: 'videoNextHighlights' },
+      { category: 'news_analysis', carouselId: 'videoCarouselNews', prevId: 'videoPrevNews', nextId: 'videoNextNews' },
+    ];
 
     function escapeHtmlVideo(str) {
       const div = document.createElement('div');
@@ -2084,13 +2105,13 @@
       return div.innerHTML;
     }
 
-    async function loadHomeVideos() {
-      const carousel = document.getElementById('videoCarousel');
+    async function loadVideoRow(row) {
+      const carousel = document.getElementById(row.carouselId);
       const { data: videos, error } = await sbVideos
         .from('home_videos')
-        .select('video_id, title, thumbnail_url, channel_id, is_highlight, video_channels(display_name)')
+        .select('video_id, title, thumbnail_url, channel_id, video_channels(display_name)')
         .eq('is_active', true)
-        .order('is_highlight', { ascending: false })
+        .eq('category', row.category)
         .order('published_at', { ascending: false })
         .limit(10);
 
@@ -2116,13 +2137,13 @@
         });
       });
 
-      updateVideoNavButtons();
+      updateVideoNavButtons(row);
     }
 
-    function updateVideoNavButtons() {
-      const carousel = document.getElementById('videoCarousel');
-      const prevBtn = document.getElementById('videoPrev');
-      const nextBtn = document.getElementById('videoNext');
+    function updateVideoNavButtons(row) {
+      const carousel = document.getElementById(row.carouselId);
+      const prevBtn = document.getElementById(row.prevId);
+      const nextBtn = document.getElementById(row.nextId);
       prevBtn.disabled = carousel.scrollLeft <= 0;
       nextBtn.disabled = carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 2;
     }
@@ -2145,15 +2166,16 @@
       if (e.target.id === 'videoModalOverlay') closeVideoModal();
     });
 
-    document.getElementById('videoPrev').addEventListener('click', () => {
-      document.getElementById('videoCarousel').scrollBy({ left: -456, behavior: 'smooth' });
+    VIDEO_ROWS.forEach(row => {
+      document.getElementById(row.prevId).addEventListener('click', () => {
+        document.getElementById(row.carouselId).scrollBy({ left: -456, behavior: 'smooth' });
+      });
+      document.getElementById(row.nextId).addEventListener('click', () => {
+        document.getElementById(row.carouselId).scrollBy({ left: 456, behavior: 'smooth' });
+      });
+      document.getElementById(row.carouselId).addEventListener('scroll', () => updateVideoNavButtons(row));
+      loadVideoRow(row);
     });
-    document.getElementById('videoNext').addEventListener('click', () => {
-      document.getElementById('videoCarousel').scrollBy({ left: 456, behavior: 'smooth' });
-    });
-    document.getElementById('videoCarousel').addEventListener('scroll', updateVideoNavButtons);
-
-    loadHomeVideos();
   </script>
 
 </body>
