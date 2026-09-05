@@ -1123,6 +1123,75 @@
     .hotlist-date, .hotlist-poster { display: none; }
   }
 
+  /* ===== บทความ ===== */
+  .articles-section {
+    width: 100%;
+    max-width: 1110px;
+    margin: 20px auto 0 auto;
+    padding: 0 20px;
+  }
+  .articles-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .articles-header .icon { font-size: 16px; }
+  .articles-header h3 { font-size: 15px; font-weight: 700; color: #fff; flex: 1; }
+  .articles-viewall {
+    font-size: 12px; color: #9a9a9a; text-decoration: none;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .articles-viewall:hover { color: #fff; }
+
+  .articles-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px 16px;
+  }
+
+  .article-card {
+    display: flex;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit;
+    min-width: 0;
+  }
+  .article-thumb {
+    flex: 0 0 56px;
+    width: 56px; height: 56px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
+  }
+  .article-body { min-width: 0; }
+  .article-tag {
+    display: inline-block;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 4px;
+    margin-bottom: 4px;
+  }
+  .article-tag.analysis { background: rgba(55,138,221,0.15); color: #6cb3ee; }
+  .article-tag.gossip { background: rgba(212,83,126,0.15); color: #e88ba8; }
+  .article-tag.interview { background: rgba(29,158,117,0.15); color: #5dcaa5; }
+  .article-tag.history { background: rgba(186,117,23,0.18); color: #ef9f27; }
+  .article-tag.review { background: rgba(127,119,221,0.18); color: #a49ae8; }
+
+  .article-title {
+    font-size: 13px; color: #e8e8e8; font-weight: 500;
+    line-height: 1.35;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    margin-bottom: 4px;
+  }
+  .article-meta { font-size: 11px; color: #777; }
+
+  @media (max-width: 900px) {
+    .articles-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .articles-grid { grid-template-columns: 1fr; }
+  }
+
   .news-top-row {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
   }
@@ -2170,6 +2239,81 @@
                 <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
                 <span class="hotlist-poster">แอดมินขาว</span>
               </span>
+            </a>
+          </div>
+        </div>
+
+        <!-- บทความ -->
+        <div class="articles-section">
+          <div class="articles-header">
+            <span class="icon">📝</span>
+            <h3>บทความ</h3>
+            <a class="articles-viewall" href="#">ดูทั้งหมด &#10142;</a>
+          </div>
+          <div class="articles-grid">
+            <a class="article-card" href="#">
+              <div class="article-thumb"></div>
+              <div class="article-body">
+                <span class="article-tag analysis">วิเคราะห์</span>
+                <div class="article-title">ทำไมลิเวอร์พูลถึงแกร่งขึ้นหลังเปลี่ยนระบบการเล่น</div>
+                <div class="article-meta">แอดน้อนแดง · 20.07.2026</div>
+              </div>
+            </a>
+            <a class="article-card" href="#">
+              <div class="article-thumb"></div>
+              <div class="article-body">
+                <span class="article-tag gossip">ซุบซิบ</span>
+                <div class="article-title">ข่าวลือ! ดาวยิงดังเล็งย้ายซบทีมใหญ่ซัมเมอร์นี้</div>
+                <div class="article-meta">แอดหมูทอด · 19.07.2026</div>
+              </div>
+            </a>
+            <a class="article-card" href="#">
+              <div class="article-thumb"></div>
+              <div class="article-body">
+                <span class="article-tag interview">สัมภาษณ์</span>
+                <div class="article-title">คุยกับดาวรุ่งเส้นทางสู่พรีเมียร์ลีก</div>
+                <div class="article-meta">แอดบอล24 · 19.07.2026</div>
+              </div>
+            </a>
+            <a class="article-card" href="#">
+              <div class="article-thumb"></div>
+              <div class="article-body">
+                <span class="article-tag history">ประวัติ</span>
+                <div class="article-title">ย้อนรอย 10 ปี แชมป์แชมเปียนส์ลีกที่น่าจดจำ</div>
+                <div class="article-meta">แอดบอลไทย · 18.07.2026</div>
+              </div>
+            </a>
+            <a class="article-card" href="#">
+              <div class="article-thumb"></div>
+              <div class="article-body">
+                <span class="article-tag review">รีวิว</span>
+                <div class="article-title">รีวิวรองเท้าสตั๊ดรุ่นใหม่ล่าสุดที่นักเตะระดับโลกใช้</div>
+                <div class="article-meta">แอดน้อนแดง · 18.07.2026</div>
+              </div>
+            </a>
+            <a class="article-card" href="#">
+              <div class="article-thumb"></div>
+              <div class="article-body">
+                <span class="article-tag analysis">วิเคราะห์</span>
+                <div class="article-title">แผนการเล่นแบบ 3 กองหลังกลับมาฮิตอีกครั้งเพราะอะไร</div>
+                <div class="article-meta">แอดบอล24 · 17.07.2026</div>
+              </div>
+            </a>
+            <a class="article-card" href="#">
+              <div class="article-thumb"></div>
+              <div class="article-body">
+                <span class="article-tag gossip">ซุบซิบ</span>
+                <div class="article-title">เปิดโผ! สโมสรไหนสนใจปีกดาวรุ่งไทยบ้าง</div>
+                <div class="article-meta">แอดหมูทอด · 17.07.2026</div>
+              </div>
+            </a>
+            <a class="article-card" href="#">
+              <div class="article-thumb"></div>
+              <div class="article-body">
+                <span class="article-tag review">รีวิว</span>
+                <div class="article-title">เทียบสเปกลูกฟุตบอลแมตช์บอลลีกใหญ่ 3 รุ่น</div>
+                <div class="article-meta">แอดบอลไทย · 16.07.2026</div>
+              </div>
             </a>
           </div>
         </div>
