@@ -1018,6 +1018,111 @@
   }
   .news-meta-stats span { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
 
+  /* ===== 10 กระทู้เดือด ===== */
+  .hotlist-section {
+    width: 100%;
+    max-width: 1110px;
+    margin: 20px auto 0 auto;
+    padding: 0 20px;
+  }
+  .hotlist {
+    background: #1E1E1E;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .hotlist-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .hotlist-icon {
+    flex: 0 0 30px;
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: #872929;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .hotlist-icon .flame { font-size: 12px; }
+  .hotlist-icon .num { font-size: 9px; font-weight: 700; color: #fff; }
+  .hotlist-header h3 { font-size: 15px; font-weight: 700; color: #fff; flex: 1; }
+  .hotlist-viewall {
+    font-size: 12px; color: #9a9a9a; text-decoration: none;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .hotlist-viewall:hover { color: #fff; }
+
+  .hotlist-row {
+    display: grid;
+    grid-template-columns: 34px 1fr auto;
+    align-items: center; gap: 10px;
+    padding: 10px 16px;
+    text-decoration: none; color: inherit;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .hotlist-row:last-child { border-bottom: none; }
+  .hotlist-row:hover { background: rgba(255,255,255,0.03); }
+
+  .hotlist-rank {
+    font-size: 14px; font-weight: 700; color: #6f6f6f;
+    text-align: center;
+  }
+  .hotlist-rank.top1, .hotlist-rank.top2, .hotlist-rank.top3 {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; margin: 0 auto;
+    font-size: 12px;
+  }
+  .hotlist-rank.top1 { background: #e6394a; }
+  .hotlist-rank.top2 { background: #d8623f; }
+  .hotlist-rank.top3 { background: #e08a3c; }
+
+  .hotlist-title {
+    min-width: 0;
+    font-size: 13px; color: #e8e8e8;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .hotlist-stats {
+    display: grid;
+    grid-template-columns: 54px 54px 44px 78px 20px 70px;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .hotlist-hot {
+    justify-self: start;
+  }
+  .hotlist-hot span {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: #e6663a; color: #fff;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 4px;
+    white-space: nowrap;
+  }
+  .hotlist-views, .hotlist-comments {
+    font-size: 11px; color: #9a9a9a;
+    display: flex; align-items: center; gap: 3px;
+  }
+  .hotlist-date {
+    font-size: 11px; color: #777;
+    display: flex; align-items: center; gap: 4px;
+    white-space: nowrap;
+  }
+  .hotlist-avatar-col { display: flex; align-items: center; justify-content: center; }
+  .hotlist-poster {
+    font-size: 11px; color: #c9c9c9;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
+
+  @media (max-width: 720px) {
+    .hotlist-stats { grid-template-columns: 44px 44px 36px 0px 18px 0px; }
+    .hotlist-date, .hotlist-poster { display: none; }
+  }
+
   .news-top-row {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
   }
@@ -1925,6 +2030,147 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- 10 กระทู้เดือด เรียงตามยอดวิว -->
+        <div class="hotlist-section">
+          <div class="hotlist">
+            <div class="hotlist-header">
+              <div class="hotlist-icon"><span class="flame">🔥</span><span class="num">10</span></div>
+              <h3>10 กระทู้เดือด</h3>
+              <a class="hotlist-viewall" href="#">ดูทั้งหมด &#10142;</a>
+            </div>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank top1">1</span>
+              <span class="hotlist-title">ทางการ! ลิเวอร์พูลปิดดีลปีกดาวรุ่งจากบุนเดสลีกา</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"><span>🔥HOT</span></span>
+                <span class="hotlist-views">👁 8,940</span>
+                <span class="hotlist-comments">💬 412</span>
+                <span class="hotlist-date">📅 20.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินแดง</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank top2">2</span>
+              <span class="hotlist-title">เรอัล มาดริด ซิวแชมป์ฟรีชิงถ้วยรอบอเมริกา</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"><span>🔥HOT</span></span>
+                <span class="hotlist-views">👁 7,102</span>
+                <span class="hotlist-comments">💬 310</span>
+                <span class="hotlist-date">📅 20.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมิน24</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank top3">3</span>
+              <span class="hotlist-title">ดราม่า! แฟนบอลบุกวิจารณ์คุณชื่อทีมชาติหลังพ่าย</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"><span>🔥HOT</span></span>
+                <span class="hotlist-views">👁 6,530</span>
+                <span class="hotlist-comments">💬 289</span>
+                <span class="hotlist-date">📅 19.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินขาว</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank">4</span>
+              <span class="hotlist-title">อินเตอร์ มิลาน เปิดตัวเบอร์เก้าคนใหม่พร้อมลุยลีก</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"></span>
+                <span class="hotlist-views">👁 5,890</span>
+                <span class="hotlist-comments">💬 201</span>
+                <span class="hotlist-date">📅 20.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินขาว</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank">5</span>
+              <span class="hotlist-title">แมนฯ ยูไนเต็ด เตรียมเปิดตัวกุนซือใหม่สัปดาห์หน้า</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"></span>
+                <span class="hotlist-views">👁 5,120</span>
+                <span class="hotlist-comments">💬 178</span>
+                <span class="hotlist-date">📅 21.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินแดง</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank">6</span>
+              <span class="hotlist-title">ทีมชาติไทยเก็บชัยนัดกระชับมิตรก่อนศึกใหญ่</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"></span>
+                <span class="hotlist-views">👁 4,760</span>
+                <span class="hotlist-comments">💬 165</span>
+                <span class="hotlist-date">📅 19.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินไทย</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank">7</span>
+              <span class="hotlist-title">นาโปลี ต่อสัญญากับกัปตันทีมยาว 3 ปี</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"></span>
+                <span class="hotlist-views">👁 3,980</span>
+                <span class="hotlist-comments">💬 120</span>
+                <span class="hotlist-date">📅 18.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินขาว</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank">8</span>
+              <span class="hotlist-title">เชฟฯ ยูไนเต็ด ปะทะ อันเดอร์สฟิลด์ ศึกลุ้นเลื่อนชั้น</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"></span>
+                <span class="hotlist-views">👁 3,410</span>
+                <span class="hotlist-comments">💬 98</span>
+                <span class="hotlist-date">📅 21.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมิน24</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank">9</span>
+              <span class="hotlist-title">สปอร์ติ้ง ลิสบอน เปิดบ้านรับสตราสบูร์กคืนนี้</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"></span>
+                <span class="hotlist-views">👁 2,890</span>
+                <span class="hotlist-comments">💬 76</span>
+                <span class="hotlist-date">📅 20.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินขาว</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank">10</span>
+              <span class="hotlist-title">วิเคราะห์บอล: บอลติมอร์ vs ลินคอล์น เร้ด อิมป์ส</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"></span>
+                <span class="hotlist-views">👁 2,340</span>
+                <span class="hotlist-comments">💬 54</span>
+                <span class="hotlist-date">📅 21.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินขาว</span>
+              </span>
+            </a>
           </div>
         </div>
 
