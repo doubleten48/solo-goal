@@ -1276,9 +1276,8 @@
   .standings-table tr.zone-rel { border-left: 3px solid #e24b4a; }
   .standings-table tr { border-left: 3px solid transparent; }
 
-  .team-cell {
+  .team-cell-inner {
     display: flex; align-items: center; gap: 8px;
-    text-align: left; justify-content: flex-start;
     font-weight: 600; color: #fff;
   }
   .team-logo {
@@ -1332,8 +1331,8 @@
     color: #e8e8e8;
   }
   .leaders-rank { color: #9a9a9a; font-weight: 600; }
-  .player-cell { display: flex; align-items: center; gap: 8px; }
-  .player-cell img {
+  .player-cell-inner { display: flex; align-items: center; gap: 8px; }
+  .player-cell-inner img {
     width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px;
     object-fit: cover;
   }
@@ -1343,8 +1342,8 @@
     display: flex; align-items: center; justify-content: center;
   }
   .player-name { font-weight: 600; color: #fff; white-space: nowrap; font-size: 13px; }
-  .leaders-table .team-mini { display: flex; align-items: center; gap: 6px; color: #9a9a9a; font-size: 12px; white-space: nowrap; }
-  .leaders-table .team-mini .team-logo { flex: 0 0 16px; width: 16px; height: 16px; }
+  .team-mini-inner { display: flex; align-items: center; gap: 6px; color: #9a9a9a; font-size: 12px; white-space: nowrap; }
+  .team-mini-inner .team-logo { flex: 0 0 16px; width: 16px; height: 16px; }
   .leaders-count { font-weight: 700; color: #fff; font-size: 15px; }
 
   @media (max-width: 720px) {
@@ -3137,7 +3136,7 @@
           return `
             <tr class="${zoneClass}">
               <td>${r.position}</td>
-              <td class="team-cell"><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'"><span>${r.team_name}</span></td>
+              <td><div class="team-cell-inner"><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'"><span>${r.team_name}</span></div></td>
               <td>${r.played}</td>
               <td>${r.won}</td>
               <td>${r.draw}</td>
@@ -3159,8 +3158,8 @@
           : `<div class="player-photo-fallback">${homeInitials(r.player_name)}</div>`;
         return `
           <td class="leaders-rank">${r.rank}</td>
-          <td class="player-cell">${photo}<span class="player-name">${r.player_name || 'ไม่ทราบชื่อ'}</span></td>
-          <td class="team-mini"><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'">${abbrTeam(r.team_name)}</td>`;
+          <td><div class="player-cell-inner">${photo}<span class="player-name">${r.player_name || 'ไม่ทราบชื่อ'}</span></div></td>
+          <td><div class="team-mini-inner"><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'">${abbrTeam(r.team_name)}</div></td>`;
       }
 
       function renderHomeLeaders() {
