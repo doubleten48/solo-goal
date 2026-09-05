@@ -1179,6 +1179,56 @@
   }
   .video-channel { font-size: 11px; color: #9a9a9a; }
 
+  /* ===== Game Event section ===== */
+  .game-event-section .section-title { justify-content: flex-start; }
+  .game-event-viewall {
+    margin-left: auto;
+    font-size: 13px;
+    color: #9a9a9a;
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .game-event-viewall:hover { color: var(--main-text); }
+
+  .game-event-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .game-event-card {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    display: block;
+    background: #1E1E1E;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: opacity 0.15s ease;
+  }
+  .game-event-card:hover { opacity: 0.92; }
+
+  .game-event-banner {
+    width: 100%;
+    aspect-ratio: 220 / 124;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .game-event-banner.predict { background: linear-gradient(135deg, #0f5c45 0%, #14432f 100%); }
+  .game-event-banner.minigame { background: linear-gradient(135deg, #6b3d1f 0%, #4a2812 100%); }
+  .game-event-banner svg { color: rgba(255,255,255,0.35); }
+
+  .game-event-text { padding: 10px 12px 12px 12px; }
+  .game-event-title {
+    font-family: 'Inter', 'Kanit', sans-serif;
+    font-size: 14px; font-weight: 600; color: #fff;
+    line-height: 1.35; margin: 6px 0 4px 0;
+  }
+  .game-event-desc {
+    font-size: 12px; color: #9a9a9a; line-height: 1.4;
+  }
+
   .video-modal-overlay {
     display: none;
     position: fixed; inset: 0;
@@ -1721,6 +1771,42 @@
               <!-- การ์ดสร้างจาก JS โดยดึงจาก Supabase (home_videos, category=news_analysis) -->
             </div>
             <button class="video-nav-btn next" id="videoNextNews" aria-label="เลื่อนขวา">&#10095;</button>
+          </div>
+        </div>
+
+        <!-- อีเวนต์และมินิเกมในเว็บ -->
+        <div class="video-section game-event-section">
+          <div class="section-title">
+            <div class="bar"></div>
+            <h2>GAME EVENT</h2>
+            <a class="game-event-viewall" href="#">ดูทั้งหมด &#10142;</a>
+          </div>
+          <div class="game-event-grid">
+            <a class="game-event-card" href="#">
+              <div class="game-event-banner predict">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="M9 12l2 2 4-4"></path>
+                </svg>
+              </div>
+              <div class="game-event-text">
+                <span class="news-tag">ทายผล</span>
+                <div class="game-event-title">ทายผลบอลชิงรางวัล</div>
+                <div class="game-event-desc">ทายผลการแข่งขันที่ชอบ ลุ้นรับเหรียญและของรางวัลพิเศษ</div>
+              </div>
+            </a>
+            <a class="game-event-card" href="#">
+              <div class="game-event-banner minigame">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M12 2l2.5 5 5.5.8-4 3.9.9 5.3L12 14.5 7.1 17l.9-5.3-4-3.9 5.5-.8L12 2z"></path>
+                </svg>
+              </div>
+              <div class="game-event-text">
+                <span class="news-tag">มินิเกม</span>
+                <div class="game-event-title">อัพเลเวลนักบอล</div>
+                <div class="game-event-desc">สะสมค่าประสบการณ์ อัพเกรดนักเตะในทีมของคุณให้แข็งแกร่งขึ้น</div>
+              </div>
+            </a>
           </div>
         </div>
 
