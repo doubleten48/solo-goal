@@ -1190,43 +1190,109 @@
   }
   .game-event-viewall:hover { color: var(--main-text); }
 
-  .game-event-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  .game-event-list {
+    display: flex;
+    flex-direction: column;
     gap: 16px;
   }
 
   .game-event-card {
-    text-decoration: none;
-    color: inherit;
-    cursor: pointer;
-    display: block;
+    display: flex;
     background: #1E1E1E;
     border-radius: 15px;
     overflow: hidden;
-    transition: opacity 0.15s ease;
   }
-  .game-event-card:hover { opacity: 0.92; }
 
-  .game-event-banner {
+  .game-event-image {
+    flex: 0 0 300px;
+    position: relative;
+  }
+  .game-event-image img {
     width: 100%;
-    aspect-ratio: 220 / 124;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .game-event-content {
+    flex: 1;
+    min-width: 0;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .game-event-badge {
+    display: inline-block;
+    align-self: flex-start;
+    background: #872929;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 8px 22px;
+    border-radius: 8px;
+  }
+
+  .game-event-dates {
+    font-size: 13px;
+    color: #9a9a9a;
+  }
+  .game-event-dates span + span { margin-left: 20px; }
+
+  .game-event-desc {
+    font-size: 14px;
+    color: #fff;
+    line-height: 1.6;
+  }
+
+  .game-event-bottom {
+    margin-top: auto;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
   }
-  .game-event-banner.predict { background: linear-gradient(135deg, #0f5c45 0%, #14432f 100%); }
-  .game-event-banner.minigame { background: linear-gradient(135deg, #6b3d1f 0%, #4a2812 100%); }
-  .game-event-banner svg { color: rgba(255,255,255,0.35); }
 
-  .game-event-text { padding: 10px 12px 12px 12px; }
-  .game-event-title {
-    font-family: 'Inter', 'Kanit', sans-serif;
-    font-size: 14px; font-weight: 600; color: #fff;
-    line-height: 1.35; margin: 6px 0 4px 0;
+  .game-event-rewards {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
   }
-  .game-event-desc {
-    font-size: 12px; color: #9a9a9a; line-height: 1.4;
+  .game-event-rewards-label { font-size: 13px; color: #9a9a9a; }
+  .game-event-reward {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: #fff;
+  }
+  .game-event-reward .icon { font-size: 18px; line-height: 1; }
+
+  .game-event-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 10px;
+  }
+  .game-event-btn {
+    background: #872929;
+    color: #fff;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+    white-space: nowrap;
+  }
+  .game-event-btn:hover { opacity: 0.85; }
+
+  @media (max-width: 640px) {
+    .game-event-card { flex-direction: column; }
+    .game-event-image { flex: 0 0 160px; }
   }
 
   .video-modal-overlay {
@@ -1781,32 +1847,60 @@
             <h2>GAME EVENT</h2>
             <a class="game-event-viewall" href="#">ดูทั้งหมด &#10142;</a>
           </div>
-          <div class="game-event-grid">
-            <a class="game-event-card" href="#">
-              <div class="game-event-banner predict">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <circle cx="12" cy="12" r="9"></circle>
-                  <path d="M9 12l2 2 4-4"></path>
-                </svg>
+          <div class="game-event-list">
+            <!-- อีเวนต์ 1: ทายผลบอล -->
+            <div class="game-event-card">
+              <div class="game-event-image">
+                <img src="images/events/predict-match-banner.jpg" alt="ทายผลบอล">
               </div>
-              <div class="game-event-text">
-                <span class="news-tag">ทายผล</span>
-                <div class="game-event-title">ทายผลบอลชิงรางวัล</div>
-                <div class="game-event-desc">ทายผลการแข่งขันที่ชอบ ลุ้นรับเหรียญและของรางวัลพิเศษ</div>
+              <div class="game-event-content">
+                <span class="game-event-badge">ทายผลบอล</span>
+                <div class="game-event-dates">
+                  <span>เริ่ม : 20 กย. 2026 12:00 น.</span>
+                  <span>จบ : 20 กย. 2026 12:00 น.</span>
+                </div>
+                <div class="game-event-desc">ทายผลการแข่งขันที่ชอบ ลุ้นรับเหรียญและของรางวัลพิเศษ ร่วมสนุกได้ทุกแมตช์การแข่งขัน</div>
+                <div class="game-event-bottom">
+                  <div class="game-event-rewards">
+                    <span class="game-event-rewards-label">ของรางวัล :</span>
+                    <span class="game-event-reward"><span class="icon">🎁</span> x100</span>
+                    <span class="game-event-reward"><span class="icon">🪙</span> x100</span>
+                    <span class="game-event-reward"><span class="icon">🎉</span> x100</span>
+                    <span class="game-event-reward"><span class="icon">😎</span> x100</span>
+                  </div>
+                  <div class="game-event-actions">
+                    <a href="#" class="game-event-btn">อ่าน</a>
+                    <a href="#" class="game-event-btn">เล่นเกม</a>
+                  </div>
+                </div>
               </div>
-            </a>
-            <a class="game-event-card" href="#">
-              <div class="game-event-banner minigame">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M12 2l2.5 5 5.5.8-4 3.9.9 5.3L12 14.5 7.1 17l.9-5.3-4-3.9 5.5-.8L12 2z"></path>
-                </svg>
+            </div>
+
+            <!-- อีเวนต์ 2: อัพเลเวลนักบอล -->
+            <div class="game-event-card">
+              <div class="game-event-image">
+                <img src="images/events/level-up-banner.jpg" alt="อัพเลเวลนักบอล">
               </div>
-              <div class="game-event-text">
-                <span class="news-tag">มินิเกม</span>
-                <div class="game-event-title">อัพเลเวลนักบอล</div>
-                <div class="game-event-desc">สะสมค่าประสบการณ์ อัพเกรดนักเตะในทีมของคุณให้แข็งแกร่งขึ้น</div>
+              <div class="game-event-content">
+                <span class="game-event-badge">อัพเลเวลนักบอล</span>
+                <div class="game-event-dates">
+                  <span>เริ่ม : 20 กย. 2026 12:00 น.</span>
+                  <span>จบ : 27 กย. 2026 12:00 น.</span>
+                </div>
+                <div class="game-event-desc">สะสมค่าประสบการณ์ อัพเกรดนักเตะในทีมของคุณให้แข็งแกร่งขึ้น พร้อมลุ้นรางวัลพิเศษ</div>
+                <div class="game-event-bottom">
+                  <div class="game-event-rewards">
+                    <span class="game-event-rewards-label">ของรางวัล :</span>
+                    <span class="game-event-reward"><span class="icon">🎁</span> x50</span>
+                    <span class="game-event-reward"><span class="icon">🪙</span> x200</span>
+                  </div>
+                  <div class="game-event-actions">
+                    <a href="#" class="game-event-btn">อ่าน</a>
+                    <a href="#" class="game-event-btn">เล่นเกม</a>
+                  </div>
+                </div>
               </div>
-            </a>
+            </div>
           </div>
         </div>
 
