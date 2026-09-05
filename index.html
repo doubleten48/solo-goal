@@ -1204,6 +1204,163 @@
     .articles-columns { grid-template-columns: 1fr; }
   }
 
+  /* ===== ตารางคะแนน + ดาวซัลโว/แอสซิสต์ ===== */
+  .standings-section {
+    width: 100%;
+    max-width: 1110px;
+    margin: 20px auto 0 auto;
+    padding: 0 20px;
+  }
+  .standings-card {
+    background: #1a1a1e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .standings-topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .standings-toggle {
+    font-size: 12px; font-weight: 700; color: #9a9a9a;
+    padding: 6px 14px; border-radius: 20px;
+    display: flex; align-items: center; gap: 6px;
+    cursor: pointer;
+  }
+  .standings-toggle.active { background: #0f8a5f; color: #fff; }
+
+  .league-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    scrollbar-width: none;
+  }
+  .league-tabs::-webkit-scrollbar { display: none; }
+  .league-tab {
+    flex: 0 0 auto;
+    font-size: 12px; font-weight: 600; color: #9a9a9a;
+    background: rgba(255,255,255,0.04);
+    border: none; padding: 8px 14px; border-radius: 8px;
+    white-space: nowrap; cursor: pointer;
+  }
+  .league-tab.active { background: #0f8a5f; color: #fff; }
+
+  .league-name { font-size: 13px; font-weight: 700; color: #fff; margin: 4px 0 10px; }
+
+  .standings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .standings-table th {
+    text-align: center;
+    font-weight: 500;
+    color: #9a9a9a;
+    padding: 6px 4px;
+    font-size: 11px;
+  }
+  .standings-table th:nth-child(2) { text-align: left; }
+  .standings-table td {
+    text-align: center;
+    color: #e8e8e8;
+    padding: 7px 4px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .standings-table tr.zone-cl { border-left: 3px solid #378add; }
+  .standings-table tr.zone-el { border-left: 3px solid #ef9f27; }
+  .standings-table tr.zone-rel { border-left: 3px solid #e24b4a; }
+  .standings-table tr { border-left: 3px solid transparent; }
+
+  .team-cell {
+    display: flex; align-items: center; gap: 8px;
+    text-align: left; justify-content: flex-start;
+    font-weight: 600; color: #fff;
+  }
+  .team-logo {
+    flex: 0 0 20px; width: 20px; height: 20px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    object-fit: contain;
+  }
+  .pts-col { font-weight: 700; color: #fff; }
+  .form-dots { display: flex; gap: 3px; justify-content: center; }
+  .form-dots span {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .form-dots .w { background: #5dcaa5; }
+  .form-dots .d { background: #9a9a9a; }
+  .form-dots .l { background: #e24b4a; }
+
+  .standings-legend {
+    display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap;
+    font-size: 11px; color: #9a9a9a;
+  }
+  .standings-legend span { display: flex; align-items: center; gap: 5px; }
+  .standings-legend .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .standings-legend .dot.cl { background: #378add; }
+  .standings-legend .dot.el { background: #ef9f27; }
+  .standings-legend .dot.rel { background: #e24b4a; }
+
+  .leaders-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+  }
+  .leaders-col h4 { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .leaders-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .leaders-table th {
+    text-align: left; color: #9a9a9a; font-weight: 500; font-size: 11px;
+    padding: 6px 4px;
+  }
+  .leaders-table th:last-child, .leaders-table td:last-child { text-align: right; }
+  .leaders-table th:first-child, .leaders-table td:first-child { text-align: center; width: 24px; }
+  .leaders-table td {
+    padding: 8px 4px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    color: #e8e8e8;
+  }
+  .player-cell { display: flex; align-items: center; gap: 8px; }
+  .player-cell img {
+    width: 26px; height: 26px; border-radius: 50%; flex: 0 0 26px;
+    object-fit: cover;
+  }
+  .player-photo-fallback {
+    width: 26px; height: 26px; border-radius: 50%; flex: 0 0 26px;
+    background: #872929; color: #fff; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .player-cell .team-logo { flex: 0 0 18px; width: 18px; height: 18px; }
+  .player-name { font-weight: 600; color: #fff; white-space: nowrap; }
+  .leaders-count { font-weight: 700; color: #fff; }
+
+  @media (max-width: 720px) {
+    .leaders-columns { grid-template-columns: 1fr; }
+    .standings-table { font-size: 11px; }
+  }
+
+  /* ===== ปุ่มลูกศร scroll up/down ===== */
+  .scroll-fab {
+    position: fixed;
+    right: 20px; bottom: 20px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #872929;
+    color: #fff;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 500;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .scroll-fab:hover { opacity: 0.9; }
+
   .news-top-row {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
   }
@@ -2334,6 +2491,70 @@
           </div>
         </div>
 
+        <!-- ตารางคะแนน + ดาวซัลโว/แอสซิสต์ -->
+        <div class="standings-section">
+          <div class="standings-card">
+            <div class="standings-topbar">
+              <div class="standings-toggle active"><span>🏆</span> ตารางคะแนน</div>
+              <div class="standings-toggle">STANDINGS</div>
+            </div>
+
+            <div class="league-tabs" id="standingsLeagueTabs">
+              <button class="league-tab active" data-comp="PL">Premier League</button>
+              <button class="league-tab" data-comp="PD">La Liga</button>
+              <button class="league-tab" data-comp="BL1">Bundesliga</button>
+              <button class="league-tab" data-comp="SA">Serie A</button>
+              <button class="league-tab" data-comp="CL">UEFA Champions League</button>
+              <button class="league-tab" data-comp="FL1">Ligue 1</button>
+            </div>
+
+            <h4 class="league-name" id="standingsLeagueName">Premier League</h4>
+
+            <table class="standings-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>ทีม</th>
+                  <th>เล่น</th>
+                  <th>ชนะ</th>
+                  <th>เสมอ</th>
+                  <th>แพ้</th>
+                  <th>ยิงได้</th>
+                  <th>เสีย</th>
+                  <th>ผลต่าง</th>
+                  <th>คะแนน</th>
+                </tr>
+              </thead>
+              <tbody id="homeStandingsBody">
+                <tr><td colspan="10" style="text-align:center;color:#9a9a9a;padding:16px;">กำลังโหลด...</td></tr>
+              </tbody>
+            </table>
+
+            <div class="standings-legend" id="homeStandingsLegend"></div>
+
+            <div class="leaders-columns">
+              <div class="leaders-col">
+                <h4>ดาวซัลโว</h4>
+                <table class="leaders-table">
+                  <thead><tr><th>#</th><th>ทีม</th><th>นักเตะ</th><th>ประตู</th></tr></thead>
+                  <tbody id="homeScorersBody">
+                    <tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="leaders-col">
+                <h4>แอสซิสต์</h4>
+                <table class="leaders-table">
+                  <thead><tr><th>#</th><th>ทีม</th><th>นักเตะ</th><th>แอสซิสต์</th></tr></thead>
+                  <tbody id="homeAssistsBody">
+                    <tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- ถัดจากนี้ลงไป = สิ่งที่ต้องทำในโปรเซสถัดไป -->
       </main>
     </div>
@@ -2788,5 +3009,200 @@
     });
   </script>
 
+  <button class="scroll-fab" id="scrollFab" aria-label="เลื่อนหน้า">&#8595;</button>
+
+  <script>
+    (function() {
+      // ===== ตารางคะแนน + ดาวซัลโว/แอสซิสต์ (หน้าแรก) =====
+      // ใช้ตารางเดียวกับ fixtures.html: standings_archive, top_scorers_archive, top_assists_archive
+      // อัปเดตโดย cron job อยู่แล้ว หน้านี้แค่อ่านตรง ๆ ผ่าน PostgREST ไม่ผ่าน Edge Function
+      const SUPABASE_URL_STANDINGS = 'https://dnrcardbuuwnvuridubb.supabase.co';
+      const SUPABASE_ANON_KEY_STANDINGS = 'sb_publishable_uz4Tj8HDZef7T2OLEzyvUw_wcGsn0ZW';
+
+      const HOME_ZONES = {
+        PL:  [{from:1,to:4,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:18,to:20,color:'#e11d48',label:'ตกชั้น'}],
+        PD:  [{from:1,to:4,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:6,to:6,color:'#22c55e',label:'คอนเฟอเรนซ์ลีก'},{from:18,to:20,color:'#e11d48',label:'ตกชั้น'}],
+        SA:  [{from:1,to:4,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:6,to:6,color:'#22c55e',label:'คอนเฟอเรนซ์ลีก'},{from:18,to:20,color:'#e11d48',label:'ตกชั้น'}],
+        BL1: [{from:1,to:4,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:6,to:6,color:'#22c55e',label:'คอนเฟอเรนซ์ลีก'},{from:16,to:16,color:'#9ca3af',label:'เพลย์ออฟตกชั้น'},{from:17,to:18,color:'#e11d48',label:'ตกชั้น'}],
+        FL1: [{from:1,to:3,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:4,to:4,color:'#7c3aed',label:'รอบคัดเลือกแชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:6,to:6,color:'#22c55e',label:'คอนเฟอเรนซ์ลีก'},{from:16,to:18,color:'#e11d48',label:'ตกชั้น'}],
+        CL:  [{from:1,to:8,color:'#3b82f6',label:'ผ่านตรงรอบ 16 ทีม'},{from:9,to:24,color:'#f97316',label:'เพลย์ออฟ'},{from:25,to:36,color:'#e11d48',label:'ตกรอบ'}],
+      };
+      const LEAGUE_NAMES = {
+        PL: 'Premier League', PD: 'La Liga', BL1: 'Bundesliga',
+        SA: 'Serie A', CL: 'UEFA Champions League', FL1: 'Ligue 1'
+      };
+
+      let homeComp = 'PL';
+      let homeStandings = {};
+      let homeScorers = {};
+      let homeAssists = {};
+
+      async function sbHome(path) {
+        try {
+          const res = await fetch(SUPABASE_URL_STANDINGS + '/rest/v1/' + path, {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY_STANDINGS,
+              'Authorization': 'Bearer ' + SUPABASE_ANON_KEY_STANDINGS
+            }
+          });
+          return res.json();
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function homeGetZone(comp, position) {
+        const zones = HOME_ZONES[comp] || [];
+        return zones.find(z => position >= z.from && position <= z.to);
+      }
+
+      function homeInitials(name) {
+        if (!name) return '?';
+        const parts = name.trim().split(/\s+/);
+        const first = parts[0]?.[0] || '';
+        const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+        return (first + last).toUpperCase();
+      }
+
+      function renderHomeStandings() {
+        const body = document.getElementById('homeStandingsBody');
+        const legend = document.getElementById('homeStandingsLegend');
+        const nameEl = document.getElementById('standingsLeagueName');
+        if (!body) return;
+        nameEl.textContent = LEAGUE_NAMES[homeComp] || homeComp;
+
+        const rows = homeStandings[homeComp] || [];
+        if (!rows.length) {
+          body.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#9a9a9a;padding:16px;">ไม่มีข้อมูลตารางคะแนนลีกนี้</td></tr>';
+          legend.innerHTML = '';
+          return;
+        }
+
+        body.innerHTML = rows.map(r => {
+          const zone = homeGetZone(homeComp, r.position);
+          const zoneClass = zone && zone.color === '#3b82f6' ? 'zone-cl' : zone && zone.color === '#f97316' ? 'zone-el' : zone && zone.color === '#e11d48' ? 'zone-rel' : '';
+          const gd = r.goal_diff > 0 ? '+' + r.goal_diff : r.goal_diff;
+          return `
+            <tr class="${zoneClass}">
+              <td>${r.position}</td>
+              <td class="team-cell"><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'"><span>${r.team_name}</span></td>
+              <td>${r.played}</td>
+              <td>${r.won}</td>
+              <td>${r.draw}</td>
+              <td>${r.lost}</td>
+              <td>${r.goals_for}</td>
+              <td>${r.goals_against}</td>
+              <td>${gd}</td>
+              <td class="pts-col">${r.points}</td>
+            </tr>`;
+        }).join('');
+
+        const zones = HOME_ZONES[homeComp] || [];
+        legend.innerHTML = zones.map(z => `<span><span class="dot" style="background:${z.color}"></span>${z.label}</span>`).join('');
+      }
+
+      function homePlayerCell(r) {
+        const photo = r.photo_url
+          ? `<img src="${r.photo_url}" onerror="this.outerHTML='<div class=&quot;player-photo-fallback&quot;>${homeInitials(r.player_name)}</div>'">`
+          : `<div class="player-photo-fallback">${homeInitials(r.player_name)}</div>`;
+        return `
+          <td>${r.rank}</td>
+          <td><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'"></td>
+          <td class="player-cell">${photo}<span class="player-name">${r.player_name || 'ไม่ทราบชื่อ'}</span></td>`;
+      }
+
+      function renderHomeLeaders() {
+        const scorersBody = document.getElementById('homeScorersBody');
+        const assistsBody = document.getElementById('homeAssistsBody');
+        if (!scorersBody || !assistsBody) return;
+
+        const scorerRows = (homeScorers[homeComp] || []).slice(0, 5);
+        const assistRows = (homeAssists[homeComp] || []).slice(0, 5);
+
+        scorersBody.innerHTML = scorerRows.length
+          ? scorerRows.map(r => `<tr>${homePlayerCell(r)}<td class="leaders-count">${r.goals ?? 0}</td></tr>`).join('')
+          : '<tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">ยังไม่มีข้อมูลดาวซัลโวลีกนี้</td></tr>';
+
+        assistsBody.innerHTML = assistRows.length
+          ? assistRows.map(r => `<tr>${homePlayerCell(r)}<td class="leaders-count">${r.assists ?? 0}</td></tr>`).join('')
+          : '<tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">ยังไม่มีข้อมูลแอสซิสต์ลีกนี้</td></tr>';
+      }
+
+      async function loadHomeStandingsData() {
+        const standings = await sbHome('standings_archive?select=*&order=competition_code.asc,position.asc');
+        if (Array.isArray(standings)) {
+          homeStandings = {};
+          standings.forEach(r => {
+            if (!homeStandings[r.competition_code]) homeStandings[r.competition_code] = [];
+            homeStandings[r.competition_code].push(r);
+          });
+        }
+
+        const scorers = await sbHome('top_scorers_archive?select=*&order=competition_code.asc,rank.asc');
+        if (Array.isArray(scorers)) {
+          homeScorers = {};
+          scorers.forEach(r => {
+            if (!homeScorers[r.competition_code]) homeScorers[r.competition_code] = [];
+            homeScorers[r.competition_code].push(r);
+          });
+        }
+
+        const assists = await sbHome('top_assists_archive?select=*&order=competition_code.asc,rank.asc');
+        if (Array.isArray(assists)) {
+          homeAssists = {};
+          assists.forEach(r => {
+            if (!homeAssists[r.competition_code]) homeAssists[r.competition_code] = [];
+            homeAssists[r.competition_code].push(r);
+          });
+        }
+
+        renderHomeStandings();
+        renderHomeLeaders();
+      }
+
+      const homeLeagueTabs = document.getElementById('standingsLeagueTabs');
+      if (homeLeagueTabs) {
+        homeLeagueTabs.addEventListener('click', (e) => {
+          const btn = e.target.closest('button[data-comp]');
+          if (!btn) return;
+          homeLeagueTabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          homeComp = btn.dataset.comp;
+          renderHomeStandings();
+          renderHomeLeaders();
+        });
+      }
+
+      loadHomeStandingsData();
+    })();
+  </script>
+
+  <script>
+    (function() {
+      const fab = document.getElementById('scrollFab');
+      function atBottom() {
+        return window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+      }
+      function updateFab() {
+        if (atBottom()) {
+          fab.innerHTML = '&#8593;';
+          fab.setAttribute('aria-label', 'เลื่อนขึ้นบนสุด');
+        } else {
+          fab.innerHTML = '&#8595;';
+          fab.setAttribute('aria-label', 'เลื่อนลงล่างสุด');
+        }
+      }
+      fab.addEventListener('click', function() {
+        if (atBottom()) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+        }
+      });
+      window.addEventListener('scroll', updateFab);
+      window.addEventListener('resize', updateFab);
+      updateFab();
+    })();
+  </script>
 </body>
 </html>
