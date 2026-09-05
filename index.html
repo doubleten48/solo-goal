@@ -1147,31 +1147,37 @@
   .articles-columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 14px 16px;
+    gap: 8px 10px;
   }
   .articles-col {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 8px;
   }
 
   .article-card {
     display: flex;
-    gap: 12px;
+    align-items: stretch;
     text-decoration: none;
     color: inherit;
     min-width: 0;
     background: #1a1a1e;
     border: 1px solid rgba(255,255,255,0.06);
     border-radius: 10px;
-    padding: 14px;
+    overflow: hidden;
   }
   .article-thumb {
-    flex: 0 0 56px;
-    width: 56px; height: 56px;
-    border-radius: 8px;
+    flex: 0 0 80px;
+    align-self: stretch;
     background: rgba(255,255,255,0.08);
   }
+  .article-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .article-body { min-width: 0; padding: 12px 14px; }
   .article-body { min-width: 0; }
   .article-tag {
     display: inline-block;
@@ -2259,7 +2265,7 @@
           <div class="articles-columns">
             <div class="articles-col">
               <a class="article-card" href="#">
-                <div class="article-thumb"></div>
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-1/160/160" alt=""></div>
                 <div class="article-body">
                   <span class="article-tag analysis">วิเคราะห์</span>
                   <div class="article-title">ทำไมลิเวอร์พูลถึงแกร่งขึ้นหลังเปลี่ยนระบบการเล่น</div>
@@ -2267,7 +2273,7 @@
                 </div>
               </a>
               <a class="article-card" href="#">
-                <div class="article-thumb"></div>
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-2/160/160" alt=""></div>
                 <div class="article-body">
                   <span class="article-tag gossip">ซุบซิบ</span>
                   <div class="article-title">ข่าวลือ! ดาวยิงดังเล็งย้ายซบทีมใหญ่ซัมเมอร์นี้</div>
@@ -2275,7 +2281,7 @@
                 </div>
               </a>
               <a class="article-card" href="#">
-                <div class="article-thumb"></div>
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-3/160/160" alt=""></div>
                 <div class="article-body">
                   <span class="article-tag interview">สัมภาษณ์</span>
                   <div class="article-title">คุยกับดาวรุ่งเส้นทางสู่พรีเมียร์ลีก</div>
@@ -2283,7 +2289,7 @@
                 </div>
               </a>
               <a class="article-card" href="#">
-                <div class="article-thumb"></div>
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-4/160/160" alt=""></div>
                 <div class="article-body">
                   <span class="article-tag history">ประวัติ</span>
                   <div class="article-title">ย้อนรอย 10 ปี แชมป์แชมเปียนส์ลีกที่น่าจดจำ</div>
@@ -2293,7 +2299,7 @@
             </div>
             <div class="articles-col">
               <a class="article-card" href="#">
-                <div class="article-thumb"></div>
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-5/160/160" alt=""></div>
                 <div class="article-body">
                   <span class="article-tag review">รีวิว</span>
                   <div class="article-title">รีวิวรองเท้าสตั๊ดรุ่นใหม่ล่าสุดที่นักเตะระดับโลกใช้</div>
@@ -2301,7 +2307,7 @@
                 </div>
               </a>
               <a class="article-card" href="#">
-                <div class="article-thumb"></div>
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-6/160/160" alt=""></div>
                 <div class="article-body">
                   <span class="article-tag analysis">วิเคราะห์</span>
                   <div class="article-title">แผนการเล่นแบบ 3 กองหลังกลับมาฮิตอีกครั้งเพราะอะไร</div>
@@ -2309,7 +2315,7 @@
                 </div>
               </a>
               <a class="article-card" href="#">
-                <div class="article-thumb"></div>
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-7/160/160" alt=""></div>
                 <div class="article-body">
                   <span class="article-tag gossip">ซุบซิบ</span>
                   <div class="article-title">เปิดโผ! สโมสรไหนสนใจปีกดาวรุ่งไทยบ้าง</div>
@@ -2317,7 +2323,7 @@
                 </div>
               </a>
               <a class="article-card" href="#">
-                <div class="article-thumb"></div>
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-8/160/160" alt=""></div>
                 <div class="article-body">
                   <span class="article-tag review">รีวิว</span>
                   <div class="article-title">เทียบสเปกลูกฟุตบอลแมตช์บอลลีกใหญ่ 3 รุ่น</div>
