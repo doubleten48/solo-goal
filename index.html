@@ -1307,8 +1307,16 @@
   .leaders-columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 32px;
     margin-top: 20px;
+    position: relative;
+  }
+  .leaders-columns::before {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0; left: 50%;
+    width: 1px;
+    background: rgba(255,255,255,0.08);
   }
   .leaders-col h4 { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 8px; }
   .leaders-table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -1317,31 +1325,30 @@
     padding: 6px 4px;
   }
   .leaders-table th:last-child, .leaders-table td:last-child { text-align: right; }
-  .leaders-table th:first-child, .leaders-table td:first-child { text-align: center; width: 24px; }
+  .leaders-table th:first-child, .leaders-table td:first-child { text-align: center; width: 22px; }
   .leaders-table td {
-    padding: 10px 4px;
+    padding: 8px 4px;
     border-top: 1px solid rgba(255,255,255,0.05);
     color: #e8e8e8;
   }
   .leaders-rank { color: #9a9a9a; font-weight: 600; }
-  .player-cell { display: flex; align-items: center; gap: 10px; }
+  .leaders-table .team-logo-col { width: 20px; padding-right: 0; }
+  .player-cell { display: flex; align-items: center; gap: 8px; }
   .player-cell img {
-    width: 40px; height: 40px; border-radius: 50%; flex: 0 0 40px;
+    width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px;
     object-fit: cover;
   }
   .player-photo-fallback {
-    width: 40px; height: 40px; border-radius: 50%; flex: 0 0 40px;
-    background: #3a3a40; color: #fff; font-size: 13px; font-weight: 700;
+    width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px;
+    background: #3a3a40; color: #fff; font-size: 11px; font-weight: 700;
     display: flex; align-items: center; justify-content: center;
   }
-  .player-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .player-name { font-weight: 700; color: #fff; white-space: nowrap; font-size: 13px; }
-  .player-team { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #9a9a9a; white-space: nowrap; }
-  .player-team .team-logo { flex: 0 0 14px; width: 14px; height: 14px; }
-  .leaders-count { font-weight: 700; color: #fff; font-size: 16px; }
+  .player-name { font-weight: 600; color: #fff; white-space: nowrap; font-size: 13px; }
+  .leaders-count { font-weight: 700; color: #fff; font-size: 15px; }
 
   @media (max-width: 720px) {
     .leaders-columns { grid-template-columns: 1fr; }
+    .leaders-columns::before { display: none; }
     .standings-table { font-size: 11px; }
   }
 
@@ -2536,18 +2543,18 @@
               <div class="leaders-col">
                 <h4>ดาวซัลโว</h4>
                 <table class="leaders-table">
-                  <thead><tr><th>No.</th><th>นักเตะ</th><th>ประตู</th></tr></thead>
+                  <thead><tr><th>No.</th><th></th><th>นักเตะ</th><th>ประตู</th></tr></thead>
                   <tbody id="homeScorersBody">
-                    <tr><td colspan="3" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
+                    <tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
                   </tbody>
                 </table>
               </div>
               <div class="leaders-col">
                 <h4>แอสซิสต์</h4>
                 <table class="leaders-table">
-                  <thead><tr><th>No.</th><th>นักเตะ</th><th>แอสซิสต์</th></tr></thead>
+                  <thead><tr><th>No.</th><th></th><th>นักเตะ</th><th>แอสซิสต์</th></tr></thead>
                   <tbody id="homeAssistsBody">
-                    <tr><td colspan="3" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
+                    <tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -3107,13 +3114,8 @@
           : `<div class="player-photo-fallback">${homeInitials(r.player_name)}</div>`;
         return `
           <td class="leaders-rank">${r.rank}</td>
-          <td class="player-cell">
-            ${photo}
-            <div class="player-info">
-              <span class="player-name">${r.player_name || 'ไม่ทราบชื่อ'}</span>
-              <span class="player-team"><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'">${r.team_name || ''}</span>
-            </div>
-          </td>`;
+          <td class="team-logo-col"><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'"></td>
+          <td class="player-cell">${photo}<span class="player-name">${r.player_name || 'ไม่ทราบชื่อ'}</span></td>`;
       }
 
       function renderHomeLeaders() {
@@ -3127,11 +3129,11 @@
 
         scorersBody.innerHTML = scorerRows.length
           ? scorerRows.map(r => `<tr>${homePlayerCell(r)}<td class="leaders-count">${r.goals ?? 0}</td></tr>`).join('')
-          : '<tr><td colspan="3" style="text-align:center;color:#9a9a9a;padding:12px;">ยังไม่มีข้อมูลดาวซัลโวลีกนี้</td></tr>';
+          : '<tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">ยังไม่มีข้อมูลดาวซัลโวลีกนี้</td></tr>';
 
         assistsBody.innerHTML = assistRows.length
           ? assistRows.map(r => `<tr>${homePlayerCell(r)}<td class="leaders-count">${r.assists ?? 0}</td></tr>`).join('')
-          : '<tr><td colspan="3" style="text-align:center;color:#9a9a9a;padding:12px;">ยังไม่มีข้อมูลแอสซิสต์ลีกนี้</td></tr>';
+          : '<tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">ยังไม่มีข้อมูลแอสซิสต์ลีกนี้</td></tr>';
       }
 
       async function loadHomeStandingsData() {
