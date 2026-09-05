@@ -2499,7 +2499,7 @@
           </div>
         </div>
 
-        <!-- ตารางคะแนน + ดาวซัลโว/แอสซิสต์ -->
+        <!-- ตารางคะแนน -->
         <div class="standings-section">
           <div class="standings-card">
             <div class="standings-topbar">
@@ -2538,6 +2538,24 @@
             </table>
 
             <div class="standings-legend" id="homeStandingsLegend"></div>
+          </div>
+        </div>
+
+        <!-- ดาวซัลโว / แอสซิสต์ (แยกอิสระจากตารางคะแนน มีแท็บลีกของตัวเอง) -->
+        <div class="standings-section">
+          <div class="standings-card">
+            <div class="standings-topbar">
+              <div class="standings-toggle active"><span>⚽</span> ดาวซัลโว</div>
+            </div>
+
+            <div class="league-tabs" id="scorersLeagueTabs">
+              <button class="league-tab active" data-comp="PL">Premier League</button>
+              <button class="league-tab" data-comp="PD">La Liga</button>
+              <button class="league-tab" data-comp="BL1">Bundesliga</button>
+              <button class="league-tab" data-comp="SA">Serie A</button>
+              <button class="league-tab" data-comp="FL1">Ligue 1</button>
+              <button class="league-tab" data-comp="CL">UEFA Champions League</button>
+            </div>
 
             <div class="leaders-columns">
               <div class="leaders-col">
@@ -3040,6 +3058,7 @@
       };
 
       let homeComp = 'PL';
+      let scorersComp = 'PL';
       let homeStandings = {};
       let homeScorers = {};
       let homeAssists = {};
@@ -3172,9 +3191,9 @@
         const assistsBody = document.getElementById('homeAssistsBody');
         if (!scorersBody || !assistsBody) return;
 
-        // กรองตามลีกที่เลือกในแท็บด้านบน เหมือนหน้า fixtures.html (currentComp เดียวกับตารางคะแนน)
-        const scorerRows = (homeScorers[homeComp] || []).slice(0, 10);
-        const assistRows = (homeAssists[homeComp] || []).slice(0, 10);
+        // ใช้แท็บลีกของตัวเอง (scorersComp) แยกจากตารางคะแนน (homeComp) โดยสิ้นเชิง
+        const scorerRows = (homeScorers[scorersComp] || []).slice(0, 10);
+        const assistRows = (homeAssists[scorersComp] || []).slice(0, 10);
 
         scorersBody.innerHTML = scorerRows.length
           ? scorerRows.map(r => `<tr>${homePlayerCell(r)}<td class="leaders-count">${r.goals ?? 0}</td></tr>`).join('')
@@ -3226,6 +3245,17 @@
           btn.classList.add('active');
           homeComp = btn.dataset.comp;
           renderHomeStandings();
+        });
+      }
+
+      const scorersLeagueTabs = document.getElementById('scorersLeagueTabs');
+      if (scorersLeagueTabs) {
+        scorersLeagueTabs.addEventListener('click', (e) => {
+          const btn = e.target.closest('button[data-comp]');
+          if (!btn) return;
+          scorersLeagueTabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          scorersComp = btn.dataset.comp;
           renderHomeLeaders();
         });
       }
