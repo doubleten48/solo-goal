@@ -3090,6 +3090,19 @@
         return (first + last).toUpperCase();
       }
 
+      // โลโก้ทีมบางครั้งโหลดพลาดเพราะ CDN ของ football-data.org หน่วง/บล็อกชั่วคราว
+      // (โดยเฉพาะตอนหน้าเว็บยิงโหลดรูปพร้อมกันหลายสิบรูปทีเดียว) ลองใหม่ 1 ครั้งก่อนค่อยซ่อนรูปทิ้ง
+      window.handleCrestError = function(imgEl) {
+        const retries = parseInt(imgEl.dataset.crestRetries || '0', 10);
+        if (retries < 2) {
+          imgEl.dataset.crestRetries = String(retries + 1);
+          const baseSrc = imgEl.src.split('?')[0];
+          setTimeout(() => { imgEl.src = baseSrc + '?r=' + Date.now(); }, 500 * (retries + 1));
+        } else {
+          imgEl.style.visibility = 'hidden';
+        }
+      };
+
       // ชื่อทีมย่อ 3 ตัวอักษร (แบบเดียวกับที่ใช้กันทั่วไปในวงการฟุตบอล เช่น MUN, ARS)
       // ครอบคลุมทีมที่พบบ่อยในลีกที่มีข้อมูลจริงตอนนี้ (PL/PD/BL1/SA/FL1/CL)
       // ทีมที่ไม่อยู่ใน map จะโชว์ชื่อเต็มแทน (กันเดาผิด) ถ้าเจอชื่อไหนตกหล่นบอกได้ จะเพิ่มให้
@@ -3160,7 +3173,7 @@
           return `
             <tr class="${zoneClass}">
               <td>${r.position}</td>
-              <td><div class="team-cell-inner"><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'"><span>${r.team_name}</span></div></td>
+              <td><div class="team-cell-inner"><img class="team-logo" src="${r.team_crest || ''}" onerror="handleCrestError(this)"><span>${r.team_name}</span></div></td>
               <td>${r.played}</td>
               <td>${r.won}</td>
               <td>${r.draw}</td>
@@ -3183,7 +3196,7 @@
         return `
           <td class="leaders-rank">${r.rank}</td>
           <td><div class="player-cell-inner">${photo}<span class="player-name">${r.player_name || 'ไม่ทราบชื่อ'}</span></div></td>
-          <td><div class="team-mini-inner"><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'">${abbrTeam(r)}</div></td>`;
+          <td><div class="team-mini-inner"><img class="team-logo" src="${r.team_crest || ''}" onerror="handleCrestError(this)">${abbrTeam(r)}</div></td>`;
       }
 
       function renderHomeLeaders() {
