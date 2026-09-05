@@ -1147,19 +1147,12 @@
   .articles-columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    column-gap: 32px;
-    position: relative;
-  }
-  .articles-columns::before {
-    content: "";
-    position: absolute;
-    top: 0; bottom: 0; left: 50%;
-    width: 1px;
-    background: rgba(255,255,255,0.08);
+    gap: 14px 16px;
   }
   .articles-col {
     display: flex;
     flex-direction: column;
+    gap: 14px;
   }
 
   .article-card {
@@ -1168,13 +1161,14 @@
     text-decoration: none;
     color: inherit;
     min-width: 0;
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: #1a1a1e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 14px;
   }
-  .articles-col .article-card:last-child { border-bottom: none; }
   .article-thumb {
-    flex: 0 0 64px;
-    width: 64px; height: 64px;
+    flex: 0 0 56px;
+    width: 56px; height: 56px;
     border-radius: 8px;
     background: rgba(255,255,255,0.08);
   }
@@ -1202,7 +1196,6 @@
 
   @media (max-width: 720px) {
     .articles-columns { grid-template-columns: 1fr; }
-    .articles-columns::before { display: none; }
   }
 
   .news-top-row {
