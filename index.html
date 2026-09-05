@@ -1144,22 +1144,37 @@
   }
   .articles-viewall:hover { color: #fff; }
 
-  .articles-grid {
+  .articles-columns {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px 16px;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 32px;
+    position: relative;
+  }
+  .articles-columns::before {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0; left: 50%;
+    width: 1px;
+    background: rgba(255,255,255,0.08);
+  }
+  .articles-col {
+    display: flex;
+    flex-direction: column;
   }
 
   .article-card {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     text-decoration: none;
     color: inherit;
     min-width: 0;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
   }
+  .articles-col .article-card:last-child { border-bottom: none; }
   .article-thumb {
-    flex: 0 0 56px;
-    width: 56px; height: 56px;
+    flex: 0 0 64px;
+    width: 64px; height: 64px;
     border-radius: 8px;
     background: rgba(255,255,255,0.08);
   }
@@ -1185,11 +1200,9 @@
   }
   .article-meta { font-size: 11px; color: #777; }
 
-  @media (max-width: 900px) {
-    .articles-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 480px) {
-    .articles-grid { grid-template-columns: 1fr; }
+  @media (max-width: 720px) {
+    .articles-columns { grid-template-columns: 1fr; }
+    .articles-columns::before { display: none; }
   }
 
   .news-top-row {
@@ -2250,71 +2263,75 @@
             <h3>บทความ</h3>
             <a class="articles-viewall" href="#">ดูทั้งหมด &#10142;</a>
           </div>
-          <div class="articles-grid">
-            <a class="article-card" href="#">
-              <div class="article-thumb"></div>
-              <div class="article-body">
-                <span class="article-tag analysis">วิเคราะห์</span>
-                <div class="article-title">ทำไมลิเวอร์พูลถึงแกร่งขึ้นหลังเปลี่ยนระบบการเล่น</div>
-                <div class="article-meta">แอดน้อนแดง · 20.07.2026</div>
-              </div>
-            </a>
-            <a class="article-card" href="#">
-              <div class="article-thumb"></div>
-              <div class="article-body">
-                <span class="article-tag gossip">ซุบซิบ</span>
-                <div class="article-title">ข่าวลือ! ดาวยิงดังเล็งย้ายซบทีมใหญ่ซัมเมอร์นี้</div>
-                <div class="article-meta">แอดหมูทอด · 19.07.2026</div>
-              </div>
-            </a>
-            <a class="article-card" href="#">
-              <div class="article-thumb"></div>
-              <div class="article-body">
-                <span class="article-tag interview">สัมภาษณ์</span>
-                <div class="article-title">คุยกับดาวรุ่งเส้นทางสู่พรีเมียร์ลีก</div>
-                <div class="article-meta">แอดบอล24 · 19.07.2026</div>
-              </div>
-            </a>
-            <a class="article-card" href="#">
-              <div class="article-thumb"></div>
-              <div class="article-body">
-                <span class="article-tag history">ประวัติ</span>
-                <div class="article-title">ย้อนรอย 10 ปี แชมป์แชมเปียนส์ลีกที่น่าจดจำ</div>
-                <div class="article-meta">แอดบอลไทย · 18.07.2026</div>
-              </div>
-            </a>
-            <a class="article-card" href="#">
-              <div class="article-thumb"></div>
-              <div class="article-body">
-                <span class="article-tag review">รีวิว</span>
-                <div class="article-title">รีวิวรองเท้าสตั๊ดรุ่นใหม่ล่าสุดที่นักเตะระดับโลกใช้</div>
-                <div class="article-meta">แอดน้อนแดง · 18.07.2026</div>
-              </div>
-            </a>
-            <a class="article-card" href="#">
-              <div class="article-thumb"></div>
-              <div class="article-body">
-                <span class="article-tag analysis">วิเคราะห์</span>
-                <div class="article-title">แผนการเล่นแบบ 3 กองหลังกลับมาฮิตอีกครั้งเพราะอะไร</div>
-                <div class="article-meta">แอดบอล24 · 17.07.2026</div>
-              </div>
-            </a>
-            <a class="article-card" href="#">
-              <div class="article-thumb"></div>
-              <div class="article-body">
-                <span class="article-tag gossip">ซุบซิบ</span>
-                <div class="article-title">เปิดโผ! สโมสรไหนสนใจปีกดาวรุ่งไทยบ้าง</div>
-                <div class="article-meta">แอดหมูทอด · 17.07.2026</div>
-              </div>
-            </a>
-            <a class="article-card" href="#">
-              <div class="article-thumb"></div>
-              <div class="article-body">
-                <span class="article-tag review">รีวิว</span>
-                <div class="article-title">เทียบสเปกลูกฟุตบอลแมตช์บอลลีกใหญ่ 3 รุ่น</div>
-                <div class="article-meta">แอดบอลไทย · 16.07.2026</div>
-              </div>
-            </a>
+          <div class="articles-columns">
+            <div class="articles-col">
+              <a class="article-card" href="#">
+                <div class="article-thumb"></div>
+                <div class="article-body">
+                  <span class="article-tag analysis">วิเคราะห์</span>
+                  <div class="article-title">ทำไมลิเวอร์พูลถึงแกร่งขึ้นหลังเปลี่ยนระบบการเล่น</div>
+                  <div class="article-meta">แอดน้อนแดง · 20.07.2026</div>
+                </div>
+              </a>
+              <a class="article-card" href="#">
+                <div class="article-thumb"></div>
+                <div class="article-body">
+                  <span class="article-tag gossip">ซุบซิบ</span>
+                  <div class="article-title">ข่าวลือ! ดาวยิงดังเล็งย้ายซบทีมใหญ่ซัมเมอร์นี้</div>
+                  <div class="article-meta">แอดหมูทอด · 19.07.2026</div>
+                </div>
+              </a>
+              <a class="article-card" href="#">
+                <div class="article-thumb"></div>
+                <div class="article-body">
+                  <span class="article-tag interview">สัมภาษณ์</span>
+                  <div class="article-title">คุยกับดาวรุ่งเส้นทางสู่พรีเมียร์ลีก</div>
+                  <div class="article-meta">แอดบอล24 · 19.07.2026</div>
+                </div>
+              </a>
+              <a class="article-card" href="#">
+                <div class="article-thumb"></div>
+                <div class="article-body">
+                  <span class="article-tag history">ประวัติ</span>
+                  <div class="article-title">ย้อนรอย 10 ปี แชมป์แชมเปียนส์ลีกที่น่าจดจำ</div>
+                  <div class="article-meta">แอดบอลไทย · 18.07.2026</div>
+                </div>
+              </a>
+            </div>
+            <div class="articles-col">
+              <a class="article-card" href="#">
+                <div class="article-thumb"></div>
+                <div class="article-body">
+                  <span class="article-tag review">รีวิว</span>
+                  <div class="article-title">รีวิวรองเท้าสตั๊ดรุ่นใหม่ล่าสุดที่นักเตะระดับโลกใช้</div>
+                  <div class="article-meta">แอดน้อนแดง · 18.07.2026</div>
+                </div>
+              </a>
+              <a class="article-card" href="#">
+                <div class="article-thumb"></div>
+                <div class="article-body">
+                  <span class="article-tag analysis">วิเคราะห์</span>
+                  <div class="article-title">แผนการเล่นแบบ 3 กองหลังกลับมาฮิตอีกครั้งเพราะอะไร</div>
+                  <div class="article-meta">แอดบอล24 · 17.07.2026</div>
+                </div>
+              </a>
+              <a class="article-card" href="#">
+                <div class="article-thumb"></div>
+                <div class="article-body">
+                  <span class="article-tag gossip">ซุบซิบ</span>
+                  <div class="article-title">เปิดโผ! สโมสรไหนสนใจปีกดาวรุ่งไทยบ้าง</div>
+                  <div class="article-meta">แอดหมูทอด · 17.07.2026</div>
+                </div>
+              </a>
+              <a class="article-card" href="#">
+                <div class="article-thumb"></div>
+                <div class="article-body">
+                  <span class="article-tag review">รีวิว</span>
+                  <div class="article-title">เทียบสเปกลูกฟุตบอลแมตช์บอลลีกใหญ่ 3 รุ่น</div>
+                  <div class="article-meta">แอดบอลไทย · 16.07.2026</div>
+                </div>
+              </a>
+            </div>
           </div>
         </div>
 
