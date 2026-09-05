@@ -1192,11 +1192,14 @@
 
   .game-event-list {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 16px;
+    flex-wrap: wrap;
   }
 
   .game-event-card {
+    flex: 1 1 0;
+    min-width: 320px;
     display: flex;
     background: #1E1E1E;
     border-radius: 15px;
@@ -1204,7 +1207,7 @@
   }
 
   .game-event-image {
-    flex: 0 0 300px;
+    flex: 0 0 140px;
     position: relative;
   }
   .game-event-image img {
@@ -1217,10 +1220,10 @@
   .game-event-content {
     flex: 1;
     min-width: 0;
-    padding: 20px 24px;
+    padding: 16px 18px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
 
   .game-event-badge {
@@ -1228,22 +1231,25 @@
     align-self: flex-start;
     background: #872929;
     color: #fff;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
-    padding: 8px 22px;
+    padding: 6px 16px;
     border-radius: 8px;
   }
 
   .game-event-dates {
-    font-size: 13px;
+    font-size: 12px;
     color: #9a9a9a;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
   }
-  .game-event-dates span + span { margin-left: 20px; }
+  .game-event-dates span + span { margin-left: 0; }
 
   .game-event-desc {
-    font-size: 14px;
+    font-size: 13px;
     color: #fff;
-    line-height: 1.6;
+    line-height: 1.5;
   }
 
   .game-event-bottom {
@@ -1279,9 +1285,9 @@
     background: #872929;
     color: #fff;
     border: none;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    padding: 9px 20px;
+    padding: 7px 16px;
     border-radius: 6px;
     text-decoration: none;
     cursor: pointer;
@@ -1289,6 +1295,10 @@
     white-space: nowrap;
   }
   .game-event-btn:hover { opacity: 0.85; }
+
+  @media (max-width: 900px) {
+    .game-event-list { flex-direction: column; }
+  }
 
   @media (max-width: 640px) {
     .game-event-card { flex-direction: column; }
