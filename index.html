@@ -3110,9 +3110,14 @@
         'AC Milan': 'MIL',
         'Juventus FC': 'JUV',
       };
-      function abbrTeam(name) {
-        if (!name) return '';
-        return TEAM_ABBR[name] || name;
+      function abbrTeam(r) {
+        // ใช้รหัสทีมจริงจาก football-data.org (TLA) ถ้ามีคอลัมน์นี้อยู่ในตาราง —
+        // เป็นแหล่งเดียวกับที่ widget คะแนนสดบนหน้าแรกใช้ (m.homeTla / m.awayTla) เลยตรงกับทุกทีมทุกลีกจริง ๆ
+        // ถ้าตาราง top_scorers_archive/top_assists_archive ไม่มีคอลัมน์นี้ ค่อย fallback ไปใช้ map ที่เดาไว้เอง (ไม่ครบทุกทีม)
+        const tla = r.team_tla || r.team_short || r.tla;
+        if (tla) return tla;
+        if (!r.team_name) return '';
+        return TEAM_ABBR[r.team_name] || r.team_name;
       }
 
       function renderHomeStandings() {
@@ -3159,7 +3164,7 @@
         return `
           <td class="leaders-rank">${r.rank}</td>
           <td><div class="player-cell-inner">${photo}<span class="player-name">${r.player_name || 'ไม่ทราบชื่อ'}</span></div></td>
-          <td><div class="team-mini-inner"><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'">${abbrTeam(r.team_name)}</div></td>`;
+          <td><div class="team-mini-inner"><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'">${abbrTeam(r)}</div></td>`;
       }
 
       function renderHomeLeaders() {
