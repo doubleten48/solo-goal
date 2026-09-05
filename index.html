@@ -1332,7 +1332,6 @@
     color: #e8e8e8;
   }
   .leaders-rank { color: #9a9a9a; font-weight: 600; }
-  .leaders-table .team-logo-col { width: 20px; padding-right: 0; }
   .player-cell { display: flex; align-items: center; gap: 8px; }
   .player-cell img {
     width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px;
@@ -1344,6 +1343,8 @@
     display: flex; align-items: center; justify-content: center;
   }
   .player-name { font-weight: 600; color: #fff; white-space: nowrap; font-size: 13px; }
+  .leaders-table .team-mini { display: flex; align-items: center; gap: 6px; color: #9a9a9a; font-size: 12px; white-space: nowrap; }
+  .leaders-table .team-mini .team-logo { flex: 0 0 16px; width: 16px; height: 16px; }
   .leaders-count { font-weight: 700; color: #fff; font-size: 15px; }
 
   @media (max-width: 720px) {
@@ -2543,7 +2544,7 @@
               <div class="leaders-col">
                 <h4>ดาวซัลโว</h4>
                 <table class="leaders-table">
-                  <thead><tr><th>No.</th><th></th><th>นักเตะ</th><th>ประตู</th></tr></thead>
+                  <thead><tr><th>No.</th><th>นักเตะ</th><th>ทีม</th><th>ประตู</th></tr></thead>
                   <tbody id="homeScorersBody">
                     <tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
                   </tbody>
@@ -2552,7 +2553,7 @@
               <div class="leaders-col">
                 <h4>แอสซิสต์</h4>
                 <table class="leaders-table">
-                  <thead><tr><th>No.</th><th></th><th>นักเตะ</th><th>แอสซิสต์</th></tr></thead>
+                  <thead><tr><th>No.</th><th>นักเตะ</th><th>ทีม</th><th>แอสซิสต์</th></tr></thead>
                   <tbody id="homeAssistsBody">
                     <tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
                   </tbody>
@@ -3071,6 +3072,50 @@
         return (first + last).toUpperCase();
       }
 
+      // ชื่อทีมย่อ 3 ตัวอักษร (แบบเดียวกับที่ใช้กันทั่วไปในวงการฟุตบอล เช่น MUN, ARS)
+      // ครอบคลุมทีมที่พบบ่อยในลีกที่มีข้อมูลจริงตอนนี้ (PL/PD/BL1/SA/FL1/CL)
+      // ทีมที่ไม่อยู่ใน map จะโชว์ชื่อเต็มแทน (กันเดาผิด) ถ้าเจอชื่อไหนตกหล่นบอกได้ จะเพิ่มให้
+      const TEAM_ABBR = {
+        'Manchester United': 'MUN',
+        'Manchester City': 'MCI',
+        'Arsenal': 'ARS',
+        'Chelsea': 'CHE',
+        'Liverpool': 'LIV',
+        'Tottenham Hotspur': 'TOT',
+        'Newcastle United': 'NEW',
+        'Brighton & Hove Albion': 'BHA',
+        'Brighton Hove Albion': 'BHA',
+        'Brentford': 'BRE',
+        'Everton': 'EVE',
+        'Sunderland': 'SUN',
+        'Leeds United': 'LEE',
+        'Hull City': 'HUL',
+        'Ipswich Town': 'IPS',
+        'Crystal Palace': 'CRY',
+        'Bournemouth': 'BOU',
+        'Nottingham Forest': 'NFO',
+        'Aston Villa': 'AVL',
+        'Fulham': 'FUL',
+        'Coventry': 'COV',
+        'West Ham United': 'WHU',
+        'Wolverhampton Wanderers': 'WOL',
+        'Real Madrid CF': 'RMA',
+        'FC Barcelona': 'BAR',
+        'Club Atlético de Madrid': 'ATM',
+        'FC Bayern München': 'BAY',
+        'Borussia Dortmund': 'BVB',
+        'Bayer 04 Leverkusen': 'LEV',
+        'Paris Saint-Germain FC': 'PSG',
+        'Paris Saint-Germain': 'PSG',
+        'Inter Milan': 'INT',
+        'AC Milan': 'MIL',
+        'Juventus FC': 'JUV',
+      };
+      function abbrTeam(name) {
+        if (!name) return '';
+        return TEAM_ABBR[name] || name;
+      }
+
       function renderHomeStandings() {
         const body = document.getElementById('homeStandingsBody');
         const legend = document.getElementById('homeStandingsLegend');
@@ -3114,8 +3159,8 @@
           : `<div class="player-photo-fallback">${homeInitials(r.player_name)}</div>`;
         return `
           <td class="leaders-rank">${r.rank}</td>
-          <td class="team-logo-col"><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'"></td>
-          <td class="player-cell">${photo}<span class="player-name">${r.player_name || 'ไม่ทราบชื่อ'}</span></td>`;
+          <td class="player-cell">${photo}<span class="player-name">${r.player_name || 'ไม่ทราบชื่อ'}</span></td>
+          <td class="team-mini"><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'">${abbrTeam(r.team_name)}</td>`;
       }
 
       function renderHomeLeaders() {
