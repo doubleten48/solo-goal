@@ -1198,8 +1198,9 @@
   }
 
   .game-event-card {
-    flex: 1 1 0;
-    min-width: 320px;
+    flex: 0 0 600px;
+    width: 600px;
+    height: 183px;
     display: flex;
     background: #1E1E1E;
     border-radius: 15px;
@@ -1207,7 +1208,9 @@
   }
 
   .game-event-image {
-    flex: 0 0 140px;
+    flex: 0 0 200px;
+    width: 200px;
+    height: 183px;
     position: relative;
   }
   .game-event-image img {
@@ -1220,10 +1223,13 @@
   .game-event-content {
     flex: 1;
     min-width: 0;
-    padding: 16px 18px;
+    height: 183px;
+    padding: 14px 16px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .game-event-badge {
@@ -1231,63 +1237,68 @@
     align-self: flex-start;
     background: #872929;
     color: #fff;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
-    padding: 6px 16px;
-    border-radius: 8px;
+    padding: 5px 14px;
+    border-radius: 6px;
   }
 
   .game-event-dates {
-    font-size: 12px;
+    font-size: 11px;
     color: #9a9a9a;
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 16px;
+    gap: 2px 12px;
   }
   .game-event-dates span + span { margin-left: 0; }
 
   .game-event-desc {
-    font-size: 13px;
+    font-size: 12px;
     color: #fff;
-    line-height: 1.5;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 
   .game-event-bottom {
     margin-top: auto;
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 12px;
     flex-wrap: wrap;
   }
 
   .game-event-rewards {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 10px;
     flex-wrap: wrap;
   }
-  .game-event-rewards-label { font-size: 13px; color: #9a9a9a; }
+  .game-event-rewards-label { font-size: 11px; color: #9a9a9a; }
   .game-event-reward {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 13px;
+    gap: 3px;
+    font-size: 11px;
     color: #fff;
   }
-  .game-event-reward .icon { font-size: 18px; line-height: 1; }
+  .game-event-reward .icon { font-size: 14px; line-height: 1; }
 
   .game-event-actions {
     margin-left: auto;
     display: flex;
-    gap: 10px;
+    gap: 8px;
   }
   .game-event-btn {
     background: #872929;
     color: #fff;
     border: none;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
-    padding: 7px 16px;
+    padding: 6px 14px;
     border-radius: 6px;
     text-decoration: none;
     cursor: pointer;
@@ -1296,13 +1307,18 @@
   }
   .game-event-btn:hover { opacity: 0.85; }
 
-  @media (max-width: 900px) {
-    .game-event-list { flex-direction: column; }
-  }
-
   @media (max-width: 640px) {
-    .game-event-card { flex-direction: column; }
-    .game-event-image { flex: 0 0 160px; }
+    .game-event-card {
+      width: 100%;
+      flex: 1 1 100%;
+      height: auto;
+    }
+    .game-event-image {
+      flex-basis: 130px;
+      width: 130px;
+      height: auto;
+    }
+    .game-event-content { height: auto; }
   }
 
   .video-modal-overlay {
@@ -1861,7 +1877,7 @@
             <!-- อีเวนต์ 1: ทายผลบอล -->
             <div class="game-event-card">
               <div class="game-event-image">
-                <img src="images/events/predict-match-banner.jpg" alt="ทายผลบอล">
+                <img src="https://picsum.photos/seed/predict-match/200/183" alt="ทายผลบอล">
               </div>
               <div class="game-event-content">
                 <span class="game-event-badge">ทายผลบอล</span>
@@ -1889,7 +1905,7 @@
             <!-- อีเวนต์ 2: อัพเลเวลนักบอล -->
             <div class="game-event-card">
               <div class="game-event-image">
-                <img src="images/events/level-up-banner.jpg" alt="อัพเลเวลนักบอล">
+                <img src="https://picsum.photos/seed/level-up/200/183" alt="อัพเลเวลนักบอล">
               </div>
               <div class="game-event-content">
                 <span class="game-event-badge">อัพเลเวลนักบอล</span>
