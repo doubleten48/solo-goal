@@ -1229,7 +1229,7 @@
     display: flex; align-items: center; gap: 6px;
     cursor: pointer;
   }
-  .standings-toggle.active { background: #0f8a5f; color: #fff; }
+  .standings-toggle.active { background: #872929; color: #fff; }
 
   .league-tabs {
     display: flex;
@@ -1248,7 +1248,7 @@
     border: none; padding: 8px 14px; border-radius: 8px;
     white-space: nowrap; cursor: pointer;
   }
-  .league-tab.active { background: #0f8a5f; color: #fff; }
+  .league-tab.active { background: #872929; color: #fff; }
 
   .league-name { font-size: 13px; font-weight: 700; color: #fff; margin: 4px 0 10px; }
 
@@ -2496,7 +2496,6 @@
           <div class="standings-card">
             <div class="standings-topbar">
               <div class="standings-toggle active"><span>🏆</span> ตารางคะแนน</div>
-              <div class="standings-toggle">STANDINGS</div>
             </div>
 
             <div class="league-tabs" id="standingsLeagueTabs">
@@ -2504,8 +2503,8 @@
               <button class="league-tab" data-comp="PD">La Liga</button>
               <button class="league-tab" data-comp="BL1">Bundesliga</button>
               <button class="league-tab" data-comp="SA">Serie A</button>
-              <button class="league-tab" data-comp="CL">UEFA Champions League</button>
               <button class="league-tab" data-comp="FL1">Ligue 1</button>
+              <button class="league-tab" data-comp="CL">UEFA Champions League</button>
             </div>
 
             <h4 class="league-name" id="standingsLeagueName">Premier League</h4>
@@ -2534,20 +2533,20 @@
 
             <div class="leaders-columns">
               <div class="leaders-col">
-                <h4>ดาวซัลโว</h4>
+                <h4>ดาวซัลโว (ทุกลีก)</h4>
                 <table class="leaders-table">
-                  <thead><tr><th>#</th><th>ทีม</th><th>นักเตะ</th><th>ประตู</th></tr></thead>
+                  <thead><tr><th>#</th><th>ทีม</th><th>นักเตะ</th><th>ลีก</th><th>ประตู</th></tr></thead>
                   <tbody id="homeScorersBody">
-                    <tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
+                    <tr><td colspan="5" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
                   </tbody>
                 </table>
               </div>
               <div class="leaders-col">
-                <h4>แอสซิสต์</h4>
+                <h4>แอสซิสต์ (ทุกลีก)</h4>
                 <table class="leaders-table">
-                  <thead><tr><th>#</th><th>ทีม</th><th>นักเตะ</th><th>แอสซิสต์</th></tr></thead>
+                  <thead><tr><th>#</th><th>ทีม</th><th>นักเตะ</th><th>ลีก</th><th>แอสซิสต์</th></tr></thead>
                   <tbody id="homeAssistsBody">
-                    <tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
+                    <tr><td colspan="5" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -3108,7 +3107,8 @@
         return `
           <td>${r.rank}</td>
           <td><img class="team-logo" src="${r.team_crest || ''}" onerror="this.style.visibility='hidden'"></td>
-          <td class="player-cell">${photo}<span class="player-name">${r.player_name || 'ไม่ทราบชื่อ'}</span></td>`;
+          <td class="player-cell">${photo}<span class="player-name">${r.player_name || 'ไม่ทราบชื่อ'}</span></td>
+          <td>${LEAGUE_NAMES[r.competition_code] || r.competition_code}</td>`;
       }
 
       function renderHomeLeaders() {
@@ -3116,16 +3116,20 @@
         const assistsBody = document.getElementById('homeAssistsBody');
         if (!scorersBody || !assistsBody) return;
 
-        const scorerRows = (homeScorers[homeComp] || []).slice(0, 5);
-        const assistRows = (homeAssists[homeComp] || []).slice(0, 5);
+        // รวมทุกลีกเข้าด้วยกัน เรียงตามจำนวนประตู/แอสซิสต์จริง ไม่ผูกกับแท็บลีกที่เลือกในตารางคะแนน
+        const allScorerRows = Object.values(homeScorers).flat();
+        const allAssistRows = Object.values(homeAssists).flat();
+
+        const scorerRows = allScorerRows.sort((a, b) => (b.goals ?? 0) - (a.goals ?? 0)).slice(0, 10);
+        const assistRows = allAssistRows.sort((a, b) => (b.assists ?? 0) - (a.assists ?? 0)).slice(0, 10);
 
         scorersBody.innerHTML = scorerRows.length
-          ? scorerRows.map(r => `<tr>${homePlayerCell(r)}<td class="leaders-count">${r.goals ?? 0}</td></tr>`).join('')
-          : '<tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">ยังไม่มีข้อมูลดาวซัลโวลีกนี้</td></tr>';
+          ? scorerRows.map((r, i) => `<tr>${homePlayerCell({ ...r, rank: i + 1 })}<td class="leaders-count">${r.goals ?? 0}</td></tr>`).join('')
+          : '<tr><td colspan="5" style="text-align:center;color:#9a9a9a;padding:12px;">ยังไม่มีข้อมูลดาวซัลโว</td></tr>';
 
         assistsBody.innerHTML = assistRows.length
-          ? assistRows.map(r => `<tr>${homePlayerCell(r)}<td class="leaders-count">${r.assists ?? 0}</td></tr>`).join('')
-          : '<tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">ยังไม่มีข้อมูลแอสซิสต์ลีกนี้</td></tr>';
+          ? assistRows.map((r, i) => `<tr>${homePlayerCell({ ...r, rank: i + 1 })}<td class="leaders-count">${r.assists ?? 0}</td></tr>`).join('')
+          : '<tr><td colspan="5" style="text-align:center;color:#9a9a9a;padding:12px;">ยังไม่มีข้อมูลแอสซิสต์</td></tr>';
       }
 
       async function loadHomeStandingsData() {
