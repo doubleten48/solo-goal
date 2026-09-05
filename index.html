@@ -1194,12 +1194,12 @@
     display: flex;
     flex-direction: row;
     gap: 16px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
 
   .game-event-card {
-    flex: 0 0 600px;
-    width: 600px;
+    flex: 1 1 0;
+    min-width: 0;
     height: 183px;
     display: flex;
     background: #1E1E1E;
@@ -1208,8 +1208,7 @@
   }
 
   .game-event-image {
-    flex: 0 0 200px;
-    width: 200px;
+    flex: 0 0 34%;
     height: 183px;
     position: relative;
   }
@@ -1308,14 +1307,13 @@
   .game-event-btn:hover { opacity: 0.85; }
 
   @media (max-width: 640px) {
+    .game-event-list { flex-wrap: wrap; }
     .game-event-card {
-      width: 100%;
       flex: 1 1 100%;
       height: auto;
     }
     .game-event-image {
       flex-basis: 130px;
-      width: 130px;
       height: auto;
     }
     .game-event-content { height: auto; }
