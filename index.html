@@ -1123,6 +1123,84 @@
     .hotlist-date, .hotlist-poster { display: none; }
   }
 
+  /* ===== สถิติชุมชน ===== */
+  .community-stats-section {
+    width: 100%;
+    max-width: 1110px;
+    margin: 20px auto 0 auto;
+    padding: 0 20px;
+  }
+  .community-stats-card {
+    background: #1E1E1E;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .community-stats-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .community-stats-icon {
+    flex: 0 0 30px;
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: #872929;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .community-stats-header h3 { font-size: 15px; font-weight: 700; color: #fff; flex: 1; margin: 0; }
+  .community-stats-updated {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; color: #9a9a9a;
+    white-space: nowrap;
+  }
+  .community-stats-dot-live {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #ff4d4d; display: inline-block;
+  }
+  .community-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+  }
+  .cs-item {
+    padding: 16px 12px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+  .cs-item:last-child { border-right: none; }
+  .cs-label {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 8px;
+    font-size: 11px; color: #9a9a9a;
+    white-space: nowrap;
+  }
+  .cs-dot-online {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #22c55e; display: inline-block;
+  }
+  .cs-value { font-size: 20px; font-weight: 700; color: #fff; }
+  .cs-value-row {
+    display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap;
+  }
+  .cs-delta {
+    font-size: 10px; font-weight: 700; color: #d4a017;
+    background: rgba(212,160,23,0.15);
+    padding: 2px 5px; border-radius: 4px;
+  }
+  .cs-status-version { font-size: 14px; font-weight: 700; color: #fff; }
+  .cs-status-days { font-size: 11px; color: #9a9a9a; margin-top: 2px; }
+
+  @media (max-width: 720px) {
+    .community-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .cs-item {
+      border-right: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .cs-item:nth-child(2n) { border-right: none; }
+    .cs-item:last-child { grid-column: span 2; border-bottom: none; }
+  }
+
   /* ===== บทความ ===== */
   .articles-section {
     width: 100%;
@@ -2575,6 +2653,51 @@
                     <tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- สถิติชุมชน -->
+        <div class="community-stats-section">
+          <div class="community-stats-card">
+            <div class="community-stats-header">
+              <div class="community-stats-icon"><span>📊</span></div>
+              <h3>สถิติชุมชน</h3>
+              <span class="community-stats-updated">
+                <span class="community-stats-dot-live"></span>
+                อัปเดตล่าสุด 2 นาทีที่แล้ว
+              </span>
+            </div>
+
+            <div class="community-stats-grid">
+              <div class="cs-item">
+                <div class="cs-label"><span class="cs-dot-online"></span> ออนไลน์ตอนนี้</div>
+                <div class="cs-value">32</div>
+              </div>
+
+              <div class="cs-item">
+                <div class="cs-label"><span>👥</span> สมาชิกทั้งหมด</div>
+                <div class="cs-value-row">
+                  <span class="cs-value">3,742</span>
+                  <span class="cs-delta">+12</span>
+                </div>
+              </div>
+
+              <div class="cs-item">
+                <div class="cs-label"><span>📝</span> กระทู้ทั้งหมด</div>
+                <div class="cs-value">9,214</div>
+              </div>
+
+              <div class="cs-item">
+                <div class="cs-label"><span>🔥</span> กระทู้ใหม่วันนี้</div>
+                <div class="cs-value">14</div>
+              </div>
+
+              <div class="cs-item">
+                <div class="cs-label"><span>⚙️</span> สถานะเว็บ</div>
+                <div class="cs-status-version">v1.0.0</div>
+                <div class="cs-status-days">ก่อตั้งมา 128 วัน</div>
               </div>
             </div>
           </div>
