@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1320">
+<title>สร้างข่าวสรุปผลบอล - SoloGoal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- TODO(TEN): เช็ค path ให้ตรงกับที่จริงเก็บไฟล์นี้ไว้ -->
+<script src="supabase-init.js"></script>
+<style>
+  :root{ --sidebar-w: 198px; --header-h: 60px; --main-bg: #2c2b2b; --main-text: #fff; --body-bg: #2c2b2b; }
+  html.light-mode { --main-bg: #E5E5EA; --main-text: #1a1a1a; --body-bg: #E5E5EA; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--body-bg); font-family: 'Sarabun','Inter',sans-serif; color: #fff; }
+  .layout { display: flex; min-height: 100vh; position: relative; }
+  .sidebar { width: var(--sidebar-w); flex-shrink: 0; background: linear-gradient(to bottom, #872929 0%, #0d0a0a 100%); display: flex; flex-direction: column; padding: 14px 0 0 0; transition: width 0.2s ease; overflow: hidden; position: sticky; top: 0; align-self: flex-start; height: 100vh; z-index: 30; }
+  .logo-wrap { position: relative; width: fit-content; margin: 0 0 34px 0; }
+  .logo-svg { display: block; width: 76px; height: 85px; margin: 33px 0 0 61px; }
+  .sidebar .menu-panel { margin: 0 15px; position: relative; height: 403px; }
+  .sidebar .menu-panel ul { list-style: none; position: relative; height: 100%; }
+  .menu-highlight { position: absolute; left: 17px; width: 137px; height: 27px; background: rgba(29,28,28,0.33); border-radius: 5px; z-index: 0; opacity: 0; transition: top 0.08s ease, opacity 0.1s ease; pointer-events: none; }
+  .sidebar .menu-panel li { position: absolute; left: 0; right: 0; height: 40px; cursor: pointer; white-space: nowrap; }
+  .sidebar .menu-panel li img { position: absolute; top: 50%; transform: translateY(-50%); z-index: 1; display: block; }
+  .sidebar .menu-panel li span { position: absolute; top: 50%; transform: translateY(-50%); left: 52px; z-index: 1; font-size: 13px; color: #fff; }
+  .sidebar .menu-divider { width: 163px; height: 1px; background: rgba(255,255,255,0.15); margin: 0 auto 18px auto; }
+  .sidebar .balance-box { margin: 0 15px; width: 170px; }
+  .sidebar .balance-box img { display: block; width: 100%; height: auto; }
+  .sidebar .menu-collapsed { display: none; flex-direction: column; align-items: center; gap: 5px; padding-top: 161px; }
+  .sidebar .menu-collapsed li { list-style: none; width: 35px; height: 35px; cursor: pointer; }
+  .sidebar .menu-collapsed li img { width: 35px; height: 35px; display: block; }
+  .sidebar.collapsed { width: 56px; }
+  .sidebar.collapsed .logo-wrap, .sidebar.collapsed .menu-panel, .sidebar.collapsed .menu-divider, .sidebar.collapsed .balance-box { display: none; }
+  .sidebar.collapsed .menu-collapsed { display: flex; }
+  .sidebar-toggle { position: fixed; top: 108px; left: calc(var(--sidebar-w) - 5px); width: 10px; height: 30px; background: #1a1a1a; border: none; border-radius: 4px; color: #fff; font-size: 10px; line-height: 30px; text-align: center; padding: 0; cursor: pointer; z-index: 31; transition: left 0.2s ease; }
+  .content-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .header { height: var(--header-h); background: #121214; display: flex; align-items: center; padding-left: 25px; flex-shrink: 0; position: sticky; top: 0; z-index: 25; }
+  .header .wordmark { display: none; font-size: 20px; color: #fff; margin-right: 26px; }
+  .sidebar.collapsed ~ .content-area .header { padding-left: 26px; }
+  .sidebar.collapsed ~ .content-area .header .wordmark { display: block; }
+  .header .icons { position: absolute; top: 50%; left: 25px; transform: translateY(-50%); display: flex; align-items: center; gap: 11px; }
+  .sidebar.collapsed ~ .content-area .header .icons { left: 165px; }
+  .header .icon-wrap { position: relative; display: flex; }
+  .header .icon-btn { display: flex; align-items: center; justify-content: center; background: transparent; border: 1.5px solid transparent; border-radius: 8px; padding: 2px; cursor: pointer; line-height: 0; }
+  .header .icon-btn.active { border-color: rgba(255,255,255,0.6); }
+  .header .icons img { width: 27px; height: 27px; cursor: pointer; display: block; }
+  .dropdown-panel { display: none; position: absolute; top: calc(100% + 14px); left: 0; width: 320px; max-width: 90vw; background: #1E1E1E; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; box-shadow: 0 12px 28px rgba(0,0,0,0.45); z-index: 60; overflow: hidden; }
+  .dropdown-panel.open { display: block; }
+  .dropdown-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .dropdown-link { font-size: 12px; color: #d99a3d; text-decoration: none; font-weight: 600; }
+  .dropdown-footer { text-align: center; padding: 10px 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .notif-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 36px 20px; }
+  .notif-empty-icon { font-size: 30px; opacity: 0.5; }
+  .notif-empty-text { font-size: 13px; color: #9a9a9a; }
+  .mail-list { max-height: 320px; overflow-y: auto; }
+  .header .auth-links { position: absolute; right: 62px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 14px; }
+  .header .auth-link { color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-decoration: none; opacity: 0.85; }
+  .header .auth-divider { width: 1px; height: 12px; background: rgba(255,255,255,0.25); }
+  .header .icons .light-mode-btn { width: 30px; height: 30px; cursor: pointer; display: block; }
+  .header .profile-chip { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .profile-chip-text { display: flex; flex-direction: column; gap: 2px; }
+  .profile-chip-name { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.15; }
+  .profile-chip-role { font-size: 8px; font-weight: 600; letter-spacing: 1px; color: #9a9a9a; text-transform: uppercase; }
+  .profile-chip-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #3a3a3a; }
+  .avatar-btn { position: relative; display: flex; background: transparent; border: none; padding: 0; cursor: pointer; line-height: 0; border-radius: 50%; }
+  .profile-menu-panel { left: auto; right: 0; width: 220px; padding: 6px 0; }
+  .profile-menu-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: #e8e8e8; text-decoration: none; background: transparent; border: none; width: 100%; text-align: left; cursor: pointer; font-family: inherit; }
+  .profile-menu-item:hover { background: rgba(255,255,255,0.05); }
+  .profile-menu-icon { width: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .profile-menu-logout { color: #e57373; }
+  .profile-menu-divider { height: 1px; margin: 4px 0; background: rgba(255,255,255,0.08); }
+  .main { flex: 1; background: var(--main-bg); color: var(--main-text); }
+
+  .page { width: 100%; max-width: 760px; margin: 24px auto 60px; padding: 0 20px; }
+  .page h1 { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+  .card { background: #1a1a1a; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 14px; }
+  label { display: block; font-size: 13px; color: #b3b3b3; margin-bottom: 6px; }
+  label .hint { color: #777; font-weight: 400; }
+  .field { width: 100%; background: #242424; border: 0.5px solid #3a3a3a; border-radius: 8px; padding: 10px 12px; color: #e8e8e8; font-size: 14px; font-family: inherit; }
+  .field:focus { outline: none; border-color: #4a4a4a; }
+  .form-row { display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-end; }
+  .form-row > div { flex: 1; }
+  .group { margin-bottom: 16px; }
+  textarea.field { min-height: 80px; resize: vertical; line-height: 1.6; }
+  .dropzone { background: #242424; border: 1px dashed #4a4a4a; border-radius: 8px; height: 170px; display: flex; align-items: center; justify-content: center; color: #777; font-size: 13px; cursor: pointer; position: relative; overflow: hidden; }
+  #cropStage { position: relative; width: 100%; height: 170px; border-radius: 8px; overflow: hidden; display: none; touch-action: none; background: #000; }
+  #cropStage img { position: absolute; top: 50%; left: 50%; transform-origin: center; user-select: none; pointer-events: none; }
+  #scoreboardOverlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 16px; gap: 6px; pointer-events: none; }
+  #scoreboardOverlay .sb-league { color: #c9c9c9; font-size: 10px; letter-spacing: 1px; }
+  #scoreboardOverlay .sb-row { display: flex; align-items: center; gap: 14px; }
+  #scoreboardOverlay .sb-team { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 56px; }
+  #scoreboardOverlay .sb-team img { width: 28px; height: 28px; object-fit: contain; }
+  #scoreboardOverlay .sb-team span { color: #e8e8e8; font-size: 10px; text-align: center; }
+  #scoreboardOverlay .sb-score { color: #fff; font-size: 24px; font-weight: 500; }
+  .zoom-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .stat-row { display: flex; align-items: center; gap: 10px; background: #242424; border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; }
+  .stat-row input.stat-val { width: 60px; background: #1a1a1a; border: 0.5px solid #3a3a3a; border-radius: 6px; padding: 6px; color: #e8e8e8; font-size: 12px; text-align: center; }
+  .stat-row .stat-label { flex: 1; color: #e8e8e8; font-size: 12px; }
+  .lineup-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .lineup-row .lineup-name { flex: 1; font-size: 12px; color: #e8e8e8; }
+  .lineup-row input.lineup-rating { width: 56px; background: #242424; border: 0.5px solid #3a3a3a; border-radius: 6px; padding: 5px; color: #e8e8e8; font-size: 12px; text-align: center; }
+  .chip-add { border: 1px dashed #4a4a4a; color: #777; font-size: 12px; padding: 6px 14px; border-radius: 20px; background: none; cursor: pointer; }
+  .submit-row { display: flex; justify-content: flex-end; margin-top: 20px; }
+  button.primary { background: #872929; color: #fbeaea; border: none; border-radius: 8px; padding: 10px 22px; font-size: 14px; font-weight: 500; cursor: pointer; }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .error-text { color: #f0a0a0; font-size: 12px; margin-top: 4px; display: none; }
+  .status-banner { font-size: 13px; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; display: none; }
+  .status-banner.info { background: #1f2a38; color: #a9c7e8; }
+  .status-banner.error { background: #3a2020; color: #f0a0a0; }
+  .status-banner.success { background: #1f3a24; color: #a9e8b8; }
+  #gate-checking, #gate-denied { text-align: center; padding: 60px 20px; color: #b3b3b3; }
+  #formWrap { display: none; }
+  .two-col { display: flex; gap: 16px; }
+  .two-col > div { flex: 1; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="logo-wrap">
+      <a href="index.html"><svg class="logo-svg" width="76" height="85" viewBox="0 0 76 85" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SoloGoal">
+        <rect width="76" height="85" fill="#872929" opacity="0.001"/>
+        <text x="10" y="50" fill="#fff" font-size="14" font-family="Sarabun">SG</text>
+      </svg></a>
+      <!-- TODO(TEN): แทนที่ด้วย SVG โลโก้เต็มของจริง -->
+    </div>
+    <nav class="menu-panel">
+      <div class="menu-highlight" id="menuHighlight"></div>
+      <ul id="menuList">
+        <li style="top:9px"><a href="index.html" style="position:absolute;inset:0;display:block;"><img src="assets/HOME ICON_2.svg" alt="" style="left:28px;width:13px;height:16px"><span style="left:57px">หน้าแรก</span></a></li>
+        <li style="top:46px"><img src="assets/NEWS ICON_2.svg" alt="" style="left:27px;width:16px;height:13px"><span style="left:57px">อัพเดทข่าว</span></li>
+        <li style="top:79px"><img src="assets/ARTICLE ICON_2.svg" alt="" style="left:28px;width:13px;height:13px"><span style="left:57px">บทความ</span></li>
+        <li style="top:115px"><img src="assets/SOCIETY ICON_2.svg" alt="" style="left:28px;width:14px;height:13px"><span style="left:56px">บอร์ดโซไซตี้</span></li>
+        <li style="top:148px"><img src="assets/BALL_INTER ICON_2.svg" alt="" style="left:28px;width:14px;height:18px"><span style="left:56px">บอร์ดบอลนอก</span></li>
+        <li style="top:182px"><img src="assets/BALL_THAI ICON_2.svg" alt="" style="left:29px;width:12px;height:17px"><span style="left:56px">บอร์ดบอลไทย</span></li>
+        <li style="top:214px"><img src="assets/all sport icon_2.svg" alt="" style="left:29px;width:14px;height:19px"><span style="left:56px">ออลสปอร์ต</span></li>
+        <li style="top:250px"><img src="assets/games icon_2.svg" alt="" style="left:29px;width:15px;height:15px"><span style="left:56px">บอร์ดเกมส์</span></li>
+        <li style="top:282px"><img src="assets/deal icon_2.svg" alt="" style="left:28px;width:16px;height:16px"><span style="left:56px">เดลล่างมอ</span></li>
+        <li style="top:316px"><img src="assets/Prisoner Icon_2.svg" alt="" style="left:27px;width:15px;height:16px"><span style="left:56px">เรือนจำคนง่าว</span></li>
+        <li style="top:353px"><img src="assets/buy item icon_2.svg" alt="" style="left:28px;width:16px;height:16px"><span style="left:56px;color:#FFC107">ซื้อไอเท็มเว็บ</span></li>
+      </ul>
+    </nav>
+    <div class="menu-divider"></div>
+    <div class="balance-box"><img src="assets/balance.svg" alt="Balance"></div>
+    <ul class="menu-collapsed">
+      <li><img src="assets/HOME ICON.svg" alt="หน้าแรก"></li>
+      <li><img src="assets/NEWS ICON.svg" alt="อัพเดทข่าว"></li>
+      <li><img src="assets/ARTICLE ICON.svg" alt="บทความ"></li>
+      <li><img src="assets/SOCIETY ICON.svg" alt="บอร์ดโซไซตี้"></li>
+      <li><img src="assets/BALL_INTER ICON.svg" alt="บอร์ดบอลนอก"></li>
+      <li><img src="assets/BALL_THAI ICON.svg" alt="บอร์ดบอลไทย"></li>
+      <li><img src="assets/all sport icon.svg" alt="ออลสปอร์ต"></li>
+      <li><img src="assets/games icon.svg" alt="บอร์ดเกมส์"></li>
+      <li><img src="assets/deal icon.svg" alt="เดลล่างมอ"></li>
+      <li><img src="assets/Prisoner Icon.svg" alt="เรือนจำคนง่าว"></li>
+      <li><img src="assets/buy item icon.svg" alt="ซื้อไอเท็มเว็บ"></li>
+    </ul>
+  </aside>
+
+  <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#10094;</button>
+
+  <div class="content-area">
+    <header class="header">
+      <a href="index.html" class="wordmark" style="text-decoration:none;">SOLOGOAL</a>
+      <div class="icons">
+        <div class="icon-wrap" id="bellWrap">
+          <button class="icon-btn" id="bellBtn" type="button" aria-label="การแจ้งเตือน"><img class="bell" src="assets/mynaui_bell.svg" alt="Notifications"></button>
+          <div class="dropdown-panel notif-panel" id="notifPanel">
+            <div class="notif-empty"><div class="notif-empty-icon">🔕</div><div class="notif-empty-text">ไม่มีการแจ้งเตือน</div></div>
+            <div class="dropdown-footer"><a href="#" class="dropdown-link">อ่านทั้งหมด</a></div>
+          </div>
+        </div>
+        <div class="icon-wrap" id="mailWrap">
+          <button class="icon-btn" id="mailBtn" type="button" aria-label="ข้อความ"><img class="mail" src="assets/mynaui_mail.svg" alt="Messages"></button>
+          <div class="dropdown-panel mail-panel" id="mailPanel">
+            <div class="dropdown-header"><a href="#" class="dropdown-link">ทำเป็นอ่านแล้วทั้งหมด</a><a href="#" class="dropdown-link">ข้อความใหม่</a></div>
+            <div class="mail-list"></div>
+            <div class="dropdown-footer"><a href="#" class="dropdown-link">ดูข้อความทั้งหมด</a></div>
+          </div>
+        </div>
+        <svg class="light-mode-btn" id="themeToggle" viewBox="0 0 29 29" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Toggle light mode">
+          <path d="M14.5 18.125C15.507 18.125 16.3629 17.7726 17.0677 17.0677C17.7726 16.3629 18.125 15.5069 18.125 14.5C18.125 13.4931 17.7726 12.6372 17.0677 11.9323C16.3629 11.2274 15.507 10.875 14.5 10.875C13.4931 10.875 12.6372 11.2274 11.9323 11.9323C11.2275 12.6372 10.875 13.4931 10.875 14.5C10.875 15.5069 11.2275 16.3629 11.9323 17.0677C12.6372 17.7726 13.4931 18.125 14.5 18.125ZM14.5 20.5417C12.8285 20.5417 11.4037 19.9526 10.2256 18.7745C9.04744 17.5964 8.45837 16.1715 8.45837 14.5C8.45837 12.8285 9.04744 11.4036 10.2256 10.2255C11.4037 9.0474 12.8285 8.45834 14.5 8.45834C16.1716 8.45834 17.5964 9.0474 18.7745 10.2255C19.9526 11.4036 20.5417 12.8285 20.5417 14.5C20.5417 16.1715 19.9526 17.5964 18.7745 18.7745C17.5964 19.9526 16.1716 20.5417 14.5 20.5417ZM6.04171 15.7083H1.20837V13.2917H6.04171V15.7083ZM27.7917 15.7083H22.9584V13.2917H27.7917V15.7083ZM13.2917 6.04167V1.20834H15.7084V6.04167H13.2917ZM13.2917 27.7917V22.9583H15.7084V27.7917H13.2917ZM7.73337 9.36459L4.68233 6.43438L6.40421 4.65209L9.30421 7.67292L7.73337 9.36459ZM22.5959 24.3479L19.6657 21.2969L21.2667 19.6354L24.3177 22.5656L22.5959 24.3479ZM19.6355 7.73334L22.5657 4.68229L24.348 6.40417L21.3271 9.30417L19.6355 7.73334ZM4.65212 22.5958L7.70317 19.6656L9.36462 21.2667L6.43442 24.3177L4.65212 22.5958Z" fill="#FEF7FF"/>
+        </svg>
+      </div>
+      <div class="auth-links" id="authLinks" style="display:none;">
+        <a class="auth-link" href="auth.html?tab=register">REGISTER</a><span class="auth-divider"></span><a class="auth-link" href="auth.html?tab=login">LOGIN</a>
+      </div>
+      <div class="profile-chip" id="profileChip" style="display:none;">
+        <div class="profile-chip-text"><span class="profile-chip-name" id="profileChipName">สมาชิก</span><span class="profile-chip-role" id="profileChipRole"></span></div>
+        <button class="avatar-btn" id="avatarBtn" type="button" aria-label="เมนูผู้ใช้"><img class="profile-chip-avatar" id="profileChipAvatar" src="assets/default-avatar.png" alt="avatar"></button>
+        <div class="dropdown-panel profile-menu-panel" id="profileMenuPanel">
+          <a href="/profile.html" class="profile-menu-item"><span class="profile-menu-icon">👤</span><span>โปรไฟล์</span></a>
+          <a href="/admin.html" class="profile-menu-item" id="adminMenuItem" style="display:none;"><span class="profile-menu-icon">🛠️</span><span>ระบบแอดมิน</span></a>
+          <a href="/board.html" class="profile-menu-item"><span class="profile-menu-icon">📋</span><span>เว็บบอร์ด</span></a>
+          <div class="profile-menu-divider"></div>
+          <button type="button" class="profile-menu-item profile-menu-logout" id="logoutMenuBtn"><span class="profile-menu-icon">🚪</span><span>ออกจากระบบ</span></button>
+        </div>
+      </div>
+    </header>
+
+    <script>
+      (function guessAuthStateEarly() {
+        try {
+          var tokenKey = 'sb-dnrcardbuuwnvuridubb-auth-token';
+          var hasToken = !!(localStorage.getItem(tokenKey) || sessionStorage.getItem(tokenKey));
+          document.getElementById(hasToken ? 'profileChip' : 'authLinks').style.display = 'flex';
+        } catch (e) { document.getElementById('authLinks').style.display = 'flex'; }
+      })();
+    </script>
+
+    <main class="main">
+      <div class="page">
+        <h1>สร้างกระทู้ — ข่าวสรุปผลบอล</h1>
+        <div id="gate-checking">กำลังตรวจสอบสิทธิ์การเข้าถึง...</div>
+        <div id="gate-denied" style="display:none;">หน้านี้ใช้ได้เฉพาะแอดมิน/webmaster เท่านั้น</div>
+
+        <div id="formWrap">
+          <div id="statusBanner" class="status-banner"></div>
+
+          <!-- 1. สกอร์บอร์ด -->
+          <div class="card">
+            <h2>1. สกอร์บอร์ด</h2>
+            <div class="form-row">
+              <div>
+                <label for="league">ลีค</label>
+                <select id="league" class="field"><option value="">-- เลือกลีค --</option></select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div><label for="homeTeam">ทีมเหย้า</label><select id="homeTeam" class="field"><option value="">--</option></select></div>
+              <div style="max-width:70px;"><label>สกอร์</label><input id="homeScore" type="number" class="field" value="0" /></div>
+              <span style="padding-bottom:10px;">–</span>
+              <div style="max-width:70px;"><label>สกอร์</label><input id="awayScore" type="number" class="field" value="0" /></div>
+              <div><label for="awayTeam">ทีมเยือน</label><select id="awayTeam" class="field"><option value="">--</option></select></div>
+            </div>
+            <div class="two-col">
+              <div>
+                <label>รูปพื้นหลัง</label>
+                <div class="dropzone" id="dropzone"><span>อัปโหลดรูปพื้นหลัง</span>
+                  <input id="coverInput" type="file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;" />
+                </div>
+              </div>
+              <div>
+                <label>พรีวิว</label>
+                <div id="cropStage">
+                  <img id="cropImg" alt="" />
+                  <div id="scoreboardOverlay">
+                    <span class="sb-league" id="ov_league"></span>
+                    <div class="sb-row">
+                      <div class="sb-team"><img id="ov_homeLogo" src="" alt=""><span id="ov_homeName"></span></div>
+                      <span class="sb-score" id="ov_score">0 – 0</span>
+                      <div class="sb-team"><img id="ov_awayLogo" src="" alt=""><span id="ov_awayName"></span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="zoom-row" id="zoomRow" style="display:none;">
+                  <span style="font-size:12px; color:#777;">ซูม</span>
+                  <input id="zoomRange" type="range" min="100" max="250" value="100" style="flex:1;" />
+                </div>
+              </div>
+            </div>
+            <p style="font-size:11px; color:#777; margin-top:6px;">ลากรูปพื้นหลังเพื่อจัดตำแหน่งได้ สกอร์บอร์ดจะซ้อนทับให้อัตโนมัติจากข้อมูลที่เลือกด้านบน</p>
+          </div>
+
+          <!-- 2. ไฮไลท์ -->
+          <div class="card">
+            <h2>2. วิดีโอไฮไลท์ (บังคับ)</h2>
+            <label for="highlightUrl">ลิงก์ YouTube</label>
+            <input id="highlightUrl" class="field" type="text" placeholder="https://www.youtube.com/watch?v=..." />
+          </div>
+
+          <!-- 3. บทความสรุป -->
+          <div class="card">
+            <h2>3. บทความสรุป (4-5 บรรทัด, บังคับ)</h2>
+            <textarea id="summary" class="field"></textarea>
+          </div>
+
+          <!-- 4. สถิติ + ไลน์อัพ -->
+          <div class="card">
+            <h2>4. สถิติหลังเกม + ไลน์อัพ + เรตติ้ง</h2>
+            <label for="sofascoreUrl">วาง URL แมตช์จาก sofascore.com (แนะนำ — ดึงข้อมูลให้อัตโนมัติ)</label>
+            <div style="display:flex; gap:8px; margin-bottom:16px;">
+              <input id="sofascoreUrl" class="field" type="text" placeholder="https://www.sofascore.com/football/match/.../KsY#id:16363259" />
+              <button type="button" class="chip-add" id="fetchSofascoreBtn" style="white-space:nowrap;">ดึงข้อมูลอัตโนมัติ</button>
+            </div>
+            <div id="sofascoreStatus" style="font-size:12px; color:#777; margin-bottom:12px;"></div>
+
+            <div id="statsSection" style="display:none;">
+              <p style="font-size:12px; color:#9a9a9a; margin-bottom:8px;">สถิติภาพรวม (ตรวจสอบ/แก้ไขได้ก่อนบันทึก)</p>
+              <div id="statsTable"></div>
+            </div>
+
+            <div id="lineupsSection" style="display:none; margin-top:16px;">
+              <p style="font-size:12px; color:#9a9a9a; margin-bottom:8px;">ไลน์อัพ + เรตติ้ง</p>
+              <div class="two-col">
+                <div><strong id="homeLineupTitle" style="font-size:12px;"></strong><div id="homeLineupList"></div></div>
+                <div><strong id="awayLineupTitle" style="font-size:12px;"></strong><div id="awayLineupList"></div></div>
+              </div>
+            </div>
+
+            <div id="motmSection" style="display:none; margin-top:16px;">
+              <label for="motmPlayer">Man of the Match <span class="hint">(auto-suggest จากเรตติ้งสูงสุด — แก้ได้)</span></label>
+              <input id="motmPlayer" class="field" type="text" />
+            </div>
+          </div>
+
+          <div class="error-text" id="formError"></div>
+          <div class="submit-row"><button type="button" class="primary" id="submitBtn">โพสต์ข่าวสรุปผลบอล</button></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  // ===== chrome: theme / sidebar / dropdowns / auth-role gate (เหมือน news-post.html) =====
+  const themeToggle = document.getElementById('themeToggle');
+  const htmlEl = document.documentElement;
+  function applyTheme(isLight) { htmlEl.classList.toggle('light-mode', isLight); }
+  applyTheme(localStorage.getItem('sologoal-theme') === 'light');
+  themeToggle.addEventListener('click', () => {
+    const isLight = htmlEl.classList.toggle('light-mode');
+    localStorage.setItem('sologoal-theme', isLight ? 'light' : 'dark');
+  });
+
+  const sidebarEl = document.getElementById('sidebar');
+  const sbToggleBtn = document.getElementById('sidebarToggle');
+  sbToggleBtn.addEventListener('click', () => {
+    const collapsed = sidebarEl.classList.toggle('collapsed');
+    document.documentElement.style.setProperty('--sidebar-w', collapsed ? '56px' : '198px');
+    sbToggleBtn.innerHTML = collapsed ? '&#10095;' : '&#10094;';
+  });
+
+  const menuList = document.getElementById('menuList');
+  const highlightEl = document.getElementById('menuHighlight');
+  menuList.querySelectorAll('li').forEach((li) => {
+    li.addEventListener('mouseenter', () => {
+      highlightEl.style.top = (li.offsetTop + (li.offsetHeight - 27) / 2) + 'px';
+      highlightEl.style.opacity = '1';
+    });
+  });
+  menuList.addEventListener('mouseleave', () => { highlightEl.style.opacity = '0'; });
+
+  function setupHeaderDropdown(btnId, panelId) {
+    const btn = document.getElementById(btnId);
+    const panel = document.getElementById(panelId);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = panel.classList.contains('open');
+      closeAllHeaderDropdowns();
+      if (!isOpen) { panel.classList.add('open'); btn.classList.add('active'); }
+    });
+    panel.addEventListener('click', (e) => e.stopPropagation());
+  }
+  function closeAllHeaderDropdowns() {
+    document.querySelectorAll('.dropdown-panel.open').forEach(p => p.classList.remove('open'));
+    document.querySelectorAll('.icon-btn.active, .avatar-btn.active').forEach(b => b.classList.remove('active'));
+  }
+  setupHeaderDropdown('bellBtn', 'notifPanel');
+  setupHeaderDropdown('mailBtn', 'mailPanel');
+  setupHeaderDropdown('avatarBtn', 'profileMenuPanel');
+  document.addEventListener('click', closeAllHeaderDropdowns);
+
+  let currentSession = null;
+
+  (async function initHeaderAuthState() {
+    const authLinksEl = document.getElementById('authLinks');
+    const chipEl = document.getElementById('profileChip');
+    const { data: { session } } = await sb.auth.getSession();
+    currentSession = session;
+
+    if (!session) {
+      chipEl.style.display = 'none'; authLinksEl.style.display = 'flex';
+      document.getElementById('gate-checking').style.display = 'none';
+      document.getElementById('gate-denied').style.display = 'block';
+      return;
+    }
+
+    const nameEl = document.getElementById('profileChipName');
+    const roleEl = document.getElementById('profileChipRole');
+    const avatarEl = document.getElementById('profileChipAvatar');
+    const adminMenuItemEl = document.getElementById('adminMenuItem');
+    const { data: profile } = await sb.from('profiles').select('username, avatar_url').eq('user_id', session.user.id).single();
+    nameEl.textContent = profile?.username || session.user.user_metadata?.username || 'สมาชิก';
+    if (profile?.avatar_url) avatarEl.src = profile.avatar_url;
+
+    let myRole = 'member';
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/get-my-role`, { headers: { Authorization: `Bearer ${session.access_token}` } });
+      if (res.ok) {
+        const roleData = await res.json();
+        if (roleData?.role) {
+          myRole = roleData.role;
+          if (myRole !== 'member') { roleEl.textContent = myRole.toUpperCase(); if (myRole === 'webmaster' || myRole === 'admin') adminMenuItemEl.style.display = 'flex'; }
+        }
+      }
+    } catch (e) {}
+
+    authLinksEl.style.display = 'none';
+    chipEl.style.display = 'flex';
+    document.getElementById('gate-checking').style.display = 'none';
+    if (myRole === 'admin' || myRole === 'webmaster') {
+      document.getElementById('formWrap').style.display = 'block';
+      initFormData();
+    } else {
+      document.getElementById('gate-denied').style.display = 'block';
+    }
+  })();
+
+  document.getElementById('logoutMenuBtn').addEventListener('click', async () => {
+    await sb.auth.signOut();
+    window.location.href = '/auth.html?tab=login';
+  });
+
+  // ============================================================
+  // โค้ดเฉพาะฟอร์มข่าวสรุปผลบอล
+  // ============================================================
+  const COVER_BUCKET = 'news-covers';
+  let teamsByLeague = {};
+  let teamsById = {};
+
+  async function initFormData() {
+    const { data: leagues } = await sb.from('leagues').select('id, code, name').order('name');
+    const leagueSel = document.getElementById('league');
+    (leagues || []).forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l.id; opt.textContent = l.name; opt.dataset.name = l.name;
+      leagueSel.appendChild(opt);
+    });
+
+    const { data: teams } = await sb.from('teams').select('id, league_id, name, logo_url');
+    (teams || []).forEach(t => {
+      teamsById[t.id] = t;
+      if (!teamsByLeague[t.league_id]) teamsByLeague[t.league_id] = [];
+      teamsByLeague[t.league_id].push(t);
+    });
+
+    leagueSel.addEventListener('change', () => {
+      const list = teamsByLeague[leagueSel.value] || [];
+      fillTeamSelect('homeTeam', list);
+      fillTeamSelect('awayTeam', list);
+      updateOverlay();
+    });
+  }
+
+  function fillTeamSelect(id, list) {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">--</option>' + list.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+  }
+
+  function updateOverlay() {
+    const leagueSel = document.getElementById('league');
+    const leagueName = leagueSel.selectedOptions[0]?.dataset.name || '';
+    const home = teamsById[document.getElementById('homeTeam').value];
+    const away = teamsById[document.getElementById('awayTeam').value];
+    document.getElementById('ov_league').textContent = leagueName ? leagueName.toUpperCase() : '';
+    document.getElementById('ov_homeName').textContent = home ? home.name : '';
+    document.getElementById('ov_awayName').textContent = away ? away.name : '';
+    document.getElementById('ov_homeLogo').src = home?.logo_url || '';
+    document.getElementById('ov_awayLogo').src = away?.logo_url || '';
+    document.getElementById('ov_score').textContent =
+      `${document.getElementById('homeScore').value || 0} – ${document.getElementById('awayScore').value || 0}`;
+  }
+  ['homeTeam','awayTeam','homeScore','awayScore'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateOverlay);
+    document.getElementById(id).addEventListener('change', updateOverlay);
+  });
+
+  // ===== พื้นหลัง + ครอป/ซูม/ลาก =====
+  const dropzone = document.getElementById('dropzone');
+  const coverInput = document.getElementById('coverInput');
+  const cropStage = document.getElementById('cropStage');
+  const cropImg = document.getElementById('cropImg');
+  const zoomRow = document.getElementById('zoomRow');
+  const zoomRange = document.getElementById('zoomRange');
+  let cropState = { scale: 1, x: 0, y: 0, file: null };
+
+  coverInput.addEventListener('change', () => {
+    const file = coverInput.files[0];
+    if (!file) return;
+    cropState.file = file;
+    cropImg.src = URL.createObjectURL(file);
+    cropImg.onload = () => {
+      dropzone.style.display = 'none';
+      cropStage.style.display = 'block';
+      zoomRow.style.display = 'flex';
+      cropState.scale = 1; cropState.x = 0; cropState.y = 0;
+      zoomRange.value = 100;
+      applyCropTransform();
+    };
+  });
+  function applyCropTransform() {
+    cropImg.style.transform = `translate(calc(-50% + ${cropState.x}px), calc(-50% + ${cropState.y}px)) scale(${cropState.scale})`;
+    cropImg.style.width = cropStage.clientWidth + 'px';
+  }
+  zoomRange.addEventListener('input', () => { cropState.scale = zoomRange.value / 100; applyCropTransform(); });
+  let dragging = false, dragStart = { x: 0, y: 0 };
+  cropStage.addEventListener('pointerdown', (e) => { dragging = true; dragStart = { x: e.clientX - cropState.x, y: e.clientY - cropState.y }; });
+  window.addEventListener('pointermove', (e) => { if (!dragging) return; cropState.x = e.clientX - dragStart.x; cropState.y = e.clientY - dragStart.y; applyCropTransform(); });
+  window.addEventListener('pointerup', () => { dragging = false; });
+
+  function renderCroppedImage() {
+    return new Promise((resolve) => {
+      if (!cropState.file) return resolve(null);
+      const outW = 1200, outH = 630;
+      const canvas = document.createElement('canvas');
+      canvas.width = outW; canvas.height = outH;
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = () => {
+        const stageW = cropStage.clientWidth, stageH = cropStage.clientHeight;
+        const scaleToOut = outW / stageW;
+        const displayW = stageW * cropState.scale;
+        const displayH = (img.naturalHeight / img.naturalWidth) * displayW;
+        const cx = stageW / 2 + cropState.x;
+        const cy = stageH / 2 + cropState.y;
+        ctx.drawImage(img, (cx - displayW / 2) * scaleToOut, (cy - displayH / 2) * scaleToOut, displayW * scaleToOut, displayH * scaleToOut);
+        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.9);
+      };
+      img.src = cropImg.src;
+    });
+  }
+
+  // ===== ดึงข้อมูล sofascore ผ่าน edge function =====
+  let lastStats = null, lastLineups = null;
+
+  document.getElementById('fetchSofascoreBtn').addEventListener('click', async () => {
+    const url = document.getElementById('sofascoreUrl').value.trim();
+    const statusEl = document.getElementById('sofascoreStatus');
+    if (!url) { statusEl.textContent = 'วาง URL แมตช์ก่อน'; return; }
+    statusEl.textContent = 'กำลังดึงข้อมูล...';
+    try {
+      const { data, error } = await sb.functions.invoke('fetch-match-recap-data', { body: { sofascoreUrl: url } });
+      if (error) throw error;
+      lastStats = data.statistics; lastLineups = data.lineups;
+      statusEl.textContent = data.cached ? 'ดึงจาก cache แล้ว' : 'ดึงข้อมูลใหม่สำเร็จ';
+      renderStats(data.statistics);
+      renderLineups(data.lineups);
+    } catch (e) {
+      statusEl.textContent = 'ดึงไม่สำเร็จ: ' + (e.message || e) + ' — กรอกสถิติ/ไลน์อัพเองแทนได้';
+    }
+  });
+
+  function renderStats(statistics) {
+    const all = (statistics.statistics || []).find(s => s.period === 'ALL');
+    const overview = all?.groups?.find(g => g.groupName === 'Match overview');
+    if (!overview) return;
+    const wrap = document.getElementById('statsTable');
+    wrap.innerHTML = overview.statisticsItems.map(item => `
+      <div class="stat-row">
+        <input class="stat-val" data-key="${item.key}" data-side="home" value="${item.home}">
+        <span class="stat-label">${item.name}</span>
+        <input class="stat-val" data-key="${item.key}" data-side="away" value="${item.away}">
+      </div>`).join('');
+    document.getElementById('statsSection').style.display = 'block';
+  }
+
+  function renderLineups(lineups) {
+    const homeTeamName = teamsById[document.getElementById('homeTeam').value]?.name || 'ทีมเหย้า';
+    const awayTeamName = teamsById[document.getElementById('awayTeam').value]?.name || 'ทีมเยือน';
+    document.getElementById('homeLineupTitle').textContent = homeTeamName;
+    document.getElementById('awayLineupTitle').textContent = awayTeamName;
+
+    const buildList = (players) => (players || [])
+      .filter(p => p.statistics && typeof p.statistics.rating === 'number')
+      .sort((a, b) => (b.statistics.rating || 0) - (a.statistics.rating || 0))
+      .map(p => `<div class="lineup-row"><span class="lineup-name">${p.player.name}</span><input class="lineup-rating" data-name="${p.player.name}" value="${p.statistics.rating}"></div>`)
+      .join('');
+
+    document.getElementById('homeLineupList').innerHTML = buildList(lineups.home?.players);
+    document.getElementById('awayLineupList').innerHTML = buildList(lineups.away?.players);
+    document.getElementById('lineupsSection').style.display = 'block';
+
+    const combined = [...(lineups.home?.players || []), ...(lineups.away?.players || [])]
+      .filter(p => p.statistics && typeof p.statistics.rating === 'number')
+      .sort((a, b) => b.statistics.rating - a.statistics.rating);
+    if (combined.length) {
+      document.getElementById('motmPlayer').value = combined[0].player.name;
+      document.getElementById('motmSection').style.display = 'block';
+    }
+  }
+
+  function showBanner(kind, msg) {
+    const el = document.getElementById('statusBanner');
+    el.className = 'status-banner ' + kind;
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  document.getElementById('submitBtn').addEventListener('click', async () => {
+    const homeTeamId = document.getElementById('homeTeam').value;
+    const awayTeamId = document.getElementById('awayTeam').value;
+    const highlightUrl = document.getElementById('highlightUrl').value.trim();
+    const summary = document.getElementById('summary').value.trim();
+    const errorEl = document.getElementById('formError');
+    errorEl.style.display = 'none';
+
+    const ytPattern = /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w-]+/;
+    if (!homeTeamId || !awayTeamId) { errorEl.textContent = 'เลือกทีมเหย้า/ทีมเยือนให้ครบก่อน'; errorEl.style.display = 'block'; return; }
+    if (!highlightUrl || !ytPattern.test(highlightUrl)) { errorEl.textContent = 'ต้องใส่ลิงก์ YouTube ไฮไลท์ที่ถูกต้อง (บังคับ)'; errorEl.style.display = 'block'; return; }
+    if (!summary) { errorEl.textContent = 'เขียนบทความสรุปก่อนโพสต์'; errorEl.style.display = 'block'; return; }
+
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true; submitBtn.textContent = 'กำลังโพสต์...';
+
+    try {
+      let coverUrl = null;
+      const blob = await renderCroppedImage();
+      if (blob) {
+        const fileName = `recap-${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+        const { error: uploadErr } = await sb.storage.from(COVER_BUCKET).upload(fileName, blob, { contentType: 'image/jpeg' });
+        if (uploadErr) throw uploadErr;
+        coverUrl = sb.storage.from(COVER_BUCKET).getPublicUrl(fileName).data.publicUrl;
+      }
+
+      // อ่านค่าสถิติ/เรตติ้งที่แก้ไขแล้วจากตาราง (ถ้ามี)
+      const statsOut = {};
+      document.querySelectorAll('#statsTable .stat-row').forEach(row => {
+        const inputs = row.querySelectorAll('.stat-val');
+        const key = inputs[0].dataset.key;
+        statsOut[key] = { home: inputs[0].value, away: inputs[1].value };
+      });
+      const lineupsOut = { home: [], away: [] };
+      document.querySelectorAll('#homeLineupList .lineup-row').forEach(row => {
+        lineupsOut.home.push({ name: row.querySelector('.lineup-name').textContent, rating: row.querySelector('.lineup-rating').value });
+      });
+      document.querySelectorAll('#awayLineupList .lineup-row').forEach(row => {
+        lineupsOut.away.push({ name: row.querySelector('.lineup-name').textContent, rating: row.querySelector('.lineup-rating').value });
+      });
+
+      const homeName = teamsById[homeTeamId]?.name || '';
+      const awayName = teamsById[awayTeamId]?.name || '';
+      const homeScore = document.getElementById('homeScore').value;
+      const awayScore = document.getElementById('awayScore').value;
+      const title = `${homeName} ${homeScore}-${awayScore} ${awayName}`;
+
+      const { data: { user } } = await sb.auth.getUser();
+      const { data: postRow, error: postErr } = await sb.from('news_posts').insert({
+        author_id: user.id,
+        post_type: 'match_recap',
+        title,
+        content: summary,
+        cover_image_url: coverUrl,
+        tag: 'MATCH RECAPS',
+        hashtags: [homeName.replace(/\s+/g,''), awayName.replace(/\s+/g,'')]
+      }).select().single();
+      if (postErr) throw postErr;
+
+      const { error: recapErr } = await sb.from('news_match_recaps').insert({
+        post_id: postRow.id,
+        home_team_id: homeTeamId,
+        away_team_id: awayTeamId,
+        home_score: Number(homeScore),
+        away_score: Number(awayScore),
+        highlight_youtube_url: highlightUrl,
+        stats: Object.keys(statsOut).length ? statsOut : null,
+        lineups: (lineupsOut.home.length || lineupsOut.away.length) ? lineupsOut : null,
+        motm_player: document.getElementById('motmPlayer').value.trim() || null,
+        sofascore_event_id: (lastStats && document.getElementById('sofascoreUrl').value.match(/id[:=](\d+)/)?.[1]) || null
+      });
+      if (recapErr) throw recapErr;
+
+      showBanner('success', 'โพสต์ข่าวสรุปผลบอลเรียบร้อยแล้ว');
+      setTimeout(() => { window.location.href = 'news-post.html'; }, 1200);
+    } catch (err) {
+      showBanner('error', 'โพสต์ไม่สำเร็จ: ' + (err.message || err));
+      submitBtn.disabled = false; submitBtn.textContent = 'โพสต์ข่าวสรุปผลบอล';
+    }
+  });
+</script>
+</body>
+</html>
