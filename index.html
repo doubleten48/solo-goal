@@ -1445,21 +1445,22 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 16px;
   }
 
-  .footer-top {
+  .footer-brand { display: flex; flex-direction: column; gap: 4px; }
+  .footer-logo { font-size: 19px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+  .footer-logo .accent { color: #872929; }
+  .footer-copyright { font-size: 11px; color: #6f6f6f; }
+
+  .footer-bottom-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 14px;
   }
-  .footer-brand { display: flex; flex-direction: column; gap: 4px; }
-  .footer-logo { font-size: 19px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
-  .footer-logo .accent { color: #872929; }
-  .footer-copyright { font-size: 11px; color: #6f6f6f; }
 
   .footer-social { display: flex; gap: 10px; }
   .footer-social a {
@@ -1487,8 +1488,8 @@
 
   @media (max-width: 720px) {
     .site-footer-inner { min-height: unset; }
-    .footer-top { justify-content: center; text-align: center; }
-    .footer-brand { align-items: center; }
+    .footer-brand { align-items: center; text-align: center; }
+    .footer-bottom-row { justify-content: center; flex-direction: column; text-align: center; }
     .footer-nav { justify-content: center; font-size: 12px; gap: 8px 16px; }
   }
 
@@ -2776,11 +2777,21 @@
         <!-- Ending Board -->
         <div class="site-footer">
           <div class="site-footer-inner">
-            <div class="footer-top">
-              <div class="footer-brand">
-                <div class="footer-logo">SOLO<span class="accent">GOAL</span></div>
-                <div class="footer-copyright">© 2026 solo-goal.com — สงวนลิขสิทธิ์</div>
-              </div>
+            <div class="footer-brand">
+              <div class="footer-logo">SOLO<span class="accent">GOAL</span></div>
+              <div class="footer-copyright">© 2026 solo-goal.com — สงวนลิขสิทธิ์</div>
+            </div>
+
+            <div class="footer-bottom-row">
+              <nav class="footer-nav">
+                <a href="index.html">หน้าแรก</a>
+                <a href="#">เกี่ยวกับ</a>
+                <a href="#">ข้อตกลงการใช้งาน</a>
+                <a href="https://counter-pressing.com/cookies" target="_blank" rel="noopener">นโยบายคุกกี้</a>
+                <a href="https://counter-pressing.com/privacy" target="_blank" rel="noopener">นโยบายความเป็นส่วนตัว</a>
+                <a href="#">กฎกติกาการใช้บอร์ด</a>
+                <a href="#">ติดต่อเรา</a>
+              </nav>
 
               <div class="footer-social">
                 <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15 8.5h2V5.5h-2c-2 0-3.5 1.5-3.5 3.5v2H9.5v3H11.5v7h3v-7h2l.5-3H14.5V9c0-.3.2-.5.5-.5z"/></svg></a>
@@ -2791,16 +2802,6 @@
                 <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9l6 3-6 3V9z" fill="currentColor" stroke="none"/></svg></a>
               </div>
             </div>
-
-            <nav class="footer-nav">
-              <a href="index.html">หน้าแรก</a>
-              <a href="#">เกี่ยวกับ</a>
-              <a href="#">ข้อตกลงการใช้งาน</a>
-              <a href="https://counter-pressing.com/cookies" target="_blank" rel="noopener">นโยบายคุกกี้</a>
-              <a href="https://counter-pressing.com/privacy" target="_blank" rel="noopener">นโยบายความเป็นส่วนตัว</a>
-              <a href="#">กฎกติกาการใช้บอร์ด</a>
-              <a href="#">ติดต่อเรา</a>
-            </nav>
           </div>
         </div>
 
