@@ -3506,9 +3506,10 @@
         window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
       });
       standingsBtn.addEventListener('click', function() {
-        if (standingsTarget) {
-          standingsTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        if (!standingsTarget) return;
+        const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 60;
+        const targetY = standingsTarget.getBoundingClientRect().top + window.scrollY - headerH - 12;
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
       });
 
       window.addEventListener('scroll', updateFabs);
