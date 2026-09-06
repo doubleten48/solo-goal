@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>สร้างข่าว — SoloGoal</title>
+
+<!--
+  หมายเหตุสำหรับ TEN:
+  ไฟล์นี้เป็นหน้าเดี่ยว ยังไม่ได้ผูกกับ header/sidebar/theme-toggle ของจริงในเว็บ
+  (ผมไม่มีไฟล์จริงของ repo solo-goal ให้ดูในเซสชันนี้) รบกวนเอาโค้ดส่วน <header> ด้านล่าง
+  ไปแทนที่ด้วย include/partial ของจริง (แบบเดียวกับ about.html/terms.html ที่ทำไว้ก่อนหน้า)
+  และเปลี่ยนไปใช้ supabase-init.js ที่แชร์กันอยู่แล้วแทนโค้ด init ที่เขียนไว้ในไฟล์นี้ตรงๆ
+-->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  :root {
+    --bg-page: #121214;
+    --bg-card: #1a1a1a;
+    --bg-field: #242424;
+    --border: #3a3a3a;
+    --border-strong: #4a4a4a;
+    --text-primary: #e8e8e8;
+    --text-secondary: #b3b3b3;
+    --text-muted: #777;
+    --accent: #872929;
+    --accent-text: #fbeaea;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-family: -apple-system, "Segoe UI", "Noto Sans Thai", sans-serif;
+  }
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 24px 16px 64px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 500;
+    margin: 0 0 20px;
+  }
+  .card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+  label .hint { color: var(--text-muted); font-weight: 400; }
+  .field {
+    width: 100%;
+    background: var(--bg-field);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .field:focus { outline: none; border-color: var(--border-strong); }
+  .row { display: flex; gap: 16px; margin-bottom: 16px; }
+  .row > div { flex: 1; }
+  .group { margin-bottom: 16px; }
+  textarea.field { min-height: 90px; resize: vertical; line-height: 1.6; }
+
+  .dropzone {
+    background: var(--bg-field);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .dropzone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  }
+  #cropStage {
+    position: relative;
+    width: 100%;
+    height: 160px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: none;
+    touch-action: none;
+    background: #000;
+  }
+  #cropStage img {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform-origin: center;
+    user-select: none;
+    pointer-events: none;
+  }
+  .zoom-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .chip {
+    background: #2a2a2a;
+    color: var(--text-primary);
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0 6px 6px 0;
+  }
+  .chip button {
+    background: none; border: none; color: #888; cursor: pointer; font-size: 12px; padding: 0;
+  }
+  .chip-add {
+    border: 1px dashed var(--border-strong);
+    color: var(--text-muted);
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: none;
+    cursor: pointer;
+  }
+
+  .autocomplete-wrap { position: relative; }
+  #sourceDropdown {
+    display: none;
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    margin-top: 4px;
+    background: #2a2a2a;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    z-index: 5;
+    overflow: hidden;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+  #sourceDropdown div {
+    padding: 8px 12px; font-size: 13px; cursor: pointer;
+  }
+  #sourceDropdown div:hover { background: #3a3a3a; }
+
+  .submit-row { display: flex; justify-content: flex-end; margin-top: 20px; }
+  button.primary {
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    border-radius: var(--radius);
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .error-text { color: #f0a0a0; font-size: 12px; margin-top: 4px; display: none; }
+  .status-banner {
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    display: none;
+  }
+  .status-banner.info { background: #1f2a38; color: #a9c7e8; }
+  .status-banner.error { background: #3a2020; color: #f0a0a0; }
+  .status-banner.success { background: #1f3a24; color: #a9e8b8; }
+
+  #gate-checking, #gate-denied { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+  #formWrap { display: none; }
+</style>
+</head>
+<body>
+
+<!-- TODO(TEN): แทนที่ด้วย header/sidebar ของจริง -->
+<header style="background:#1a1a1a; padding:14px 20px; border-bottom:2px solid var(--accent);">
+  <strong>SoloGoal</strong> — อัพเดทข่าว
+</header>
+
+<main>
+  <h1>สร้างกระทู้ — ข่าวทั่วไป</h1>
+
+  <div id="gate-checking">กำลังตรวจสอบสิทธิ์การเข้าถึง...</div>
+  <div id="gate-denied" style="display:none;">หน้านี้ใช้ได้เฉพาะแอดมิน/webmaster เท่านั้น</div>
+
+  <div id="formWrap">
+    <div id="statusBanner" class="status-banner"></div>
+
+    <div class="card">
+      <div class="group">
+        <label for="title">หัวข้อ / พาดหัว</label>
+        <input id="title" class="field" type="text" placeholder="พาดหัวข่าว" />
+      </div>
+
+      <div class="row">
+        <div>
+          <label>รูปปก</label>
+          <div class="dropzone" id="dropzone">
+            <span id="dropzoneLabel"><i>อัปโหลดรูปภาพ</i></span>
+            <input id="coverInput" type="file" accept="image/*" />
+          </div>
+          <div id="cropStage"><img id="cropImg" alt="" /></div>
+          <div class="zoom-row" id="zoomRow" style="display:none;">
+            <span style="font-size:12px; color:var(--text-muted);">ซูม</span>
+            <input id="zoomRange" type="range" min="100" max="250" value="100" style="flex:1;" />
+          </div>
+          <p style="font-size:11px; color:var(--text-muted); margin-top:6px;">ลากรูปเพื่อจัดตำแหน่ง ก่อนโพสต์ระบบจะครอปตามกรอบที่เห็น</p>
+        </div>
+
+        <div>
+          <label for="tag">Tag</label>
+          <select id="tag" class="field">
+            <option value="">-- เลือก --</option>
+            <option value="TALK SPORT">TALK SPORT</option>
+            <option value="MATCH RECAPS">MATCH RECAPS</option>
+            <option value="TRANSFER NEWS">TRANSFER NEWS</option>
+            <option value="BREAKING NEWS">BREAKING NEWS</option>
+            <option value="OFFICIAL">OFFICIAL</option>
+          </select>
+          <p style="font-size:11px; color:var(--text-muted); margin-top:6px;">เลือก "MATCH RECAPS" จะพาไปหน้าสร้างข่าวสรุปผลบอลแทน</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="sourceLink">ลิงก์ต้นทาง <span class="hint">(ไม่บังคับ)</span></label>
+          <input id="sourceLink" class="field" type="text" placeholder="https://..." />
+        </div>
+        <div class="autocomplete-wrap">
+          <label for="sourceName">ชื่อแหล่งข่าว <span class="hint">(ไม่บังคับ)</span></label>
+          <input id="sourceName" class="field" type="text" placeholder="เช่น BBC, F. Romano" autocomplete="off" />
+          <div id="sourceDropdown"></div>
+        </div>
+      </div>
+
+      <div class="group">
+        <label for="content">เนื้อหาข่าว</label>
+        <textarea id="content" class="field"></textarea>
+      </div>
+
+      <div class="group">
+        <label>แฮชแท็ก <span class="hint">(กดปุ่มเพื่อดึงชื่อทีมจากหัวข้อ/เนื้อหาอัตโนมัติ — แก้ไข/ลบ/เพิ่มเองได้)</span></label>
+        <div id="hashtagList"></div>
+        <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+          <button type="button" class="chip-add" id="autoTagBtn">ดึงแฮชแท็กอัตโนมัติ</button>
+          <input id="hashtagInput" class="field" type="text" placeholder="พิมพ์แล้วกด Enter เพื่อเพิ่มเอง" style="max-width:220px;" />
+        </div>
+      </div>
+
+      <div class="error-text" id="formError"></div>
+
+      <div class="submit-row">
+        <button type="button" class="primary" id="submitBtn">โพสต์ข่าว</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ---- ค่าคงที่: ปรับให้ตรงกับโปรเจกต์จริงถ้าจำเป็น ----
+const SUPABASE_URL = 'https://dnrcardbuuwnvuridubb.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_uz4Tj8HDZef7T2OLEzyvUw_wcGsn0ZW';
+const COVER_BUCKET = 'news-covers'; // TODO(TEN): ยังไม่ได้สร้าง bucket นี้จริง ต้อง confirm ก่อนสร้างเพิ่ม
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let hashtags = [];
+let cropState = { scale: 1, x: 0, y: 0, file: null };
+
+function renderHashtags() {
+  const wrap = document.getElementById('hashtagList');
+  wrap.innerHTML = hashtags.map((t, i) =>
+    `<span class="chip">#${t} <button data-i="${i}" class="removeTag">✕</button></span>`
+  ).join('');
+  wrap.querySelectorAll('.removeTag').forEach(btn => {
+    btn.addEventListener('click', () => {
+      hashtags.splice(Number(btn.dataset.i), 1);
+      renderHashtags();
+    });
+  });
+}
+
+document.getElementById('hashtagInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.value.trim()) {
+    e.preventDefault();
+    hashtags.push(e.target.value.trim().replace(/^#/, ''));
+    e.target.value = '';
+    renderHashtags();
+  }
+});
+
+// ดึงแฮชแท็กอัตโนมัติ: จับคู่ชื่อทีมจาก team_aliases / api_sports_team_cache กับข้อความในหัวข้อ+เนื้อหา
+document.getElementById('autoTagBtn').addEventListener('click', async () => {
+  const text = (document.getElementById('title').value + ' ' + document.getElementById('content').value).toLowerCase();
+  const { data: aliases } = await sb.from('team_aliases').select('alias, canonical');
+  const { data: teams } = await sb.from('api_sports_team_cache').select('team_name');
+  const names = new Set();
+  (aliases || []).forEach(a => { if (text.includes(a.alias.toLowerCase())) names.add(a.canonical); });
+  (teams || []).forEach(t => { if (t.team_name && text.includes(t.team_name.toLowerCase())) names.add(t.team_name); });
+  names.forEach(n => {
+    const tag = n.replace(/\s+/g, '');
+    if (!hashtags.includes(tag)) hashtags.push(tag);
+  });
+  renderHashtags();
+});
+
+// tag select: redirect ทันทีถ้าเลือก MATCH RECAPS
+document.getElementById('tag').addEventListener('change', (e) => {
+  if (e.target.value === 'MATCH RECAPS') {
+    // TODO(TEN): news-post-recap.html ยังไม่ได้สร้าง — ตอนนี้จะ 404 จนกว่าจะทำหน้านั้น
+    window.location.href = 'news-post-recap.html';
+  }
+});
+
+// ---- รูปปก: อัปโหลด + ครอป/ซูม ----
+const dropzone = document.getElementById('dropzone');
+const coverInput = document.getElementById('coverInput');
+const cropStage = document.getElementById('cropStage');
+const cropImg = document.getElementById('cropImg');
+const zoomRow = document.getElementById('zoomRow');
+const zoomRange = document.getElementById('zoomRange');
+
+coverInput.addEventListener('change', () => {
+  const file = coverInput.files[0];
+  if (!file) return;
+  cropState.file = file;
+  const url = URL.createObjectURL(file);
+  cropImg.src = url;
+  cropImg.onload = () => {
+    dropzone.style.display = 'none';
+    cropStage.style.display = 'block';
+    zoomRow.style.display = 'flex';
+    cropState.scale = 1;
+    cropState.x = 0;
+    cropState.y = 0;
+    zoomRange.value = 100;
+    applyCropTransform();
+  };
+});
+
+function applyCropTransform() {
+  cropImg.style.transform =
+    `translate(calc(-50% + ${cropState.x}px), calc(-50% + ${cropState.y}px)) scale(${cropState.scale})`;
+  const stageW = cropStage.clientWidth;
+  cropImg.style.width = stageW + 'px';
+}
+
+zoomRange.addEventListener('input', () => {
+  cropState.scale = zoomRange.value / 100;
+  applyCropTransform();
+});
+
+let dragging = false, dragStart = { x: 0, y: 0 };
+cropStage.addEventListener('pointerdown', (e) => {
+  dragging = true;
+  dragStart = { x: e.clientX - cropState.x, y: e.clientY - cropState.y };
+});
+window.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  cropState.x = e.clientX - dragStart.x;
+  cropState.y = e.clientY - dragStart.y;
+  applyCropTransform();
+});
+window.addEventListener('pointerup', () => { dragging = false; });
+
+// เรนเดอร์ผลลัพธ์ที่ครอปแล้วเป็น Blob ก่อนอัปโหลดจริง
+function renderCroppedImage() {
+  return new Promise((resolve) => {
+    if (!cropState.file) return resolve(null);
+    const outW = 1200, outH = 630;
+    const canvas = document.createElement('canvas');
+    canvas.width = outW; canvas.height = outH;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      const stageW = cropStage.clientWidth, stageH = cropStage.clientHeight;
+      const scaleToOut = outW / stageW;
+      const drawnW = img.naturalWidth * (stageW / img.naturalWidth) * cropState.scale;
+      // คำนวณตำแหน่งกึ่งกลาง + offset ผู้ใช้ แล้วสเกลขึ้นไปที่ขนาดผลลัพธ์จริง
+      const displayW = stageW * cropState.scale;
+      const displayH = (img.naturalHeight / img.naturalWidth) * displayW;
+      const cx = stageW / 2 + cropState.x;
+      const cy = stageH / 2 + cropState.y;
+      const drawX = (cx - displayW / 2) * scaleToOut;
+      const drawY = (cy - displayH / 2) * scaleToOut;
+      ctx.drawImage(img, drawX, drawY, displayW * scaleToOut, displayH * scaleToOut);
+      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.9);
+    };
+    img.src = cropImg.src;
+  });
+}
+
+// ---- แหล่งข่าว autocomplete ----
+const sourceNameInput = document.getElementById('sourceName');
+const sourceDropdown = document.getElementById('sourceDropdown');
+let sourceSearchTimer;
+
+sourceNameInput.addEventListener('input', () => {
+  clearTimeout(sourceSearchTimer);
+  const v = sourceNameInput.value.trim();
+  if (!v) { sourceDropdown.style.display = 'none'; return; }
+  sourceSearchTimer = setTimeout(async () => {
+    const { data } = await sb.from('news_sources')
+      .select('display_name')
+      .ilike('display_name', v + '%')
+      .limit(8);
+    if (!data || !data.length) { sourceDropdown.style.display = 'none'; return; }
+    sourceDropdown.innerHTML = data.map(r => `<div>${r.display_name}</div>`).join('');
+    sourceDropdown.style.display = 'block';
+    sourceDropdown.querySelectorAll('div').forEach(el => {
+      el.addEventListener('click', () => {
+        sourceNameInput.value = el.textContent;
+        sourceDropdown.style.display = 'none';
+      });
+    });
+  }, 200);
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.autocomplete-wrap')) sourceDropdown.style.display = 'none';
+});
+
+function showBanner(kind, msg) {
+  const el = document.getElementById('statusBanner');
+  el.className = 'status-banner ' + kind;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ---- โพสต์จริง ----
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  const title = document.getElementById('title').value.trim();
+  const tag = document.getElementById('tag').value;
+  const content = document.getElementById('content').value.trim();
+  const errorEl = document.getElementById('formError');
+  errorEl.style.display = 'none';
+
+  if (!title || !tag || !content) {
+    errorEl.textContent = 'กรอกหัวข้อ, เลือก tag และเขียนเนื้อหาให้ครบก่อนโพสต์';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'กำลังโพสต์...';
+
+  try {
+    let coverUrl = null;
+    const blob = await renderCroppedImage();
+    if (blob) {
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+      const { error: uploadErr } = await sb.storage.from(COVER_BUCKET).upload(fileName, blob, { contentType: 'image/jpeg' });
+      if (uploadErr) throw uploadErr;
+      const { data: pub } = sb.storage.from(COVER_BUCKET).getPublicUrl(fileName);
+      coverUrl = pub.publicUrl;
+    }
+
+    const sourceName = document.getElementById('sourceName').value.trim();
+    if (sourceName) {
+      const key = sourceName.toLowerCase();
+      await sb.from('news_sources').upsert(
+        { name_key: key, display_name: sourceName },
+        { onConflict: 'name_key', ignoreDuplicates: true }
+      );
+    }
+
+    const { data: { user } } = await sb.auth.getUser();
+
+    const { error: insertErr } = await sb.from('news_posts').insert({
+      author_id: user.id,
+      post_type: 'general',
+      title,
+      content,
+      cover_image_url: coverUrl,
+      tag,
+      source_link: document.getElementById('sourceLink').value.trim() || null,
+      source_name: sourceName || null,
+      hashtags
+    });
+    if (insertErr) throw insertErr;
+
+    showBanner('success', 'โพสต์ข่าวเรียบร้อยแล้ว');
+    setTimeout(() => { window.location.href = 'news-post.html'; }, 1200);
+  } catch (err) {
+    showBanner('error', 'โพสต์ไม่สำเร็จ: ' + (err.message || err));
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'โพสต์ข่าว';
+  }
+});
+
+// ---- ตรวจสิทธิ์ก่อนแสดงฟอร์ม ----
+async function checkAccess() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) {
+    document.getElementById('gate-checking').style.display = 'none';
+    document.getElementById('gate-denied').style.display = 'block';
+    return;
+  }
+  const { data: profile } = await sb.from('profiles').select('role').eq('id', user.id).single();
+  const allowed = profile && (profile.role === 'admin' || profile.role === 'webmaster');
+  document.getElementById('gate-checking').style.display = 'none';
+  if (allowed) {
+    document.getElementById('formWrap').style.display = 'block';
+  } else {
+    document.getElementById('gate-denied').style.display = 'block';
+  }
+}
+checkAccess();
+renderHashtags();
+</script>
+</body>
+</html>
