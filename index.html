@@ -3508,7 +3508,7 @@
       standingsBtn.addEventListener('click', function() {
         if (!standingsTarget) return;
         const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 60;
-        const targetY = standingsTarget.getBoundingClientRect().top + window.scrollY - headerH - 12;
+        const targetY = standingsTarget.getBoundingClientRect().top + window.scrollY - headerH - 4;
         window.scrollTo({ top: targetY, behavior: 'smooth' });
       });
 
