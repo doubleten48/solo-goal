@@ -38,6 +38,21 @@
     border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem;
   }
 
+  /* ===== หน้ารวมหัวข้อ (hub) ===== */
+  .topic-list { display: flex; flex-direction: column; gap: 10px; }
+  .topic-card {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #1a1a1a; border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px 18px; cursor: pointer; transition: border-color 0.15s;
+  }
+  .topic-card:hover { border-color: var(--red); }
+  .topic-card-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+  .topic-card-sub { font-size: 12px; color: var(--muted); }
+  .topic-card-arrow { font-size: 18px; color: var(--sub); flex-shrink: 0; margin-left: 12px; }
+
+  .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--sub); margin-bottom: 1rem; cursor: pointer; }
+  .back-link:hover { color: #fff; }
+
   .staff-row {
     display: flex; align-items: center; justify-content: space-between;
     padding: 12px 0; border-bottom: 1px solid var(--line);
@@ -56,6 +71,7 @@
   .staff-role-tag.admin { background: rgba(255,255,255,0.08); color: var(--sub); }
 
   .btn {
+    display: inline-block;
     padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
     border: none; cursor: pointer; font-family: inherit; transition: background 0.15s;
   }
@@ -65,6 +81,7 @@
   .btn-outline:hover { border-color: var(--red); color: #fff; }
 
   .section-title { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .news-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
   .denied {
     text-align: center; padding: 4rem 1rem; color: var(--sub);
@@ -146,6 +163,7 @@
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
 
   let currentSession = null
+  let currentRole = null
   let currentTargetUserId = null
   let currentTargetLabel = ''
 
@@ -158,9 +176,32 @@
       return
     }
 
-    // เช็คสิทธิ์ผ่าน edge function (ตัวเดียวกับที่ดึงรายชื่อ staff)
-    // เพราะ column "role" ถูกปิดไม่ให้ query ตรงจาก client แล้ว เพื่อความปลอดภัย
-    await loadStaffList()
+    // เช็ค role ผ่าน get-my-role (ใช้ได้ทั้ง admin และ webmaster ต่างจาก admin-list-staff
+    // ที่ล็อกไว้เฉพาะ webmaster) เพราะ column "role" ปิดไม่ให้ query ตรงจาก client
+    let role = 'member'
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/get-my-role`, {
+        headers: { 'Authorization': `Bearer ${currentSession.access_token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        role = data.role || 'member'
+      }
+    } catch (e) { /* เงียบไว้ ปฏิบัติเหมือน member */ }
+
+    currentRole = role
+
+    if (role !== 'admin' && role !== 'webmaster') {
+      renderDenied()
+      return
+    }
+
+    const badge = document.getElementById('role-badge')
+    badge.textContent = role.toUpperCase()
+    badge.style.display = 'inline-block'
+    document.getElementById('logout-btn').style.display = 'inline-block'
+
+    renderHub()
   }
 
   function renderDenied() {
@@ -168,44 +209,87 @@
       <div class="denied">
         <div class="icon">🔒</div>
         <div style="font-size:18px;font-weight:600;color:#fff;margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึงหน้านี้</div>
-        <div style="font-size:13px;">หน้านี้สำหรับ Webmaster เท่านั้น</div>
+        <div style="font-size:13px;">หน้านี้สำหรับแอดมิน/webmaster เท่านั้น</div>
       </div>
     `
   }
 
-  async function loadStaffList() {
+  // ===== หน้ารวมหัวข้อ =====
+  function renderHub() {
+    const topics = []
+
+    topics.push(`
+      <div class="topic-card" onclick="renderNewsSection()">
+        <div>
+          <div class="topic-card-title">ตั้งกระทู้ข่าว</div>
+          <div class="topic-card-sub">สร้างข่าวทั่วไป / ข่าวสรุปผลบอล — ใช้ได้ทั้ง admin และ webmaster</div>
+        </div>
+        <div class="topic-card-arrow">›</div>
+      </div>
+    `)
+
+    if (currentRole === 'webmaster') {
+      topics.push(`
+        <div class="topic-card" onclick="renderStaffSection()">
+          <div>
+            <div class="topic-card-title">จัดการทีมงาน</div>
+            <div class="topic-card-sub">รีเซ็ตรหัสผ่าน / เปลี่ยนชื่อผู้ใช้ทีมงาน — Webmaster เท่านั้น</div>
+          </div>
+          <div class="topic-card-arrow">›</div>
+        </div>
+      `)
+    }
+
+    document.getElementById('main-container').innerHTML = `
+      <div class="card">
+        <div class="section-title">ระบบแอดมิน</div>
+        <div class="topic-list">${topics.join('')}</div>
+      </div>
+    `
+  }
+
+  // ===== หัวข้อ: ตั้งกระทู้ข่าว (admin + webmaster) =====
+  function renderNewsSection() {
+    document.getElementById('main-container').innerHTML = `
+      <div class="back-link" onclick="renderHub()">‹ กลับหน้าหลัก</div>
+      <div class="card">
+        <div class="section-title">ตั้งกระทู้ข่าว</div>
+        <div class="news-actions">
+          <a href="news-post.html" class="btn btn-red">+ สร้างข่าวทั่วไป</a>
+          <a href="news-post-recap.html" class="btn btn-outline">+ สร้างข่าวสรุปผลบอล</a>
+        </div>
+      </div>
+    `
+  }
+
+  // ===== หัวข้อ: จัดการทีมงาน (webmaster เท่านั้น) =====
+  async function renderStaffSection() {
+    document.getElementById('main-container').innerHTML = `
+      <div class="back-link" onclick="renderHub()">‹ กลับหน้าหลัก</div>
+      <div class="card">
+        <div class="section-title">รีเซ็ตรหัสผ่านทีมงาน (Webmaster เท่านั้น)</div>
+        <div id="staff-list"><div class="loading" style="padding:1.5rem;"><div class="spinner"></div>กำลังโหลด...</div></div>
+      </div>
+    `
+
     let staff, error
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-list-staff`, {
         headers: { 'Authorization': `Bearer ${currentSession.access_token}` },
       })
       const data = await res.json()
-      if (!res.ok) { error = data.error; } else { staff = data.staff }
+      if (!res.ok) { error = data.error } else { staff = data.staff }
     } catch (e) {
       error = String(e)
     }
 
+    const listEl = document.getElementById('staff-list')
     if (error || !staff) {
-      renderDenied()
+      listEl.innerHTML = `<div style="color:var(--muted);font-size:13px;">โหลดรายชื่อทีมงานไม่สำเร็จ${error ? ': ' + escapeHtml(error) : ''}</div>`
       return
     }
 
-    const badge = document.getElementById('role-badge')
-    badge.textContent = 'WEBMASTER'
-    badge.style.display = 'inline-block'
-    document.getElementById('logout-btn').style.display = 'inline-block'
-
     const others = staff.filter(s => s.user_id !== currentSession.user.id)
-
-    let html = `
-      <div class="card">
-        <div class="section-title">รีเซ็ตรหัสผ่านทีมงาน (Webmaster เท่านั้น)</div>
-        <div id="staff-list"></div>
-      </div>
-    `
-    document.getElementById('main-container').innerHTML = html
-
-    const listEl = document.getElementById('staff-list')
     if (!others.length) {
       listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;">ไม่มีบัญชีทีมงานอื่น</div>'
       return
@@ -338,7 +422,7 @@
       msgEl.className = 'modal-msg success'
       setTimeout(() => {
         closeRenameModal()
-        loadStaffList()
+        renderStaffSection()
       }, 1000)
     } catch (e) {
       msgEl.textContent = 'เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง'
