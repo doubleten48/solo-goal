@@ -1,449 +1,675 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SoloGoal — ตั้งกระทู้ใหม่</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1320">
+<title>สร้างข่าว - SoloGoal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- TODO(TEN): เช็ค path ให้ตรงกับที่จริงเก็บไฟล์นี้ไว้ (เดาว่าอยู่ระดับเดียวกัน เหมือน about.html เรียก assets/...) -->
+<script src="supabase-init.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --red: #c0392b; --red-dark: #922b21;
-    --bg: #1e1e1e; --card: #242424; --line: #2e2e2e;
-    --text: #e8e8e8; --muted: #666; --sub: #aaa;
+  :root{
+    --sidebar-w: 198px;
+    --header-h: 60px;
+    --main-bg: #2c2b2b;
+    --main-text: #fff;
+    --body-bg: #2c2b2b;
   }
-  body {
-    background: var(--bg); color: var(--text);
+  html.light-mode {
+    --main-bg: #E5E5EA;
+    --main-text: #1a1a1a;
+    --body-bg: #E5E5EA;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--body-bg);
     font-family: 'Sarabun', 'Inter', sans-serif;
-    min-height: 100vh; padding-bottom: 3rem;
+    color: #fff;
+    transition: background 0.2s ease;
   }
-  a { color: inherit; text-decoration: none; }
+  .layout { display: flex; min-height: 100vh; position: relative; }
 
-  header {
-    background: var(--card); border-bottom: 1px solid var(--line);
-    padding: 14px 1.5rem; display: flex; align-items: center; gap: 12px;
+  /* ===== Sidebar (คัดลอกจาก about.html) ===== */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: linear-gradient(to bottom, #872929 0%, #0d0a0a 100%);
+    display: flex;
+    flex-direction: column;
+    padding: 14px 0 0 0;
+    transition: width 0.2s ease;
+    overflow: hidden;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    z-index: 30;
   }
-  .back-btn { font-size: 14px; color: var(--sub); cursor: pointer; }
-  .header-title { font-size: 16px; font-weight: 600; color: #fff; }
+  .logo-wrap { position: relative; width: fit-content; margin: 0 0 34px 0; }
+  .logo-svg { display: block; width: 76px; height: 85px; margin: 33px 0 0 61px; position: relative; z-index: 2; }
+  .sidebar .menu-panel { margin: 0 15px; position: relative; height: 403px; }
+  .sidebar .menu-panel ul { list-style: none; position: relative; height: 100%; }
+  .menu-highlight {
+    position: absolute; left: 17px; width: 137px; height: 27px;
+    background: rgba(29, 28, 28, 0.33); border-radius: 5px; z-index: 0;
+    opacity: 0; transition: top 0.08s ease, opacity 0.1s ease; pointer-events: none;
+  }
+  .sidebar .menu-panel li { position: absolute; left: 0; right: 0; height: 40px; cursor: pointer; white-space: nowrap; }
+  .sidebar .menu-panel li img { position: absolute; top: 50%; transform: translateY(-50%); z-index: 1; display: block; }
+  .sidebar .menu-panel li span { position: absolute; top: 50%; transform: translateY(-50%); left: 52px; z-index: 1; font-weight: 400; font-size: 13px; color: #fff; }
+  .sidebar .menu-divider { width: 163px; height: 1px; background: rgba(255,255,255,0.15); margin: 0 auto 18px auto; }
+  .sidebar .balance-box { margin: 0 15px; width: 170px; }
+  .sidebar .balance-box img { display: block; width: 100%; height: auto; }
+  .sidebar .menu-collapsed { display: none; flex-direction: column; align-items: center; gap: 5px; padding-top: 161px; }
+  .sidebar .menu-collapsed li { list-style: none; width: 35px; height: 35px; cursor: pointer; }
+  .sidebar .menu-collapsed li img { width: 35px; height: 35px; display: block; }
+  .sidebar.collapsed { width: 56px; }
+  .sidebar.collapsed .logo-wrap, .sidebar.collapsed .menu-panel, .sidebar.collapsed .menu-divider, .sidebar.collapsed .balance-box { display: none; }
+  .sidebar.collapsed .menu-collapsed { display: flex; }
+  .sidebar-toggle {
+    position: fixed; top: 108px; left: calc(var(--sidebar-w) - 5px);
+    width: 10px; height: 30px; background: #1a1a1a; border: none; border-radius: 4px;
+    color: #fff; font-size: 10px; line-height: 30px; text-align: center; padding: 0;
+    cursor: pointer; z-index: 31; transition: left 0.2s ease;
+  }
 
-  .container { max-width: 680px; margin: 0 auto; padding: 1.5rem; }
+  /* ===== Header + main (คัดลอกจาก about.html) ===== */
+  .content-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .header {
+    height: var(--header-h); background: #121214; display: flex; align-items: center;
+    padding-left: 25px; flex-shrink: 0; position: sticky; top: 0; z-index: 25;
+  }
+  .header .wordmark { display: none; font-size: 20px; font-weight: 400; color: #fff; margin-right: 26px; white-space: nowrap; }
+  .sidebar.collapsed ~ .content-area .header { padding-left: 26px; }
+  .sidebar.collapsed ~ .content-area .header .wordmark { display: block; }
+  .header .icons { position: absolute; top: 50%; left: 25px; transform: translateY(-50%); display: flex; align-items: center; gap: 11px; }
+  .header .icon-wrap { position: relative; display: flex; }
+  .header .icon-btn { display: flex; align-items: center; justify-content: center; background: transparent; border: 1.5px solid transparent; border-radius: 8px; padding: 2px; cursor: pointer; line-height: 0; }
+  .header .icon-btn.active { border-color: rgba(255,255,255,0.6); }
+  .header .icons img { width: 27px; height: 27px; cursor: pointer; display: block; }
 
-  .form-group { margin-bottom: 1.25rem; }
-  label { display: block; font-size: 13px; color: var(--sub); margin-bottom: 6px; }
-  select, input[type="text"], input[type="url"], textarea {
-    width: 100%; background: var(--card); border: 1px solid var(--line);
-    border-radius: 8px; padding: 12px; color: var(--text); font-size: 14px;
-    font-family: inherit; outline: none;
+  .dropdown-panel {
+    display: none; position: absolute; top: calc(100% + 14px); left: 0; width: 320px; max-width: 90vw;
+    background: #1E1E1E; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.45); z-index: 60; overflow: hidden;
   }
-  select:focus, input:focus, textarea:focus { border-color: var(--red); }
-  textarea { min-height: 220px; resize: vertical; line-height: 1.6; font-family: 'Sarabun', monospace; }
+  .dropdown-panel.open { display: block; }
+  .dropdown-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .dropdown-link { font-size: 12px; color: #d99a3d; text-decoration: none; font-weight: 600; }
+  .dropdown-link:hover { text-decoration: underline; }
+  .dropdown-footer { text-align: center; padding: 10px 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .dropdown-footer .dropdown-link { font-size: 13px; }
+  .notif-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 36px 20px; }
+  .notif-empty-icon { font-size: 30px; opacity: 0.5; }
+  .notif-empty-text { font-size: 13px; color: #9a9a9a; }
+  .mail-list { max-height: 320px; overflow-y: auto; }
+  .mail-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s ease; }
+  .mail-item:last-child { border-bottom: none; }
+  .mail-item:hover { background: rgba(255,255,255,0.03); }
+  .mail-avatar { flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; background: #3a3a3a; display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden; }
+  .mail-avatar-accent { background: #872929; }
+  .mail-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .mail-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .mail-preview { font-size: 12px; color: #9a9a9a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mail-time { flex-shrink: 0; font-size: 11px; color: #777; padding-top: 2px; }
+  .sidebar.collapsed ~ .content-area .header .icons { left: 165px; }
+  .header .auth-links { position: absolute; right: 62px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 14px; }
+  .header .auth-link { color: #fff; font-family: 'Sarabun', 'Inter', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-decoration: none; opacity: 0.85; transition: opacity 0.15s ease; white-space: nowrap; }
+  .header .auth-link:hover { opacity: 1; text-decoration: underline; text-underline-offset: 4px; }
+  .header .auth-divider { width: 1px; height: 12px; background: rgba(255,255,255,0.25); flex-shrink: 0; }
+  .header .icons .light-mode-btn { width: 30px; height: 30px; cursor: pointer; display: block; }
+  .header .profile-chip { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .profile-chip-text { display: flex; flex-direction: column; gap: 2px; }
+  .profile-chip-name { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.15; white-space: nowrap; }
+  .profile-chip-role { font-size: 8px; font-weight: 600; letter-spacing: 1px; color: #9a9a9a; text-transform: uppercase; line-height: 1.15; }
+  .profile-chip-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #3a3a3a; flex-shrink: 0; }
+  .avatar-btn { position: relative; display: flex; background: transparent; border: none; padding: 0; cursor: pointer; line-height: 0; border-radius: 50%; }
+  .avatar-btn.active .profile-chip-avatar { box-shadow: 0 0 0 2px rgba(255,255,255,0.6); }
+  .profile-menu-panel { left: auto; right: 0; width: 220px; padding: 6px 0; }
+  .profile-menu-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; color: #e8e8e8; text-decoration: none; background: transparent; border: none; width: 100%; text-align: left; cursor: pointer; font-family: inherit; }
+  .profile-menu-item:hover { background: rgba(255,255,255,0.05); }
+  .profile-menu-icon { width: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .profile-menu-logout { color: #e57373; }
+  .profile-menu-divider { height: 1px; margin: 4px 0; background: rgba(255,255,255,0.08); }
+  .main { flex: 1; background: var(--main-bg); color: var(--main-text); transition: background 0.2s ease, color 0.2s ease; }
 
-  .char-count { font-size: 11px; color: var(--muted); text-align: right; margin-top: 4px; }
-
-  /* ── TOOLBAR ── */
-  .toolbar {
-    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;
-    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
-    padding: 8px;
-  }
-  .tb-btn {
-    background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
-    padding: 6px 10px; font-size: 12px; color: var(--sub); cursor: pointer;
-    font-family: inherit; transition: all 0.15s; white-space: nowrap;
-  }
-  .tb-btn:hover { border-color: var(--red); color: #fff; }
-  .tb-btn b, .tb-btn i, .tb-btn u { color: inherit; }
-  .tb-sep { width: 1px; background: var(--line); margin: 0 2px; }
-  .tb-select {
-    background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
-    padding: 6px 8px; font-size: 12px; color: var(--sub); font-family: inherit;
-  }
-
-  /* ── IMAGE UPLOAD ── */
-  .image-tools {
-    display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;
-  }
-  .btn-img-upload {
-    background: linear-gradient(135deg, #f39c12, #e67e22); color: #fff;
-    border: none; border-radius: 8px; padding: 10px 18px; font-size: 13px;
-    font-weight: 600; cursor: pointer; font-family: inherit;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .btn-img-upload:hover { opacity: 0.9; }
-  .btn-img-url {
-    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
-    padding: 10px 18px; font-size: 13px; color: var(--sub); cursor: pointer;
-    font-family: inherit;
-  }
-  .btn-img-url:hover { border-color: var(--red); color: #fff; }
-  .url-input-row {
-    display: none; gap: 8px; margin-bottom: 8px;
-  }
-  .url-input-row.show { display: flex; }
-  .url-input-row input { flex: 1; }
-  .url-input-row button {
-    background: var(--red); color: #fff; border: none; border-radius: 8px;
-    padding: 0 16px; font-size: 13px; cursor: pointer; font-family: inherit;
-  }
-  .upload-progress { font-size: 12px; color: var(--muted); margin-bottom: 8px; display: none; }
-  .upload-progress.show { display: block; }
-
-  .btn-submit-row { display: flex; gap: 10px; margin-top: 0.75rem; }
-  .btn-preview {
-    flex: 1; background: var(--card); border: 1px solid var(--line); color: var(--sub);
-    padding: 14px; border-radius: 8px; font-size: 14px; font-weight: 600;
-    cursor: pointer; font-family: inherit;
-  }
-  .btn-preview:hover { border-color: #444; color: #fff; }
-  .btn-submit {
-    flex: 2; background: var(--red); color: #fff; padding: 14px;
-    border-radius: 8px; font-size: 15px; font-weight: 600; border: none;
-    cursor: pointer; font-family: inherit;
-  }
-  .btn-submit:hover { background: var(--red-dark); }
-  .btn-submit:disabled { background: #444; cursor: not-allowed; }
-
-  .alert {
-    padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 1rem; display: none;
-  }
-  .alert.show { display: block; }
-  .alert-error { background: rgba(231,76,60,0.12); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
-
-  .login-required {
-    text-align: center; padding: 3rem 1.5rem; color: var(--sub);
-  }
-  .login-required a { color: var(--red); text-decoration: underline; }
-
-  .spinner {
-    display: inline-block; width: 14px; height: 14px;
-    border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
-    border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 6px;
-    vertical-align: middle;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── PREVIEW MODAL ── */
-  .modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-    z-index: 100; align-items: flex-start; justify-content: center; padding: 2rem 1rem;
-    overflow-y: auto;
-  }
-  .modal-overlay.show { display: flex; }
-  .modal-box {
-    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-    max-width: 640px; width: 100%; padding: 1.5rem; margin-top: 1rem;
-  }
-  .modal-close {
-    text-align: right; color: var(--muted); cursor: pointer; font-size: 14px; margin-bottom: 0.5rem;
-  }
-  .preview-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 1rem; }
-  .preview-content { font-size: 14px; line-height: 1.8; color: var(--text); }
-  .preview-content img { max-width: 100%; border-radius: 8px; margin: 8px 0; }
-  .preview-content iframe { max-width: 100%; border-radius: 8px; margin: 8px 0; }
+  /* ===== เนื้อหาเฉพาะหน้านี้: ฟอร์มสร้างข่าว ===== */
+  .news-form-page { width: 100%; max-width: 720px; margin: 24px auto 60px; padding: 0 20px; }
+  .news-form-page h1 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 20px; }
+  .card { background: #1a1a1a; border-radius: 12px; padding: 20px; }
+  label { display: block; font-size: 13px; color: #b3b3b3; margin-bottom: 6px; }
+  label .hint { color: #777; font-weight: 400; }
+  .field { width: 100%; background: #242424; border: 0.5px solid #3a3a3a; border-radius: 8px; padding: 10px 12px; color: #e8e8e8; font-size: 14px; font-family: inherit; }
+  .field:focus { outline: none; border-color: #4a4a4a; }
+  .form-row { display: flex; gap: 16px; margin-bottom: 16px; }
+  .form-row > div { flex: 1; }
+  .group { margin-bottom: 16px; }
+  textarea.field { min-height: 90px; resize: vertical; line-height: 1.6; }
+  .dropzone { background: #242424; border: 1px dashed #4a4a4a; border-radius: 8px; height: 160px; display: flex; align-items: center; justify-content: center; color: #777; font-size: 13px; cursor: pointer; position: relative; overflow: hidden; }
+  #cropStage { position: relative; width: 100%; height: 160px; border-radius: 8px; overflow: hidden; display: none; touch-action: none; background: #000; }
+  #cropStage img { position: absolute; top: 50%; left: 50%; transform-origin: center; user-select: none; pointer-events: none; }
+  .zoom-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .chip { background: #2a2a2a; color: #e8e8e8; font-size: 12px; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; margin: 0 6px 6px 0; }
+  .chip button { background: none; border: none; color: #888; cursor: pointer; font-size: 12px; padding: 0; }
+  .chip-add { border: 1px dashed #4a4a4a; color: #777; font-size: 12px; padding: 4px 10px; border-radius: 20px; background: none; cursor: pointer; }
+  .autocomplete-wrap { position: relative; }
+  #sourceDropdown { display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #2a2a2a; border: 0.5px solid #3a3a3a; border-radius: 8px; z-index: 5; overflow: hidden; max-height: 180px; overflow-y: auto; }
+  #sourceDropdown div { padding: 8px 12px; font-size: 13px; cursor: pointer; }
+  #sourceDropdown div:hover { background: #3a3a3a; }
+  .submit-row { display: flex; justify-content: flex-end; margin-top: 20px; }
+  button.primary { background: #872929; color: #fbeaea; border: none; border-radius: 8px; padding: 10px 22px; font-size: 14px; font-weight: 500; cursor: pointer; }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .error-text { color: #f0a0a0; font-size: 12px; margin-top: 4px; display: none; }
+  .status-banner { font-size: 13px; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; display: none; }
+  .status-banner.info { background: #1f2a38; color: #a9c7e8; }
+  .status-banner.error { background: #3a2020; color: #f0a0a0; }
+  .status-banner.success { background: #1f3a24; color: #a9e8b8; }
+  #gate-checking, #gate-denied { text-align: center; padding: 60px 20px; color: #b3b3b3; }
+  #formWrap { display: none; }
 </style>
 </head>
 <body>
 
-<header>
-  <span class="back-btn" onclick="history.back()">← กลับ</span>
-  <span class="header-title">ตั้งกระทู้ใหม่</span>
-</header>
+<div class="layout">
 
-<div class="container" id="container">
-  <div style="text-align:center;padding:3rem;color:#666;">กำลังโหลด...</div>
-</div>
+  <!-- Sidebar (คัดลอกจาก about.html) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo-wrap">
+      <a href="index.html"><svg class="logo-svg" width="76" height="85" viewBox="0 0 76 85" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SoloGoal">
+        <rect width="76" height="85" fill="#872929" opacity="0.001"/>
+        <text x="10" y="50" fill="#fff" font-size="14" font-family="Sarabun">SG</text>
+      </svg></a>
+    </div>
 
-<div class="modal-overlay" id="preview-modal" onclick="if(event.target===this) closePreview()">
-  <div class="modal-box">
-    <div class="modal-close" onclick="closePreview()">✕ ปิด</div>
-    <div class="preview-title" id="preview-title-el"></div>
-    <div class="preview-content" id="preview-content-el"></div>
+    <nav class="menu-panel">
+      <div class="menu-highlight" id="menuHighlight"></div>
+      <ul id="menuList">
+        <li style="top:9px"><a href="index.html" style="position:absolute;inset:0;display:block;"><img src="assets/HOME ICON_2.svg" alt="" style="left:28px;width:13px;height:16px"><span style="left:57px">หน้าแรก</span></a></li>
+        <li style="top:46px"><img src="assets/NEWS ICON_2.svg" alt="" style="left:27px;width:16px;height:13px"><span style="left:57px">อัพเดทข่าว</span></li>
+        <li style="top:79px"><img src="assets/ARTICLE ICON_2.svg" alt="" style="left:28px;width:13px;height:13px"><span style="left:57px">บทความ</span></li>
+        <li style="top:115px"><img src="assets/SOCIETY ICON_2.svg" alt="" style="left:28px;width:14px;height:13px"><span style="left:56px">บอร์ดโซไซตี้</span></li>
+        <li style="top:148px"><img src="assets/BALL_INTER ICON_2.svg" alt="" style="left:28px;width:14px;height:18px"><span style="left:56px">บอร์ดบอลนอก</span></li>
+        <li style="top:182px"><img src="assets/BALL_THAI ICON_2.svg" alt="" style="left:29px;width:12px;height:17px"><span style="left:56px">บอร์ดบอลไทย</span></li>
+        <li style="top:214px"><img src="assets/all sport icon_2.svg" alt="" style="left:29px;width:14px;height:19px"><span style="left:56px">ออลสปอร์ต</span></li>
+        <li style="top:250px"><img src="assets/games icon_2.svg" alt="" style="left:29px;width:15px;height:15px"><span style="left:56px">บอร์ดเกมส์</span></li>
+        <li style="top:282px"><img src="assets/deal icon_2.svg" alt="" style="left:28px;width:16px;height:16px"><span style="left:56px">เดลล่างมอ</span></li>
+        <li style="top:316px"><img src="assets/Prisoner Icon_2.svg" alt="" style="left:27px;width:15px;height:16px"><span style="left:56px">เรือนจำคนง่าว</span></li>
+        <li style="top:353px"><img src="assets/buy item icon_2.svg" alt="" style="left:28px;width:16px;height:16px"><span style="left:56px;color:#FFC107">ซื้อไอเท็มเว็บ</span></li>
+      </ul>
+    </nav>
+
+    <div class="menu-divider"></div>
+    <div class="balance-box"><img src="assets/balance.svg" alt="Balance"></div>
+
+    <ul class="menu-collapsed">
+      <li><img src="assets/HOME ICON.svg" alt="หน้าแรก"></li>
+      <li><img src="assets/NEWS ICON.svg" alt="อัพเดทข่าว"></li>
+      <li><img src="assets/ARTICLE ICON.svg" alt="บทความ"></li>
+      <li><img src="assets/SOCIETY ICON.svg" alt="บอร์ดโซไซตี้"></li>
+      <li><img src="assets/BALL_INTER ICON.svg" alt="บอร์ดบอลนอก"></li>
+      <li><img src="assets/BALL_THAI ICON.svg" alt="บอร์ดบอลไทย"></li>
+      <li><img src="assets/all sport icon.svg" alt="ออลสปอร์ต"></li>
+      <li><img src="assets/games icon.svg" alt="บอร์ดเกมส์"></li>
+      <li><img src="assets/deal icon.svg" alt="เดลล่างมอ"></li>
+      <li><img src="assets/Prisoner Icon.svg" alt="เรือนจำคนง่าว"></li>
+      <li><img src="assets/buy item icon.svg" alt="ซื้อไอเท็มเว็บ"></li>
+    </ul>
+  </aside>
+
+  <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#10094;</button>
+
+  <div class="content-area">
+    <header class="header">
+      <a href="index.html" class="wordmark" style="text-decoration:none;">SOLOGOAL</a>
+      <div class="icons">
+        <div class="icon-wrap" id="bellWrap">
+          <button class="icon-btn" id="bellBtn" type="button" aria-label="การแจ้งเตือน">
+            <img class="bell" src="assets/mynaui_bell.svg" alt="Notifications">
+          </button>
+          <div class="dropdown-panel notif-panel" id="notifPanel">
+            <div class="notif-empty">
+              <div class="notif-empty-icon">🔕</div>
+              <div class="notif-empty-text">ไม่มีการแจ้งเตือน</div>
+            </div>
+            <div class="dropdown-footer"><a href="#" class="dropdown-link">อ่านทั้งหมด</a></div>
+          </div>
+        </div>
+
+        <div class="icon-wrap" id="mailWrap">
+          <button class="icon-btn" id="mailBtn" type="button" aria-label="ข้อความ">
+            <img class="mail" src="assets/mynaui_mail.svg" alt="Messages">
+          </button>
+          <div class="dropdown-panel mail-panel" id="mailPanel">
+            <div class="dropdown-header">
+              <a href="#" class="dropdown-link">ทำเป็นอ่านแล้วทั้งหมด</a>
+              <a href="#" class="dropdown-link">ข้อความใหม่</a>
+            </div>
+            <div class="mail-list"></div>
+            <div class="dropdown-footer"><a href="#" class="dropdown-link">ดูข้อความทั้งหมด</a></div>
+          </div>
+        </div>
+
+        <svg class="light-mode-btn" id="themeToggle" viewBox="0 0 29 29" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Toggle light mode">
+          <path d="M14.5 18.125C15.507 18.125 16.3629 17.7726 17.0677 17.0677C17.7726 16.3629 18.125 15.5069 18.125 14.5C18.125 13.4931 17.7726 12.6372 17.0677 11.9323C16.3629 11.2274 15.507 10.875 14.5 10.875C13.4931 10.875 12.6372 11.2274 11.9323 11.9323C11.2275 12.6372 10.875 13.4931 10.875 14.5C10.875 15.5069 11.2275 16.3629 11.9323 17.0677C12.6372 17.7726 13.4931 18.125 14.5 18.125ZM14.5 20.5417C12.8285 20.5417 11.4037 19.9526 10.2256 18.7745C9.04744 17.5964 8.45837 16.1715 8.45837 14.5C8.45837 12.8285 9.04744 11.4036 10.2256 10.2255C11.4037 9.0474 12.8285 8.45834 14.5 8.45834C16.1716 8.45834 17.5964 9.0474 18.7745 10.2255C19.9526 11.4036 20.5417 12.8285 20.5417 14.5C20.5417 16.1715 19.9526 17.5964 18.7745 18.7745C17.5964 19.9526 16.1716 20.5417 14.5 20.5417ZM6.04171 15.7083H1.20837V13.2917H6.04171V15.7083ZM27.7917 15.7083H22.9584V13.2917H27.7917V15.7083ZM13.2917 6.04167V1.20834H15.7084V6.04167H13.2917ZM13.2917 27.7917V22.9583H15.7084V27.7917H13.2917ZM7.73337 9.36459L4.68233 6.43438L6.40421 4.65209L9.30421 7.67292L7.73337 9.36459ZM22.5959 24.3479L19.6657 21.2969L21.2667 19.6354L24.3177 22.5656L22.5959 24.3479ZM19.6355 7.73334L22.5657 4.68229L24.348 6.40417L21.3271 9.30417L19.6355 7.73334ZM4.65212 22.5958L7.70317 19.6656L9.36462 21.2667L6.43442 24.3177L4.65212 22.5958Z" fill="#FEF7FF"/>
+        </svg>
+      </div>
+
+      <div class="auth-links" id="authLinks" style="display:none;">
+        <a class="auth-link" href="auth.html?tab=register">REGISTER</a>
+        <span class="auth-divider"></span>
+        <a class="auth-link" href="auth.html?tab=login">LOGIN</a>
+      </div>
+
+      <div class="profile-chip" id="profileChip" style="display:none;">
+        <div class="profile-chip-text">
+          <span class="profile-chip-name" id="profileChipName">สมาชิก</span>
+          <span class="profile-chip-role" id="profileChipRole"></span>
+        </div>
+        <button class="avatar-btn" id="avatarBtn" type="button" aria-label="เมนูผู้ใช้">
+          <img class="profile-chip-avatar" id="profileChipAvatar" src="assets/default-avatar.png" alt="avatar">
+        </button>
+        <div class="dropdown-panel profile-menu-panel" id="profileMenuPanel">
+          <a href="/profile.html" class="profile-menu-item"><span class="profile-menu-icon">👤</span><span>โปรไฟล์</span></a>
+          <a href="/admin.html" class="profile-menu-item" id="adminMenuItem" style="display:none;"><span class="profile-menu-icon">🛠️</span><span>ระบบแอดมิน</span></a>
+          <a href="/board.html" class="profile-menu-item"><span class="profile-menu-icon">📋</span><span>เว็บบอร์ด</span></a>
+          <div class="profile-menu-divider"></div>
+          <button type="button" class="profile-menu-item profile-menu-logout" id="logoutMenuBtn"><span class="profile-menu-icon">🚪</span><span>ออกจากระบบ</span></button>
+        </div>
+      </div>
+    </header>
+
+    <script>
+      // เดาสถานะ login แบบ sync จาก token ใน storage (แก้อาการแว้บว่างเปล่า) — คัดลอกจาก about.html
+      (function guessAuthStateEarly() {
+        try {
+          var tokenKey = 'sb-dnrcardbuuwnvuridubb-auth-token';
+          var hasToken = !!(localStorage.getItem(tokenKey) || sessionStorage.getItem(tokenKey));
+          document.getElementById(hasToken ? 'profileChip' : 'authLinks').style.display = 'flex';
+        } catch (e) {
+          document.getElementById('authLinks').style.display = 'flex';
+        }
+      })();
+    </script>
+
+    <main class="main">
+      <div class="news-form-page">
+        <h1>สร้างกระทู้ — ข่าวทั่วไป</h1>
+
+        <div id="gate-checking">กำลังตรวจสอบสิทธิ์การเข้าถึง...</div>
+        <div id="gate-denied" style="display:none;">หน้านี้ใช้ได้เฉพาะแอดมิน/webmaster เท่านั้น</div>
+
+        <div id="formWrap">
+          <div id="statusBanner" class="status-banner"></div>
+          <div class="card">
+            <div class="group">
+              <label for="title">หัวข้อ / พาดหัว</label>
+              <input id="title" class="field" type="text" placeholder="พาดหัวข่าว" />
+            </div>
+
+            <div class="form-row">
+              <div>
+                <label>รูปปก</label>
+                <div class="dropzone" id="dropzone">
+                  <span>อัปโหลดรูปภาพ</span>
+                  <input id="coverInput" type="file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;" />
+                </div>
+                <div id="cropStage"><img id="cropImg" alt="" /></div>
+                <div class="zoom-row" id="zoomRow" style="display:none;">
+                  <span style="font-size:12px; color:#777;">ซูม</span>
+                  <input id="zoomRange" type="range" min="100" max="250" value="100" style="flex:1;" />
+                </div>
+                <p style="font-size:11px; color:#777; margin-top:6px;">ลากรูปเพื่อจัดตำแหน่ง ก่อนโพสต์ระบบจะครอปตามกรอบที่เห็น</p>
+              </div>
+
+              <div>
+                <label for="tag">Tag</label>
+                <select id="tag" class="field">
+                  <option value="">-- เลือก --</option>
+                  <option value="TALK SPORT">TALK SPORT</option>
+                  <option value="MATCH RECAPS">MATCH RECAPS</option>
+                  <option value="TRANSFER NEWS">TRANSFER NEWS</option>
+                  <option value="BREAKING NEWS">BREAKING NEWS</option>
+                  <option value="OFFICIAL">OFFICIAL</option>
+                </select>
+                <p style="font-size:11px; color:#777; margin-top:6px;">เลือก "MATCH RECAPS" จะพาไปหน้าสร้างข่าวสรุปผลบอลแทน</p>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div>
+                <label for="sourceLink">ลิงก์ต้นทาง <span class="hint">(ไม่บังคับ)</span></label>
+                <input id="sourceLink" class="field" type="text" placeholder="https://..." />
+              </div>
+              <div class="autocomplete-wrap">
+                <label for="sourceName">ชื่อแหล่งข่าว <span class="hint">(ไม่บังคับ)</span></label>
+                <input id="sourceName" class="field" type="text" placeholder="เช่น BBC, F. Romano" autocomplete="off" />
+                <div id="sourceDropdown"></div>
+              </div>
+            </div>
+
+            <div class="group">
+              <label for="content">เนื้อหาข่าว</label>
+              <textarea id="content" class="field"></textarea>
+            </div>
+
+            <div class="group">
+              <label>แฮชแท็ก <span class="hint">(ดึงชื่อทีมจากหัวข้อ/เนื้อหาอัตโนมัติ — แก้ไข/ลบ/เพิ่มเองได้)</span></label>
+              <div id="hashtagList"></div>
+              <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+                <button type="button" class="chip-add" id="autoTagBtn">ดึงแฮชแท็กอัตโนมัติ</button>
+                <input id="hashtagInput" class="field" type="text" placeholder="พิมพ์แล้วกด Enter เพื่อเพิ่มเอง" style="max-width:220px;" />
+              </div>
+            </div>
+
+            <div class="error-text" id="formError"></div>
+
+            <div class="submit-row">
+              <button type="button" class="primary" id="submitBtn">โพสต์ข่าว</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
   </div>
 </div>
 
 <script>
-  const SUPABASE_URL = 'https://dnrcardbuuwnvuridubb.supabase.co'
-  const SUPABASE_KEY = 'sb_publishable_uz4Tj8HDZef7T2OLEzyvUw_wcGsn0ZW'
-  const { createClient } = supabase
-  const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
+  // ===== Light/dark mode toggle (คัดลอกจาก about.html) =====
+  const themeToggle = document.getElementById('themeToggle');
+  const htmlEl = document.documentElement;
+  function applyTheme(isLight) { htmlEl.classList.toggle('light-mode', isLight); }
+  applyTheme(localStorage.getItem('sologoal-theme') === 'light');
+  themeToggle.addEventListener('click', () => {
+    const isLight = htmlEl.classList.toggle('light-mode');
+    localStorage.setItem('sologoal-theme', isLight ? 'light' : 'dark');
+  });
 
-  let currentUser = null
-  let boards = []
+  // ===== Sidebar collapse =====
+  const sidebarEl = document.getElementById('sidebar');
+  const toggleBtn = document.getElementById('sidebarToggle');
+  toggleBtn.addEventListener('click', () => {
+    const collapsed = sidebarEl.classList.toggle('collapsed');
+    document.documentElement.style.setProperty('--sidebar-w', collapsed ? '56px' : '198px');
+    toggleBtn.innerHTML = collapsed ? '&#10095;' : '&#10094;';
+  });
 
-  const params = new URLSearchParams(window.location.search)
-  const preselectBoardId = params.get('board_id')
+  // ===== Menu hover highlight =====
+  const menuList = document.getElementById('menuList');
+  const highlight = document.getElementById('menuHighlight');
+  menuList.querySelectorAll('li').forEach((li) => {
+    li.addEventListener('mouseenter', () => {
+      highlight.style.top = (li.offsetTop + (li.offsetHeight - 27) / 2) + 'px';
+      highlight.style.opacity = '1';
+    });
+  });
+  menuList.addEventListener('mouseleave', () => { highlight.style.opacity = '0'; });
 
-  async function init() {
-    const { data: { session } } = await sb.auth.getSession()
-    currentUser = session?.user || null
+  // ===== Header dropdowns =====
+  function setupHeaderDropdown(btnId, panelId) {
+    const btn = document.getElementById(btnId);
+    const panel = document.getElementById(panelId);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = panel.classList.contains('open');
+      closeAllHeaderDropdowns();
+      if (!isOpen) { panel.classList.add('open'); btn.classList.add('active'); }
+    });
+    panel.addEventListener('click', (e) => e.stopPropagation());
+  }
+  function closeAllHeaderDropdowns() {
+    document.querySelectorAll('.dropdown-panel.open').forEach(p => p.classList.remove('open'));
+    document.querySelectorAll('.icon-btn.active, .avatar-btn.active').forEach(b => b.classList.remove('active'));
+  }
+  setupHeaderDropdown('bellBtn', 'notifPanel');
+  setupHeaderDropdown('mailBtn', 'mailPanel');
+  setupHeaderDropdown('avatarBtn', 'profileMenuPanel');
+  document.addEventListener('click', closeAllHeaderDropdowns);
 
-    if (!currentUser) {
-      renderLoginRequired()
-      return
+  // ===== สถานะ login จริง + role gate (ใช้ sb กลางจาก supabase-init.js) =====
+  (async function initHeaderAuthState() {
+    const authLinksEl = document.getElementById('authLinks');
+    const chipEl = document.getElementById('profileChip');
+
+    const { data: { session } } = await sb.auth.getSession();
+
+    if (!session) {
+      chipEl.style.display = 'none';
+      authLinksEl.style.display = 'flex';
+      document.getElementById('gate-checking').style.display = 'none';
+      document.getElementById('gate-denied').style.display = 'block';
+      return;
     }
 
-    const { data } = await sb.from('boards').select('*').order('sort_order')
-    boards = data || []
-    renderForm()
+    const nameEl = document.getElementById('profileChipName');
+    const roleEl = document.getElementById('profileChipRole');
+    const avatarEl = document.getElementById('profileChipAvatar');
+    const adminMenuItemEl = document.getElementById('adminMenuItem');
+
+    const { data: profile } = await sb.from('profiles').select('username, avatar_url').eq('user_id', session.user.id).single();
+    nameEl.textContent = profile?.username || session.user.user_metadata?.username || 'สมาชิก';
+    if (profile?.avatar_url) avatarEl.src = profile.avatar_url;
+
+    let myRole = 'member';
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/get-my-role`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.ok) {
+        const roleData = await res.json();
+        if (roleData?.role) {
+          myRole = roleData.role;
+          if (myRole !== 'member') {
+            roleEl.textContent = myRole.toUpperCase();
+            if (myRole === 'webmaster' || myRole === 'admin') adminMenuItemEl.style.display = 'flex';
+          }
+        }
+      }
+    } catch (e) { /* เงียบไว้ — ไม่ได้ role ก็ปฏิบัติเหมือนเป็น member */ }
+
+    authLinksEl.style.display = 'none';
+    chipEl.style.display = 'flex';
+
+    // gate หน้านี้: เฉพาะ admin/webmaster เท่านั้น
+    document.getElementById('gate-checking').style.display = 'none';
+    if (myRole === 'admin' || myRole === 'webmaster') {
+      document.getElementById('formWrap').style.display = 'block';
+    } else {
+      document.getElementById('gate-denied').style.display = 'block';
+    }
+  })();
+
+  document.getElementById('logoutMenuBtn').addEventListener('click', async () => {
+    await sb.auth.signOut();
+    window.location.href = '/auth.html?tab=login';
+  });
+
+  // ============================================================
+  // โค้ดเฉพาะฟอร์มสร้างข่าว (ใช้ sb กลางจาก supabase-init.js ทั้งหมด)
+  // ============================================================
+  const COVER_BUCKET = 'news-covers'; // TODO(TEN): ยังไม่ได้สร้าง bucket นี้จริง ต้อง confirm ก่อนสร้างเพิ่ม
+
+  let hashtags = [];
+  let cropState = { scale: 1, x: 0, y: 0, file: null };
+
+  function renderHashtags() {
+    const wrap = document.getElementById('hashtagList');
+    wrap.innerHTML = hashtags.map((t, i) => `<span class="chip">#${t} <button data-i="${i}" class="removeTag">✕</button></span>`).join('');
+    wrap.querySelectorAll('.removeTag').forEach(btn => {
+      btn.addEventListener('click', () => { hashtags.splice(Number(btn.dataset.i), 1); renderHashtags(); });
+    });
+  }
+  document.getElementById('hashtagInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      e.preventDefault();
+      hashtags.push(e.target.value.trim().replace(/^#/, ''));
+      e.target.value = '';
+      renderHashtags();
+    }
+  });
+  document.getElementById('autoTagBtn').addEventListener('click', async () => {
+    const text = (document.getElementById('title').value + ' ' + document.getElementById('content').value).toLowerCase();
+    const { data: aliases } = await sb.from('team_aliases').select('alias, canonical');
+    const { data: teams } = await sb.from('api_sports_team_cache').select('team_name');
+    const names = new Set();
+    (aliases || []).forEach(a => { if (text.includes(a.alias.toLowerCase())) names.add(a.canonical); });
+    (teams || []).forEach(t => { if (t.team_name && text.includes(t.team_name.toLowerCase())) names.add(t.team_name); });
+    names.forEach(n => { const tag = n.replace(/\s+/g, ''); if (!hashtags.includes(tag)) hashtags.push(tag); });
+    renderHashtags();
+  });
+
+  document.getElementById('tag').addEventListener('change', (e) => {
+    if (e.target.value === 'MATCH RECAPS') {
+      // TODO(TEN): news-post-recap.html ยังไม่ได้สร้าง — ตอนนี้จะ 404 จนกว่าจะทำหน้านั้น
+      window.location.href = 'news-post-recap.html';
+    }
+  });
+
+  const dropzone = document.getElementById('dropzone');
+  const coverInput = document.getElementById('coverInput');
+  const cropStage = document.getElementById('cropStage');
+  const cropImg = document.getElementById('cropImg');
+  const zoomRow = document.getElementById('zoomRow');
+  const zoomRange = document.getElementById('zoomRange');
+
+  coverInput.addEventListener('change', () => {
+    const file = coverInput.files[0];
+    if (!file) return;
+    cropState.file = file;
+    cropImg.src = URL.createObjectURL(file);
+    cropImg.onload = () => {
+      dropzone.style.display = 'none';
+      cropStage.style.display = 'block';
+      zoomRow.style.display = 'flex';
+      cropState.scale = 1; cropState.x = 0; cropState.y = 0;
+      zoomRange.value = 100;
+      applyCropTransform();
+    };
+  });
+  function applyCropTransform() {
+    cropImg.style.transform = `translate(calc(-50% + ${cropState.x}px), calc(-50% + ${cropState.y}px)) scale(${cropState.scale})`;
+    cropImg.style.width = cropStage.clientWidth + 'px';
+  }
+  zoomRange.addEventListener('input', () => { cropState.scale = zoomRange.value / 100; applyCropTransform(); });
+  let dragging = false, dragStart = { x: 0, y: 0 };
+  cropStage.addEventListener('pointerdown', (e) => { dragging = true; dragStart = { x: e.clientX - cropState.x, y: e.clientY - cropState.y }; });
+  window.addEventListener('pointermove', (e) => { if (!dragging) return; cropState.x = e.clientX - dragStart.x; cropState.y = e.clientY - dragStart.y; applyCropTransform(); });
+  window.addEventListener('pointerup', () => { dragging = false; });
+
+  function renderCroppedImage() {
+    return new Promise((resolve) => {
+      if (!cropState.file) return resolve(null);
+      const outW = 1200, outH = 630;
+      const canvas = document.createElement('canvas');
+      canvas.width = outW; canvas.height = outH;
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = () => {
+        const stageW = cropStage.clientWidth, stageH = cropStage.clientHeight;
+        const scaleToOut = outW / stageW;
+        const displayW = stageW * cropState.scale;
+        const displayH = (img.naturalHeight / img.naturalWidth) * displayW;
+        const cx = stageW / 2 + cropState.x;
+        const cy = stageH / 2 + cropState.y;
+        const drawX = (cx - displayW / 2) * scaleToOut;
+        const drawY = (cy - displayH / 2) * scaleToOut;
+        ctx.drawImage(img, drawX, drawY, displayW * scaleToOut, displayH * scaleToOut);
+        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.9);
+      };
+      img.src = cropImg.src;
+    });
   }
 
-  function renderLoginRequired() {
-    document.getElementById('container').innerHTML = `
-      <div class="login-required">
-        🔒 กรุณาเข้าสู่ระบบก่อนตั้งกระทู้<br><br>
-        <a href="/auth.html?tab=login">เข้าสู่ระบบ</a> หรือ <a href="/auth.html?tab=register">สมัครสมาชิก</a>
-      </div>
-    `
+  const sourceNameInput = document.getElementById('sourceName');
+  const sourceDropdown = document.getElementById('sourceDropdown');
+  let sourceSearchTimer;
+  sourceNameInput.addEventListener('input', () => {
+    clearTimeout(sourceSearchTimer);
+    const v = sourceNameInput.value.trim();
+    if (!v) { sourceDropdown.style.display = 'none'; return; }
+    sourceSearchTimer = setTimeout(async () => {
+      const { data } = await sb.from('news_sources').select('display_name').ilike('display_name', v + '%').limit(8);
+      if (!data || !data.length) { sourceDropdown.style.display = 'none'; return; }
+      sourceDropdown.innerHTML = data.map(r => `<div>${r.display_name}</div>`).join('');
+      sourceDropdown.style.display = 'block';
+      sourceDropdown.querySelectorAll('div').forEach(el => {
+        el.addEventListener('click', () => { sourceNameInput.value = el.textContent; sourceDropdown.style.display = 'none'; });
+      });
+    }, 200);
+  });
+  document.addEventListener('click', (e) => { if (!e.target.closest('.autocomplete-wrap')) sourceDropdown.style.display = 'none'; });
+
+  function showBanner(kind, msg) {
+    const el = document.getElementById('statusBanner');
+    el.className = 'status-banner ' + kind;
+    el.textContent = msg;
+    el.style.display = 'block';
   }
 
-  function renderForm() {
-    const options = boards.map(b =>
-      `<option value="${b.id}" ${b.id === preselectBoardId ? 'selected' : ''}>${b.icon} ${b.name}</option>`
-    ).join('')
+  document.getElementById('submitBtn').addEventListener('click', async () => {
+    const title = document.getElementById('title').value.trim();
+    const tag = document.getElementById('tag').value;
+    const content = document.getElementById('content').value.trim();
+    const errorEl = document.getElementById('formError');
+    errorEl.style.display = 'none';
 
-    document.getElementById('container').innerHTML = `
-      <div class="alert alert-error" id="alert-error"></div>
-      <div class="form-group">
-        <label>หมวดหมู่ *</label>
-        <select id="post-board">
-          <option value="">เลือกหมวดหมู่</option>
-          ${options}
-        </select>
-      </div>
-      <div class="form-group">
-        <label>หัวข้อกระทู้ *</label>
-        <input type="text" id="post-title" placeholder="ตั้งหัวข้อให้น่าสนใจ" maxlength="150"/>
-        <div class="char-count"><span id="title-count">0</span>/150</div>
-      </div>
-      <div class="form-group">
-        <label>เนื้อหา *</label>
-
-        <div class="toolbar">
-          <button type="button" class="tb-btn" onclick="wrapSelection('**','**')"><b>B</b></button>
-          <button type="button" class="tb-btn" onclick="wrapSelection('*','*')"><i>I</i></button>
-          <button type="button" class="tb-btn" onclick="wrapSelection('__','__')"><u>U</u></button>
-          <div class="tb-sep"></div>
-          <select class="tb-select" id="color-select" onchange="applyColor(this.value)">
-            <option value="">สีตัวอักษร</option>
-            <option value="#e74c3c">🔴 แดง</option>
-            <option value="#3498db">🔵 น้ำเงิน</option>
-            <option value="#2ecc71">🟢 เขียว</option>
-            <option value="#f1c40f">🟡 เหลือง</option>
-            <option value="#9b59b6">🟣 ม่วง</option>
-            <option value="#ffffff">⚪ ขาว</option>
-          </select>
-          <select class="tb-select" id="size-select" onchange="applySize(this.value)">
-            <option value="">ขนาดตัวอักษร</option>
-            <option value="12px">เล็ก</option>
-            <option value="16px">ปกติ</option>
-            <option value="20px">ใหญ่</option>
-            <option value="28px">ใหญ่มาก</option>
-          </select>
-          <div class="tb-sep"></div>
-          <button type="button" class="tb-btn" onclick="wrapSelection('> ','')">Quote</button>
-        </div>
-
-        <div class="image-tools">
-          <button type="button" class="btn-img-upload" onclick="document.getElementById('file-input').click()">
-            📤 ฝากรูป
-          </button>
-          <input type="file" id="file-input" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" onchange="handleFileSelect(event)"/>
-          <button type="button" class="btn-img-url" onclick="toggleUrlInput()">🔗 วาง URL รูป</button>
-        </div>
-        <div class="url-input-row" id="url-input-row">
-          <input type="url" id="external-img-url" placeholder="วาง URL รูปจากเว็บอื่น เช่น https://pic.in.th/..."/>
-          <button type="button" onclick="insertExternalUrl()">แทรก</button>
-        </div>
-        <div class="upload-progress" id="upload-progress">กำลังอัปโหลด...</div>
-
-        <textarea id="post-content" placeholder="เขียนเนื้อหากระทู้... (วางลิงก์ YouTube จะแสดงเป็นวิดีโออัตโนมัติ)" maxlength="5000"></textarea>
-        <div class="char-count"><span id="content-count">0</span>/5000</div>
-      </div>
-      <div class="btn-submit-row">
-        <button type="button" class="btn-preview" onclick="showPreview()">👁 แสดงตัวอย่าง</button>
-        <button class="btn-submit" id="btn-submit" onclick="submitPost()">ตั้งกระทู้</button>
-      </div>
-    `
-
-    document.getElementById('post-title').addEventListener('input', e => {
-      document.getElementById('title-count').textContent = e.target.value.length
-    })
-    document.getElementById('post-content').addEventListener('input', e => {
-      document.getElementById('content-count').textContent = e.target.value.length
-    })
-  }
-
-  // ── TOOLBAR ACTIONS ──
-  function getTextarea() { return document.getElementById('post-content') }
-
-  function wrapSelection(before, after) {
-    const ta = getTextarea()
-    const start = ta.selectionStart, end = ta.selectionEnd
-    const selected = ta.value.substring(start, end) || 'ข้อความ'
-    const newText = ta.value.substring(0, start) + before + selected + after + ta.value.substring(end)
-    ta.value = newText
-    ta.focus()
-    ta.selectionStart = start + before.length
-    ta.selectionEnd = start + before.length + selected.length
-    document.getElementById('content-count').textContent = ta.value.length
-  }
-
-  function applyColor(color) {
-    if (!color) return
-    const ta = getTextarea()
-    const start = ta.selectionStart, end = ta.selectionEnd
-    const selected = ta.value.substring(start, end) || 'ข้อความ'
-    const tag = `[color=${color}]${selected}[/color]`
-    ta.value = ta.value.substring(0, start) + tag + ta.value.substring(end)
-    document.getElementById('color-select').value = ''
-    document.getElementById('content-count').textContent = ta.value.length
-    ta.focus()
-  }
-
-  function applySize(size) {
-    if (!size) return
-    const ta = getTextarea()
-    const start = ta.selectionStart, end = ta.selectionEnd
-    const selected = ta.value.substring(start, end) || 'ข้อความ'
-    const tag = `[size=${size}]${selected}[/size]`
-    ta.value = ta.value.substring(0, start) + tag + ta.value.substring(end)
-    document.getElementById('size-select').value = ''
-    document.getElementById('content-count').textContent = ta.value.length
-    ta.focus()
-  }
-
-  // ── IMAGE UPLOAD ──
-  async function handleFileSelect(event) {
-    const file = event.target.files[0]
-    if (!file) return
-
-    if (file.size > 5 * 1024 * 1024) {
-      showError('ไฟล์ใหญ่เกิน 5MB กรุณาเลือกไฟล์ใหม่')
-      return
+    if (!title || !tag || !content) {
+      errorEl.textContent = 'กรอกหัวข้อ, เลือก tag และเขียนเนื้อหาให้ครบก่อนโพสต์';
+      errorEl.style.display = 'block';
+      return;
     }
 
-    const progressEl = document.getElementById('upload-progress')
-    progressEl.classList.add('show')
-    progressEl.textContent = 'กำลังอัปโหลด...'
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'กำลังโพสต์...';
 
-    const ext = file.name.split('.').pop()
-    const fileName = `${currentUser.id}/${Date.now()}.${ext}`
+    try {
+      let coverUrl = null;
+      const blob = await renderCroppedImage();
+      if (blob) {
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+        const { error: uploadErr } = await sb.storage.from(COVER_BUCKET).upload(fileName, blob, { contentType: 'image/jpeg' });
+        if (uploadErr) throw uploadErr;
+        const { data: pub } = sb.storage.from(COVER_BUCKET).getPublicUrl(fileName);
+        coverUrl = pub.publicUrl;
+      }
 
-    const { data, error } = await sb.storage.from('post-images').upload(fileName, file)
+      const sourceName = document.getElementById('sourceName').value.trim();
+      if (sourceName) {
+        await sb.from('news_sources').upsert(
+          { name_key: sourceName.toLowerCase(), display_name: sourceName },
+          { onConflict: 'name_key', ignoreDuplicates: true }
+        );
+      }
 
-    if (error) {
-      progressEl.textContent = 'อัปโหลดไม่สำเร็จ กรุณาลองใหม่'
-      setTimeout(() => progressEl.classList.remove('show'), 3000)
-      return
+      const { data: { user } } = await sb.auth.getUser();
+
+      const { error: insertErr } = await sb.from('news_posts').insert({
+        author_id: user.id,
+        post_type: 'general',
+        title,
+        content,
+        cover_image_url: coverUrl,
+        tag,
+        source_link: document.getElementById('sourceLink').value.trim() || null,
+        source_name: sourceName || null,
+        hashtags
+      });
+      if (insertErr) throw insertErr;
+
+      showBanner('success', 'โพสต์ข่าวเรียบร้อยแล้ว');
+      setTimeout(() => { window.location.href = 'news-post.html'; }, 1200);
+    } catch (err) {
+      showBanner('error', 'โพสต์ไม่สำเร็จ: ' + (err.message || err));
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'โพสต์ข่าว';
     }
+  });
 
-    const { data: urlData } = sb.storage.from('post-images').getPublicUrl(fileName)
-    insertImageTag(urlData.publicUrl)
-
-    progressEl.textContent = '✅ อัปโหลดสำเร็จ'
-    setTimeout(() => progressEl.classList.remove('show'), 2000)
-    event.target.value = ''
-  }
-
-  function toggleUrlInput() {
-    document.getElementById('url-input-row').classList.toggle('show')
-  }
-
-  function insertExternalUrl() {
-    const input = document.getElementById('external-img-url')
-    const url = input.value.trim()
-    if (!url) return
-    insertImageTag(url)
-    input.value = ''
-    document.getElementById('url-input-row').classList.remove('show')
-  }
-
-  function insertImageTag(url) {
-    const ta = getTextarea()
-    const tag = `\n[img]${url}[/img]\n`
-    const pos = ta.selectionStart
-    ta.value = ta.value.substring(0, pos) + tag + ta.value.substring(pos)
-    document.getElementById('content-count').textContent = ta.value.length
-    ta.focus()
-  }
-
-  // ── RENDER CONTENT (สำหรับ preview) ──
-  function renderContent(raw) {
-    let html = escapeHtml(raw)
-
-    html = html.replace(/\[img\](.*?)\[\/img\]/g, '<img src="$1" loading="lazy"/>')
-    html = html.replace(/\[color=(#[0-9a-fA-F]{3,6})\](.*?)\[\/color\]/g, '<span style="color:$1">$2</span>')
-    html = html.replace(/\[size=(\d+px)\](.*?)\[\/size\]/g, '<span style="font-size:$1">$2</span>')
-    html = html.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
-    html = html.replace(/\*(.+?)\*/g, '<i>$1</i>')
-    html = html.replace(/__(.+?)__/g, '<u>$1</u>')
-    html = html.replace(/^&gt; (.+)$/gm, '<blockquote style="border-left:3px solid #c0392b;padding-left:10px;color:#aaa;margin:8px 0;">$1</blockquote>')
-    html = html.replace(
-      /(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})\S*)/g,
-      '<div style="position:relative;padding-bottom:56.25%;height:0;"><iframe src="https://www.youtube.com/embed/$2" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></div>'
-    )
-
-    return html.replace(/\n/g, '<br>')
-  }
-
-  function escapeHtml(str) {
-    const div = document.createElement('div')
-    div.textContent = str
-    return div.innerHTML
-  }
-
-  function showPreview() {
-    const title = document.getElementById('post-title').value.trim() || '(ยังไม่มีหัวข้อ)'
-    const content = document.getElementById('post-content').value.trim() || '(ยังไม่มีเนื้อหา)'
-    document.getElementById('preview-title-el').textContent = title
-    document.getElementById('preview-content-el').innerHTML = renderContent(content)
-    document.getElementById('preview-modal').classList.add('show')
-  }
-
-  function closePreview() {
-    document.getElementById('preview-modal').classList.remove('show')
-  }
-
-  function showError(msg) {
-    const el = document.getElementById('alert-error')
-    el.textContent = msg
-    el.classList.add('show')
-  }
-
-  async function submitPost() {
-    const boardId = document.getElementById('post-board').value
-    const title = document.getElementById('post-title').value.trim()
-    const content = document.getElementById('post-content').value.trim()
-
-    document.getElementById('alert-error').classList.remove('show')
-
-    if (!boardId) { showError('กรุณาเลือกหมวดหมู่'); return }
-    if (title.length < 4) { showError('หัวข้อกระทู้ต้องมีอย่างน้อย 4 ตัวอักษร'); return }
-    if (content.length < 10) { showError('เนื้อหากระทู้ต้องมีอย่างน้อย 10 ตัวอักษร'); return }
-
-    const btn = document.getElementById('btn-submit')
-    btn.disabled = true
-    btn.innerHTML = '<span class="spinner"></span>กำลังตั้งกระทู้...'
-
-    const { data, error } = await sb.from('posts').insert({
-      board_id: boardId,
-      author_id: currentUser.id,
-      title: title,
-      content: content
-    }).select().single()
-
-    if (error) {
-      showError('เกิดข้อผิดพลาด กรุณาลองใหม่')
-      btn.disabled = false
-      btn.innerHTML = 'ตั้งกระทู้'
-      return
-    }
-
-    window.location.href = '/post.html?id=' + data.id
-  }
-
-  init()
+  renderHashtags();
 </script>
 </body>
 </html>
