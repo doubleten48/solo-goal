@@ -1430,6 +1430,65 @@
     .standings-table { font-size: 11px; }
   }
 
+  /* ===== Ending Board (footer ปิดท้ายหน้า) ===== */
+  .site-footer {
+    width: 100%;
+    max-width: 1240px;
+    margin: 24px auto 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+  }
+  .site-footer-card {
+    border-top: 2px solid #872929;
+    background: #1a1a1e;
+    border-radius: 0 0 12px 12px;
+    min-height: 120px;
+    padding: 20px 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+  .footer-social {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .footer-social a {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+  .footer-social a:hover { background: #872929; }
+
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 14px;
+    font-size: 12px;
+    color: #9a9a9a;
+    text-align: center;
+  }
+  .footer-links a { color: #9a9a9a; text-decoration: none; }
+  .footer-links a:hover { color: #fff; }
+  .footer-links .dot { color: #56493d; }
+  .footer-copyright { color: #6f6f6f; }
+
+  @media (max-width: 720px) {
+    .site-footer-card { min-height: unset; }
+    .footer-links { font-size: 11px; gap: 6px 10px; }
+  }
+
   /* ===== ปุ่มลูกศร scroll ขึ้น/ลง + ปุ่มไปตารางคะแนน ===== */
   .scroll-fab-group {
     position: fixed;
@@ -2707,6 +2766,36 @@
                 <div class="cs-status-version">v1.0.0</div>
                 <div class="cs-status-days">ก่อตั้งมา 128 วัน</div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ending Board -->
+        <div class="site-footer">
+          <div class="site-footer-card">
+            <div class="footer-social">
+              <a href="#" aria-label="Facebook">f</a>
+              <a href="#" aria-label="YouTube">▶</a>
+              <a href="#" aria-label="LINE">💬</a>
+              <a href="#" aria-label="Instagram">📷</a>
+            </div>
+
+            <div class="footer-links">
+              <a href="index.html">หน้าแรก</a>
+              <span class="dot">•</span>
+              <a href="#">เกี่ยวกับ</a>
+              <span class="dot">•</span>
+              <a href="#">กฎกติกา</a>
+              <span class="dot">•</span>
+              <a href="#">ข้อตกลงการใช้งาน</a>
+              <span class="dot">•</span>
+              <a href="https://counter-pressing.com/privacy" target="_blank" rel="noopener">นโยบายความเป็นส่วนตัว</a>
+              <span class="dot">•</span>
+              <a href="https://counter-pressing.com/cookies" target="_blank" rel="noopener">นโยบายคุกกี้</a>
+              <span class="dot">•</span>
+              <a href="#">ติดต่อเรา</a>
+              <span class="dot">•</span>
+              <span class="footer-copyright">© 2026 solo-goal.com — สงวนลิขสิทธิ์</span>
             </div>
           </div>
         </div>
