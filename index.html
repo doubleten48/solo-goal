@@ -1,0 +1,3521 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1320">
+<title>SoloGoal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&family=Inter:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --sidebar-w: 198px;
+    --header-h: 60px;
+    --main-bg: #2c2b2b;
+    --main-text: #fff;
+    --body-bg: #2c2b2b;
+  }
+
+  html.light-mode {
+    --main-bg: #E5E5EA;
+    --main-text: #1a1a1a;
+    --body-bg: #E5E5EA;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--body-bg);
+    font-family: 'Kanit', sans-serif;
+    color: #fff;
+    transition: background 0.2s ease;
+  }
+
+  .layout {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* ===== Sidebar ===== */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: linear-gradient(to bottom, #872929 0%, #0d0a0a 100%);
+    display: flex;
+    flex-direction: column;
+    padding: 14px 0 0 0;
+    transition: width 0.2s ease;
+    overflow: hidden;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    z-index: 30;
+  }
+
+  .logo-wrap {
+    position: relative;
+    width: fit-content;
+    margin: 0 0 34px 0;
+  }
+  .logo-svg {
+    display: block;
+    width: 76px;
+    height: 85px;
+    margin: 33px 0 0 61px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ===== เส้นความเร็ววิ่งอยู่ในตัวอักษรโลโก้ ===== */
+  .solo-speed-lines .sl {
+    animation: soloSpeedLine 2.2s linear infinite;
+  }
+  @keyframes soloSpeedLine {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-150px); }
+  }
+
+  /* ===== เอฟเฟกต์สุ่มตอนเมาส์ชี้ที่ logo ===== */
+  .logo-svg.fx-glow {
+    animation: logoFxGlow 0.9s ease-in-out;
+  }
+  @keyframes logoFxGlow {
+    0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 215, 80, 0)); }
+    50%      { filter: drop-shadow(0 0 10px rgba(255, 215, 80, 0.9)); }
+  }
+  .logo-svg.fx-wiggle {
+    animation: logoFxWiggle 0.5s ease-in-out;
+    transform-origin: 50% 90%;
+  }
+  @keyframes logoFxWiggle {
+    0%, 100% { transform: rotate(0deg) translateY(0); }
+    25%      { transform: rotate(-6deg) translateY(-2px); }
+    50%      { transform: rotate(5deg) translateY(0); }
+    75%      { transform: rotate(-3deg) translateY(-1px); }
+  }
+  .logo-svg.fx-tilt {
+    animation: logoFxTilt 0.6s ease-in-out;
+    transform-origin: 50% 60%;
+  }
+  @keyframes logoFxTilt {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50%      { transform: rotate(8deg) scale(1.06); }
+  }
+  .logo-sparkle {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #FFD966;
+    box-shadow: 0 0 4px 1px rgba(255, 217, 102, 0.8);
+    opacity: 0;
+    pointer-events: none;
+    animation: logoSparklePop 0.7s ease-out forwards;
+  }
+  @keyframes logoSparklePop {
+    0%   { opacity: 1; transform: translate(0, 0) scale(0.4); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.2); }
+  }
+
+  /* ===== ลูกบอลกลิ้งผ่านด้านล่างโลโก้ ===== */
+  .logo-ball {
+    position: absolute;
+    left: 61px;
+    width: 15px;
+    height: 15px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 3;
+    top: 122px;
+  }
+  .logo-ball.roll {
+    animation: logoBallRoll 1.6s linear;
+  }
+  @keyframes logoBallRoll {
+    0%   { transform: translateX(0) rotate(0deg);   opacity: 1; }
+    92%  { opacity: 1; }
+    100% { transform: translateX(76px) rotate(720deg); opacity: 0; }
+  }
+
+
+  .sidebar .menu-panel {
+    margin: 0 15px;
+    position: relative;
+    height: 403px;
+  }
+
+  .sidebar .menu-panel ul {
+    list-style: none;
+    position: relative;
+    height: 100%;
+  }
+
+  .menu-highlight {
+    position: absolute;
+    left: 17px;
+    width: 137px;
+    height: 27px;
+    background: rgba(29, 28, 28, 0.33);
+    border-radius: 5px;
+    z-index: 0;
+    opacity: 0;
+    transition: top 0.08s ease, opacity 0.1s ease;
+    pointer-events: none;
+  }
+
+  /* ===== Mascot ที่โผล่มาตอนชี้เมาส์ไปที่เมนู ===== */
+  .menu-mascot {
+    position: absolute;
+    left: 148px; /* ← ปรับตำแหน่งซ้าย-ขวาได้ตรงนี้ ถ้ายังไม่ตรงกับดีไซน์ */
+    width: 26px;
+    height: 24px;
+    z-index: 2;
+    opacity: 0;
+    pointer-events: none;
+    transition: top 0.08s ease, opacity 0.15s ease;
+    overflow: visible;
+  }
+  .menu-mascot.show { opacity: 1; }
+
+  /* หมุนเฉพาะกลุ่มลูกบอล (แยกออกมาจากตัวคนวิ่งจริงๆ ในไฟล์ SVG แล้ว) */
+  .menu-mascot-ball-group {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .menu-mascot.show .menu-mascot-ball-group {
+    animation: menuBallSpin 0.6s linear infinite;
+  }
+  @keyframes menuBallSpin {
+    to { transform: rotate(360deg); }
+  }
+
+  .sidebar .menu-panel li {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 40px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .sidebar .menu-panel li img {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+    display: block;
+  }
+
+  .sidebar .menu-panel li span {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 52px;
+    z-index: 1;
+    font-weight: 400;
+    font-size: 13px;
+    color: #fff;
+  }
+
+  .sidebar .menu-divider {
+    width: 163px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.15);
+    margin: 0 auto 18px auto;
+  }
+
+  .sidebar .balance-box {
+    margin: 0 15px;
+    width: 170px;
+  }
+
+  .sidebar .balance-box img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* ===== Collapsed menu (icon-only) ===== */
+  .sidebar .menu-collapsed {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding-top: 161px;
+  }
+
+  .sidebar .menu-collapsed li {
+    list-style: none;
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+  }
+
+  .sidebar .menu-collapsed li img {
+    width: 35px;
+    height: 35px;
+    display: block;
+  }
+
+  /* ===== Collapsed state ===== */
+  .sidebar.collapsed {
+    width: 56px;
+  }
+
+  .sidebar.collapsed .logo-wrap,
+  .sidebar.collapsed .menu-panel,
+  .sidebar.collapsed .menu-divider,
+  .sidebar.collapsed .balance-box {
+    display: none;
+  }
+
+  .sidebar.collapsed .menu-collapsed {
+    display: flex;
+  }
+
+  /* ===== Toggle arrow button ===== */
+  .sidebar-toggle {
+    position: fixed;
+    top: 108px;
+    left: calc(var(--sidebar-w) - 5px);
+    width: 10px;
+    height: 30px;
+    background: #1a1a1a;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 10px;
+    line-height: 30px;
+    text-align: center;
+    padding: 0;
+    cursor: pointer;
+    z-index: 31;
+    transition: left 0.2s ease;
+  }
+
+  /* ===== Header + main ===== */
+  .content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .header {
+    height: var(--header-h);
+    background: #121214;
+    display: flex;
+    align-items: center;
+    padding-left: 25px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 25;
+  }
+
+  .header .wordmark {
+    display: none;
+    font-size: 20px;
+    font-weight: 400;
+    color: #fff;
+    margin-right: 26px;
+    white-space: nowrap;
+  }
+
+  .sidebar.collapsed ~ .content-area .header {
+    padding-left: 26px;
+  }
+
+  .sidebar.collapsed ~ .content-area .header .wordmark {
+    display: block;
+  }
+
+  .header .icons {
+    position: absolute;
+    top: 50%;
+    left: 25px;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+
+  .header .icon-wrap {
+    position: relative;
+    display: flex;
+  }
+
+  .header .icon-btn {
+    display: flex; align-items: center; justify-content: center;
+    background: transparent;
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    padding: 2px;
+    cursor: pointer;
+    line-height: 0;
+  }
+  .header .icon-btn.active {
+    border-color: rgba(255,255,255,0.6);
+  }
+
+  .header .icons img {
+    width: 27px;
+    height: 27px;
+    cursor: pointer;
+    display: block;
+  }
+
+  /* ===== Dropdown panels (แจ้งเตือน / ข้อความ) ===== */
+  .dropdown-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 14px);
+    left: 0;
+    width: 320px;
+    max-width: 90vw;
+    background: #1E1E1E;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+    z-index: 60;
+    overflow: hidden;
+  }
+  .dropdown-panel.open { display: block; }
+
+  .dropdown-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .dropdown-link {
+    font-size: 12px; color: #d99a3d; text-decoration: none; font-weight: 600;
+  }
+  .dropdown-link:hover { text-decoration: underline; }
+
+  .dropdown-footer {
+    text-align: center;
+    padding: 10px 14px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .dropdown-footer .dropdown-link { font-size: 13px; }
+
+  /* ── แจ้งเตือน: empty state ── */
+  .notif-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px;
+    padding: 36px 20px;
+  }
+  .notif-empty-icon { font-size: 30px; opacity: 0.5; }
+  .notif-empty-text { font-size: 13px; color: #9a9a9a; }
+
+  /* ── ข้อความ: list ── */
+  .mail-list {
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .mail-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s ease;
+  }
+  .mail-item:last-child { border-bottom: none; }
+  .mail-item:hover { background: rgba(255,255,255,0.03); }
+
+  .mail-avatar {
+    flex-shrink: 0;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #3a3a3a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    overflow: hidden;
+  }
+  .mail-avatar-accent { background: #872929; }
+
+  .mail-info {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .mail-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .mail-preview {
+    font-size: 12px; color: #9a9a9a;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .mail-time {
+    flex-shrink: 0;
+    font-size: 11px; color: #777;
+    padding-top: 2px;
+  }
+
+  /* ===== Collapsed-only fix: logo vs bell/mail overlap ===== */
+  .sidebar.collapsed ~ .content-area .header .icons {
+    left: 165px; /* ปรับตัวเลขนี้ได้ถ้ายังชิด/ห่างไป */
+  }
+
+  .sidebar.collapsed ~ .content-area .header .wordmark {
+    /* ไม่ต้อง offset เพิ่มแล้ว — header ใช้ align-items:center อยู่แล้ว
+       จะเรียงกึ่งกลางแนวตั้งตรงกับไอคอนกระดิ่ง/จดหมาย/พระอาทิตย์โดยอัตโนมัติ */
+  }
+
+  .header .auth-links {
+    position: absolute;
+    right: 62px; /* ← เพิ่มระยะห่างจากไอคอนพระอาทิตย์ตรงนี้ */
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .header .auth-link {
+    color: #fff;
+    font-family: 'DM Sans', 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-decoration: none;
+    opacity: 0.85;
+    transition: opacity 0.15s ease;
+    white-space: nowrap;
+  }
+  .header .auth-link:hover {
+    opacity: 1;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .header .auth-divider {
+    width: 1px;
+    height: 12px;
+    background: rgba(255,255,255,0.25);
+    flex-shrink: 0;
+  }
+
+  .header .icons .light-mode-btn {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: block;
+  }
+
+  /* ===== Profile chip (แสดงแทน REGISTER/LOGIN หลัง login) ===== */
+  .header .profile-chip {
+    position: absolute;
+    right: 20px; /* ← ชิดขวามากขึ้น (เดิม 62px) */
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+  }
+  .profile-chip-text {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .profile-chip-name {
+    font-size: 16px; font-weight: 700; color: #fff; line-height: 1.15;
+    white-space: nowrap;
+  }
+  .profile-chip-role {
+    font-size: 8px; font-weight: 600; letter-spacing: 1px; color: #9a9a9a;
+    text-transform: uppercase; line-height: 1.15;
+  }
+  .profile-chip-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    object-fit: cover; background: #3a3a3a; flex-shrink: 0;
+  }
+
+  .avatar-btn {
+    position: relative;
+    display: flex;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    line-height: 0;
+    border-radius: 50%;
+  }
+  .avatar-btn.active .profile-chip-avatar {
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.6);
+  }
+
+  /* ===== เมนู dropdown เมื่อกดอวตาร์ ===== */
+  .profile-menu-panel {
+    left: auto;
+    right: 0;
+    width: 220px;
+    padding: 6px 0;
+  }
+
+  .profile-menu-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    font-size: 13px; color: #e8e8e8;
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .profile-menu-item:hover { background: rgba(255,255,255,0.05); }
+  .profile-menu-icon {
+    width: 18px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .profile-menu-logout { color: #e57373; }
+
+  .profile-menu-divider {
+    height: 1px;
+    margin: 4px 0;
+    background: rgba(255,255,255,0.08);
+  }
+
+  .profile-menu-social {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px 16px 6px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin-top: 4px;
+  }
+  .social-icon {
+    display: flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px;
+    color: #9a9a9a;
+    transition: color 0.15s ease;
+  }
+  .social-icon:hover { color: #fff; }
+
+  .main {
+    flex: 1;
+    background: var(--main-bg);
+    color: var(--main-text);
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  .ads-banner {
+    width: 100%;
+    max-width: 1110px;
+    height: 100px;
+    margin: 20px auto 0 auto;
+    padding: 0 20px;
+    display: block;
+  }
+
+  .ads-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 6px;
+  }
+
+  .announce-box {
+    width: 100%;
+    max-width: 1110px;
+    margin: 16px auto 0 auto;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .announce-row {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    padding: 6px 16px; /* ปรับตัวเลขนี้ได้ถ้ายังสูง/เตี้ยไป */
+    font-size: 14px;
+  }
+
+  html.light-mode .announce-row {
+    background: #d9d9de;
+  }
+
+  .announce-row .announce-icon {
+    font-size: 15px;
+    margin-right: 8px;
+  }
+
+  .announce-row .announce-label {
+    color: var(--main-text);
+    flex: 1;
+  }
+
+  .announce-row .announce-link {
+    color: #6ea8fe;
+    font-size: 13px;
+    text-decoration: underline;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* ===== Football scores widget ===== */
+  .scores-widget {
+    width: 100%;
+    max-width: 1110px;
+    margin: 16px auto 0 auto;
+    padding: 0 20px;
+  }
+
+  .scores-frame {
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .scores-list-wrap {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .scores-cta {
+    flex-shrink: 0;
+    width: 90px;
+    background: linear-gradient(135deg, #ffc837, #ff8a00);
+    color: #1a1a1a;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    line-height: 1.4;
+    text-align: center;
+    border-radius: 5px;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .scores-cta .cta-arrow {
+    font-size: 14px;
+  }
+
+  .scores-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    width: 22px;
+    border: none;
+    background: transparent;
+    color: #9a9a9a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: color 0.15s ease;
+  }
+  .scores-nav-btn.prev { left: -28px; }
+  .scores-nav-btn.next { right: -28px; }
+
+  .scores-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .scores-nav-btn:hover:not(:disabled) {
+    color: var(--main-text);
+  }
+
+  .scores-tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+  }
+
+  .scores-tabs button {
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.06);
+    border: none;
+    color: var(--main-text);
+    padding: 6px 14px;
+    border-radius: 5px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+  }
+
+  html.light-mode .scores-tabs button {
+    background: #d9d9de;
+  }
+
+  .scores-tabs button.active {
+    background: #872929;
+    color: #fff;
+  }
+
+  .scores-list {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .score-card {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    background: rgba(255, 255, 255, 0.06);
+    border-left: 3px solid #872929;
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .score-live-badge {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    background: #ff4d4d;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 10px;
+    line-height: 1.4;
+  }
+
+  html.light-mode .score-card {
+    background: #d9d9de;
+  }
+
+  .score-card.is-live { border-left-color: #ff4d4d; }
+  .score-card.is-finished { border-left-color: #6a6a6a; }
+
+  .score-card .score-card-time {
+    font-size: 11px;
+    color: #9a9a9a;
+    margin-bottom: 8px;
+  }
+
+  .score-card .score-card-time.live-text { color: #ff6b6b; font-weight: 600; }
+
+  .score-card .score-team-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 3px 0;
+  }
+
+  .score-card .score-team-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--main-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .score-card .score-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .score-card .score-team-logo {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .score-card .score-team-value {
+    font-weight: 600;
+    color: var(--main-text);
+    flex-shrink: 0;
+  }
+
+  .scores-empty {
+    text-align: center;
+    padding: 20px;
+    font-size: 13px;
+    color: #9a9a9a;
+  }
+
+  /* ===== News section (mockup) ===== */
+  .news-section {
+    width: 100%;
+    max-width: 1110px;
+    margin: 20px auto 0 auto;
+    padding: 0 20px;
+  }
+
+  .news-section .section-title,
+  .video-section .section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .news-section .section-title .bar,
+  .video-section .section-title .bar { width: 4px; height: 20px; background: #872929; border-radius: 2px; }
+  .news-section .section-title h2,
+  .video-section .section-title h2 { font-size: 16px; font-weight: 600; color: var(--main-text); }
+
+  .news-grid {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .news-card {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    display: block;
+    transition: opacity 0.15s ease;
+  }
+  .news-card:hover { opacity: 0.92; }
+
+  .news-tag {
+    display: inline-block;
+    background: #872929;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .news-tag-yellow { background: #d4a017; color: #1a1a1a; }
+  .news-tag-breaking { display: inline-flex; align-items: center; gap: 5px; }
+  .news-blink-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #fff;
+    animation: newsBlink 1s ease-in-out infinite;
+  }
+  @keyframes newsBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  .news-recent-tag {
+    flex-shrink: 0;
+    width: 34px; height: 34px;
+    background: #872929;
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 2px;
+  }
+  .news-recent-tag span {
+    color: #fff; font-size: 7px; font-weight: 700;
+    line-height: 1.15; word-break: break-word;
+  }
+  .news-recent-tag.tag-yellow { background: #d4a017; }
+  .news-recent-tag.tag-yellow span { color: #1a1a1a; }
+  .news-recent-tag.tag-breaking { position: relative; }
+  .news-recent-tag .news-blink-dot {
+    width: 5px; height: 5px;
+    position: absolute; top: 3px; right: 3px;
+  }
+  .news-recent-tag .tag-icon { font-size: 15px; }
+
+  /* ===== ตารางข่าวล่าสุด (อยู่นอก .news-grid ไม่กระทบความสูงคอลัมน์ขวา) ===== */
+  .news-left-col {
+    display: flex; flex-direction: column;
+    width: 735px; flex-shrink: 0; max-width: 100%;
+  }
+
+  .news-recent {
+    width: 733px;
+    height: 272px;
+    max-width: 100%;
+    margin-top: 16px;
+    background: #1E1E1E;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .news-recent-header {
+    flex: 0 0 34px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .news-recent-header h3 { font-size: 13px; font-weight: 600; color: #fff; }
+  .news-recent-header a {
+    font-size: 11px; color: #9a9a9a; text-decoration: none;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .news-recent-header a:hover { color: #fff; }
+
+  .news-recent-row {
+    display: grid;
+    grid-template-columns: 34px 1fr auto;
+    align-items: center; gap: 8px;
+    padding: 0 16px;
+    flex: 1 1 0;
+    min-height: 0;
+    text-decoration: none; color: inherit;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .news-recent-row:last-child { border-bottom: none; }
+  .news-recent-row:hover { background: rgba(255,255,255,0.03); }
+
+  .news-recent-headline {
+    min-width: 0;
+    font-size: 12px; color: #e8e8e8;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .news-recent-row .subtag { font-weight: 700; color: #e74c3c; }
+
+  /* ยอดวิว/คอมเมนต์/วันที่/อวตาร์/ชื่อผู้โพสต์ — ใช้ grid กำหนดความกว้างคอลัมน์ตายตัวทั้งหมด
+     (รวมอวตาร์แยกเป็นคอลัมน์ของตัวเองด้วย) เพื่อให้ทุกอย่างเรียงตรงกันเป๊ะทุกแถว ไม่มีที่ว่างเหลือ */
+  .news-recent-stats {
+    display: grid;
+    grid-template-columns: 48px 36px 44px 20px 58px;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .news-recent-views, .news-recent-comments {
+    font-size: 10px; color: #9a9a9a;
+    display: flex; align-items: center; gap: 3px;
+  }
+  .news-recent-date {
+    font-size: 10px; color: #777; line-height: 1.15;
+  }
+  .news-recent-avatar-col {
+    display: flex; align-items: center; justify-content: center;
+  }
+  .news-recent-poster {
+    font-size: 10px; color: #c9c9c9;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
+
+  .news-meta-stats {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 11px; color: #9a9a9a; flex-shrink: 0;
+  }
+  .news-meta-stats span { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+
+  /* ===== 10 กระทู้เดือด ===== */
+  .hotlist-section {
+    width: 100%;
+    max-width: 1110px;
+    margin: 20px auto 0 auto;
+    padding: 0 20px;
+  }
+  .hotlist {
+    background: #1E1E1E;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .hotlist-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .hotlist-icon {
+    flex: 0 0 30px;
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: #872929;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .hotlist-icon .flame { font-size: 12px; }
+  .hotlist-icon .num { font-size: 9px; font-weight: 700; color: #fff; }
+  .hotlist-header h3 { font-size: 15px; font-weight: 700; color: #fff; flex: 1; }
+  .hotlist-viewall {
+    font-size: 12px; color: #9a9a9a; text-decoration: none;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .hotlist-viewall:hover { color: #fff; }
+
+  .hotlist-row {
+    display: grid;
+    grid-template-columns: 34px 1fr auto;
+    align-items: center; gap: 10px;
+    padding: 10px 16px;
+    text-decoration: none; color: inherit;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .hotlist-row:last-child { border-bottom: none; }
+  .hotlist-row:hover { background: rgba(255,255,255,0.03); }
+
+  .hotlist-rank {
+    font-size: 14px; font-weight: 700; color: #6f6f6f;
+    text-align: center;
+  }
+  .hotlist-rank.top1, .hotlist-rank.top2, .hotlist-rank.top3 {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; margin: 0 auto;
+    font-size: 12px;
+  }
+  .hotlist-rank.top1 { background: #e6394a; }
+  .hotlist-rank.top2 { background: #d8623f; }
+  .hotlist-rank.top3 { background: #e08a3c; }
+
+  .hotlist-title {
+    min-width: 0;
+    font-size: 13px; color: #e8e8e8;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .hotlist-stats {
+    display: grid;
+    grid-template-columns: 54px 54px 44px 78px 20px 70px;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .hotlist-hot {
+    justify-self: start;
+  }
+  .hotlist-hot span {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: #e6663a; color: #fff;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 4px;
+    white-space: nowrap;
+  }
+  .hotlist-views, .hotlist-comments {
+    font-size: 11px; color: #9a9a9a;
+    display: flex; align-items: center; gap: 3px;
+  }
+  .hotlist-date {
+    font-size: 11px; color: #777;
+    display: flex; align-items: center; gap: 4px;
+    white-space: nowrap;
+  }
+  .hotlist-avatar-col { display: flex; align-items: center; justify-content: center; }
+  .hotlist-poster {
+    font-size: 11px; color: #c9c9c9;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
+
+  @media (max-width: 720px) {
+    .hotlist-stats { grid-template-columns: 44px 44px 36px 0px 18px 0px; }
+    .hotlist-date, .hotlist-poster { display: none; }
+  }
+
+  /* ===== สถิติชุมชน ===== */
+  .community-stats-section {
+    width: 100%;
+    max-width: 1110px;
+    margin: 20px auto 0 auto;
+    padding: 0 20px;
+  }
+  .community-stats-card {
+    background: #1E1E1E;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .community-stats-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .community-stats-icon {
+    flex: 0 0 30px;
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: #872929;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .community-stats-header h3 { font-size: 15px; font-weight: 700; color: #fff; flex: 1; margin: 0; }
+  .community-stats-updated {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; color: #9a9a9a;
+    white-space: nowrap;
+  }
+  .community-stats-dot-live {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #ff4d4d; display: inline-block;
+  }
+  .community-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+  }
+  .cs-item {
+    padding: 16px 12px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+  .cs-item:last-child { border-right: none; }
+  .cs-label {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 8px;
+    font-size: 11px; color: #9a9a9a;
+    white-space: nowrap;
+  }
+  .cs-dot-online {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #22c55e; display: inline-block;
+  }
+  .cs-value { font-size: 20px; font-weight: 700; color: #fff; }
+  .cs-value-row {
+    display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap;
+  }
+  .cs-delta {
+    font-size: 10px; font-weight: 700; color: #d4a017;
+    background: rgba(212,160,23,0.15);
+    padding: 2px 5px; border-radius: 4px;
+  }
+  .cs-status-version { font-size: 14px; font-weight: 700; color: #fff; }
+  .cs-status-days { font-size: 11px; color: #9a9a9a; margin-top: 2px; }
+
+  @media (max-width: 720px) {
+    .community-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .cs-item {
+      border-right: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .cs-item:nth-child(2n) { border-right: none; }
+    .cs-item:last-child { grid-column: span 2; border-bottom: none; }
+  }
+
+  /* ===== บทความ ===== */
+  .articles-section {
+    width: 100%;
+    max-width: 1110px;
+    margin: 20px auto 0 auto;
+    padding: 0 20px;
+  }
+  .articles-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .articles-header .icon { font-size: 16px; }
+  .articles-header h3 { font-size: 15px; font-weight: 700; color: #fff; flex: 1; }
+  .articles-viewall {
+    font-size: 12px; color: #9a9a9a; text-decoration: none;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .articles-viewall:hover { color: #fff; }
+
+  .articles-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 10px;
+  }
+  .articles-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .article-card {
+    display: flex;
+    align-items: stretch;
+    text-decoration: none;
+    color: inherit;
+    min-width: 0;
+    background: #1a1a1e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .article-thumb {
+    flex: 0 0 80px;
+    align-self: stretch;
+    background: rgba(255,255,255,0.08);
+  }
+  .article-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .article-body { min-width: 0; padding: 12px 14px; }
+  .article-body { min-width: 0; }
+  .article-tag {
+    display: inline-block;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 4px;
+    margin-bottom: 4px;
+  }
+  .article-tag.analysis { background: rgba(55,138,221,0.15); color: #6cb3ee; }
+  .article-tag.gossip { background: rgba(212,83,126,0.15); color: #e88ba8; }
+  .article-tag.interview { background: rgba(29,158,117,0.15); color: #5dcaa5; }
+  .article-tag.history { background: rgba(186,117,23,0.18); color: #ef9f27; }
+  .article-tag.review { background: rgba(127,119,221,0.18); color: #a49ae8; }
+
+  .article-title {
+    font-size: 13px; color: #e8e8e8; font-weight: 500;
+    line-height: 1.35;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    margin-bottom: 4px;
+  }
+  .article-meta { font-size: 11px; color: #777; }
+
+  @media (max-width: 720px) {
+    .articles-columns { grid-template-columns: 1fr; }
+  }
+
+  /* ===== ตารางคะแนน + ดาวซัลโว/แอสซิสต์ ===== */
+  .standings-section {
+    width: 100%;
+    max-width: 1110px;
+    margin: 20px auto 0 auto;
+    padding: 0 20px;
+  }
+  .standings-card {
+    background: #1a1a1e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .standings-topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .standings-toggle {
+    font-size: 12px; font-weight: 700; color: #9a9a9a;
+    padding: 6px 14px; border-radius: 20px;
+    display: flex; align-items: center; gap: 6px;
+    cursor: pointer;
+  }
+  .standings-toggle.active { background: #872929; color: #fff; }
+
+  .league-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    scrollbar-width: none;
+  }
+  .league-tabs::-webkit-scrollbar { display: none; }
+  .league-tab {
+    flex: 0 0 auto;
+    font-size: 12px; font-weight: 600; color: #9a9a9a;
+    background: rgba(255,255,255,0.04);
+    border: none; padding: 8px 14px; border-radius: 8px;
+    white-space: nowrap; cursor: pointer;
+  }
+  .league-tab.active { background: #872929; color: #fff; }
+
+  .league-name { font-size: 13px; font-weight: 700; color: #fff; margin: 4px 0 10px; }
+
+  .standings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .standings-table th {
+    text-align: center;
+    font-weight: 500;
+    color: #9a9a9a;
+    padding: 6px 4px;
+    font-size: 11px;
+  }
+  .standings-table th:nth-child(2) { text-align: left; }
+  .standings-table td {
+    text-align: center;
+    color: #e8e8e8;
+    padding: 7px 4px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .standings-table tr.zone-cl { border-left: 3px solid #378add; }
+  .standings-table tr.zone-el { border-left: 3px solid #ef9f27; }
+  .standings-table tr.zone-rel { border-left: 3px solid #e24b4a; }
+  .standings-table tr { border-left: 3px solid transparent; }
+
+  .team-cell-inner {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 600; color: #fff;
+  }
+  .team-logo {
+    flex: 0 0 20px; width: 20px; height: 20px;
+    object-fit: contain;
+  }
+  .pts-col { font-weight: 700; color: #fff; }
+  .form-dots { display: flex; gap: 3px; justify-content: center; }
+  .form-dots span {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .form-dots .w { background: #5dcaa5; }
+  .form-dots .d { background: #9a9a9a; }
+  .form-dots .l { background: #e24b4a; }
+
+  .standings-legend {
+    display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap;
+    font-size: 11px; color: #9a9a9a;
+  }
+  .standings-legend span { display: flex; align-items: center; gap: 5px; }
+  .standings-legend .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .standings-legend .dot.cl { background: #378add; }
+  .standings-legend .dot.el { background: #ef9f27; }
+  .standings-legend .dot.rel { background: #e24b4a; }
+
+  .leaders-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 20px;
+    position: relative;
+  }
+  .leaders-columns::before {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0; left: 50%;
+    width: 1px;
+    background: rgba(255,255,255,0.08);
+  }
+  .leaders-col h4 { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .leaders-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .leaders-table th {
+    text-align: left; color: #9a9a9a; font-weight: 500; font-size: 11px;
+    padding: 6px 4px;
+  }
+  .leaders-table th:last-child, .leaders-table td:last-child { text-align: right; }
+  .leaders-table th:first-child, .leaders-table td:first-child { text-align: center; width: 22px; }
+  .leaders-table td {
+    padding: 8px 4px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    color: #e8e8e8;
+  }
+  .leaders-rank { color: #9a9a9a; font-weight: 600; }
+  .player-cell-inner { display: flex; align-items: center; gap: 8px; }
+  .player-cell-inner img {
+    width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px;
+    object-fit: cover;
+  }
+  .player-photo-fallback {
+    width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px;
+    background: #3a3a40; color: #fff; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .player-name { font-weight: 600; color: #fff; white-space: nowrap; font-size: 13px; }
+  .team-mini-inner { display: flex; align-items: center; gap: 6px; color: #9a9a9a; font-size: 12px; white-space: nowrap; }
+  .team-mini-inner .team-logo { flex: 0 0 16px; width: 16px; height: 16px; }
+  .leaders-count { font-weight: 700; color: #fff; font-size: 15px; }
+
+  @media (max-width: 720px) {
+    .leaders-columns { grid-template-columns: 1fr; }
+    .leaders-columns::before { display: none; }
+    .standings-table { font-size: 11px; }
+  }
+
+  /* ===== ปุ่มลูกศร scroll ขึ้น/ลง + ปุ่มไปตารางคะแนน ===== */
+  .scroll-fab-group {
+    position: fixed;
+    right: 20px; bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 500;
+  }
+  .scroll-fab {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #872929;
+    color: #fff;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    transition: background 0.2s ease, opacity 0.2s ease;
+  }
+  .scroll-fab:hover { opacity: 0.9; }
+  .scroll-fab.is-dimmed { background: rgba(135,41,41,0.35); }
+  .scroll-fab-standings { font-size: 16px; }
+
+  .news-top-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+
+  /* ===== ช่องที่ 1 (ใหญ่) 735x458 + 735x100 ===== */
+  .news-featured { width: 735px; flex-shrink: 0; max-width: 100%; }
+  .news-featured .news-thumb {
+    width: 100%; aspect-ratio: 735 / 458;
+    border-radius: 15px 15px 0 0;
+    background: linear-gradient(135deg, #872929 0%, #3d1414 55%, #0d0a0a 100%);
+    position: relative;
+  }
+  .news-featured .news-thumb-icon { position: absolute; top: 16px; left: 16px; font-size: 34px; opacity: 0.35; }
+  .news-featured .news-text {
+    width: 100%; height: 100px;
+    background: #1E1E1E;
+    border-radius: 0 0 15px 15px;
+    padding: 12px 18px;
+    display: flex; flex-direction: column;
+    gap: 8px; /* ← เพิ่มค่านี้เพื่อดันพาดหัวลงห่างจากแถวแท็ก/สถิติมากขึ้น */
+  }
+  .news-featured .news-headline {
+    font-family: 'Inter', 'Kanit', sans-serif;
+    font-size: 24px; font-weight: 500; line-height: 1.3; color: #fff;
+    margin-top: 6px; /* ← ปรับตัวเลขนี้เพื่อขยับพาดหัวขึ้น/ลง */
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+
+  .news-avatar {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #872929;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; flex-shrink: 0;
+    overflow: hidden;
+  }
+  .news-side .news-avatar { width: 15px; height: 15px; font-size: 8px; }
+
+  /* ===== ช่องที่ 2-3 (เล็ก) 360x206 + 360x68 ===== */
+  /* ===== ช่องที่ 2-3 (เล็ก) — บังคับความสูงรวมให้เท่ากับคอลัมน์ซ้ายเป๊ะด้วย flex stretch ===== */
+  .news-side {
+    display: flex; flex-direction: column; gap: 16px;
+    flex: 1; min-width: 280px;
+  }
+  .news-side .news-card {
+    flex: 1 1 0;
+    display: flex; flex-direction: column;
+    min-height: 0;
+  }
+  .news-side .news-thumb {
+    width: 100%; flex: 1 1 0; min-height: 0;
+    border-radius: 15px 15px 0 0;
+    background: linear-gradient(135deg, #444 0%, #1a1a1a 100%);
+    position: relative;
+  }
+  .news-side .news-thumb-icon { position: absolute; top: 12px; left: 12px; font-size: 22px; opacity: 0.35; }
+  .news-side .news-text {
+    width: 100%; flex: 0 0 84px;
+    background: #1E1E1E;
+    border-radius: 0 0 15px 15px;
+    padding: 8px 14px 10px 14px;
+    display: flex; flex-direction: column;
+    gap: 6px;
+  }
+  .news-side .news-tag { font-size: 10px; padding: 2px 8px; }
+  .news-side .news-meta-stats { font-size: 10px; gap: 6px; }
+  .news-side .news-headline {
+    font-family: 'Inter', 'Kanit', sans-serif;
+    font-size: 13px; font-weight: 500; line-height: 1.35; color: #fff;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+
+  /* ===== วีดีโอไฮไลท์ & ข่าว (ต่อจาก .news-section) ===== */
+  .video-section {
+    width: 100%;
+    max-width: 1110px;
+    margin: 20px auto 0 auto;
+    padding: 0 20px;
+  }
+
+  .video-carousel-wrap {
+    position: relative;
+  }
+
+  .video-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    width: 22px;
+    border: none;
+    background: transparent;
+    color: #9a9a9a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: color 0.15s ease;
+  }
+  .video-nav-btn.prev { left: -28px; }
+  .video-nav-btn.next { right: -28px; }
+  .video-nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .video-nav-btn:hover:not(:disabled) { color: var(--main-text); }
+
+  .video-carousel {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .video-carousel::-webkit-scrollbar { display: none; }
+
+  .video-card {
+    flex: 0 0 220px;
+    scroll-snap-align: start;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    display: block;
+    background: #1E1E1E;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: opacity 0.15s ease;
+    border: none;
+  }
+  .video-card:hover { opacity: 0.92; }
+
+  .video-thumb {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 220 / 124;
+    background: linear-gradient(135deg, #444 0%, #1a1a1a 100%);
+  }
+  .video-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .video-play-icon {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.9); font-size: 30px;
+  }
+  .video-duration {
+    position: absolute; bottom: 6px; right: 6px;
+    background: rgba(0,0,0,0.72); color: #fff;
+    font-size: 10px; padding: 1px 6px; border-radius: 3px;
+  }
+
+  .video-text { padding: 10px 12px 12px 12px; }
+  .video-headline {
+    font-family: 'Inter', 'Kanit', sans-serif;
+    font-size: 13px; font-weight: 500; line-height: 1.35; color: #fff;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    margin-bottom: 6px;
+    min-height: 35px;
+  }
+  .video-channel { font-size: 11px; color: #9a9a9a; }
+
+  /* ===== Game Event section ===== */
+  .game-event-section .section-title { justify-content: flex-start; }
+  .game-event-viewall {
+    margin-left: auto;
+    font-size: 13px;
+    color: #9a9a9a;
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .game-event-viewall:hover { color: var(--main-text); }
+
+  .game-event-list {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    flex-wrap: nowrap;
+  }
+
+  .game-event-card {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 183px;
+    display: flex;
+    background: #1E1E1E;
+    border-radius: 15px;
+    overflow: hidden;
+  }
+
+  .game-event-image {
+    flex: 0 0 34%;
+    height: 183px;
+    position: relative;
+  }
+  .game-event-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .game-event-content {
+    flex: 1;
+    min-width: 0;
+    height: 183px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .game-event-badge {
+    display: inline-block;
+    align-self: flex-start;
+    background: #872929;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 6px;
+  }
+
+  .game-event-dates {
+    font-size: 11px;
+    color: #9a9a9a;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+  }
+  .game-event-dates span + span { margin-left: 0; }
+
+  .game-event-desc {
+    font-size: 12px;
+    color: #fff;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .game-event-bottom {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .game-event-rewards {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .game-event-rewards-label { font-size: 11px; color: #9a9a9a; }
+  .game-event-reward {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    color: #fff;
+  }
+  .game-event-reward .icon { font-size: 14px; line-height: 1; }
+
+  .game-event-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+  }
+  .game-event-btn {
+    background: #872929;
+    color: #fff;
+    border: none;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+    white-space: nowrap;
+  }
+  .game-event-btn:hover { opacity: 0.85; }
+
+  @media (max-width: 640px) {
+    .game-event-list { flex-wrap: wrap; }
+    .game-event-card {
+      flex: 1 1 100%;
+      height: auto;
+    }
+    .game-event-image {
+      flex-basis: 130px;
+      height: auto;
+    }
+    .game-event-content { height: auto; }
+  }
+
+  .video-modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+    align-items: center; justify-content: center;
+  }
+  .video-modal-overlay.open { display: flex; }
+  .video-modal { position: relative; width: min(90vw, 900px); }
+  .video-modal-player { position: relative; width: 100%; padding-top: 56.25%; }
+  .video-modal-player iframe {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    border: 0; border-radius: 10px;
+  }
+  .video-modal-close {
+    position: absolute; top: -36px; right: 0;
+    background: none; border: none; color: #fff;
+    font-size: 28px; line-height: 1; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="logo-wrap">
+      <a href="index.html"><svg class="logo-svg" width="76" height="85" viewBox="0 0 76 85" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SoloGoal">
+<g filter="url(#soloGoalShadowIndex)">
+<mask id="soloGoalOutlineMaskIndex" maskUnits="userSpaceOnUse" x="0" y="0" width="72" height="80" fill="black">
+<rect fill="white" width="72" height="80"/>
+<path d="M2.12866 21.1462H8.73939V28.7385C8.73939 29.4923 9.19239 29.8692 10.0984 29.8692C10.9737 29.8692 11.4113 29.4923 11.4113 28.7385V24.8154C11.4113 23.6154 10.6128 22.2077 9.01579 20.5923C5.92925 17.5923 4.00976 15.5769 3.25732 14.5462C2.50488 13.5154 2.12866 12.3846 2.12866 11.1538V7.43846C2.12866 3.14615 4.92344 1 10.513 1C15.519 1 18.022 2.95385 18.022 6.86154V12.5846H11.4113V6.49231C11.4113 5.83077 11.0505 5.5 10.3287 5.5C9.48415 5.5 9.06186 6.13846 9.06186 7.41538L9.20007 9.56154C9.20007 10.7923 10.0139 12.2231 11.6417 13.8538C14.6668 16.7615 16.5863 18.7923 17.4001 19.9462C18.2294 21.1 18.644 22.4077 18.644 23.8692V28.0923C18.644 32.4923 15.8415 34.6923 10.2366 34.6923C4.8313 34.6923 2.12866 32.6923 2.12866 28.6923V21.1462Z"/>
+<path d="M20.1412 28.7385V7.43846C20.1412 3.14615 22.9206 1 28.4794 1C33.9615 1 36.7025 3.13077 36.7025 7.39231V28.6923C36.7025 30.6154 35.9347 32.1 34.3991 33.1462C32.8789 34.1769 30.8903 34.6923 28.4334 34.6923C22.9052 34.6923 20.1412 32.7077 20.1412 28.7385ZM29.6081 29.0846V6.53846C29.6081 5.87692 29.2165 5.54615 28.4334 5.54615C27.6195 5.54615 27.2126 5.87692 27.2126 6.53846V29.0846C27.2126 29.7462 27.6195 30.0769 28.4334 30.0769C29.2165 30.0769 29.6081 29.7462 29.6081 29.0846Z"/>
+<path d="M51.9049 34.3923H38.2919V1.3H45.5475V30.1462H51.9049V34.3923Z"/>
+<path d="M52.9875 28.7385V7.43846C52.9875 3.14615 55.7669 1 61.3258 1C66.8078 1 69.5489 3.13077 69.5489 7.39231V28.6923C69.5489 30.6154 68.7811 32.1 67.2455 33.1462C65.7252 34.1769 63.7366 34.6923 61.2797 34.6923C55.7516 34.6923 52.9875 32.7077 52.9875 28.7385ZM62.4544 29.0846V6.53846C62.4544 5.87692 62.0629 5.54615 61.2797 5.54615C60.4658 5.54615 60.0589 5.87692 60.0589 6.53846V29.0846C60.0589 29.7462 60.4658 30.0769 61.2797 30.0769C62.0629 30.0769 62.4544 29.7462 62.4544 29.0846Z"/>
+<path d="M16.9855 78.7H13.5074L12.563 76.8769C10.966 78.2923 9.27685 79 7.49556 79C5.76034 79 4.2401 78.5538 2.93485 77.6615C1.64495 76.7538 1 75.3154 1 73.3462V51.7462C1 47.4538 3.73336 45.3077 9.20007 45.3077C14.3904 45.3077 16.9855 47.2615 16.9855 51.1692V57.3077H10.4209V50.6154C10.4209 50.0769 10.06 49.8077 9.33827 49.8077C8.61654 49.8077 8.25568 50.0769 8.25568 50.6154V73.5769C8.25568 74.1154 8.61654 74.3846 9.33827 74.3846C10.06 74.3846 10.4209 74.1154 10.4209 73.5769V67.3923H8.92366V62.3154H16.9855V78.7Z"/>
+<path d="M18.4597 73.0462V51.7462C18.4597 47.4538 21.2391 45.3077 26.798 45.3077C32.28 45.3077 35.0211 47.4385 35.0211 51.7V73C35.0211 74.9231 34.2533 76.4077 32.7177 77.4538C31.1974 78.4846 29.2088 79 26.7519 79C21.2238 79 18.4597 77.0154 18.4597 73.0462ZM27.9266 73.3923V50.8462C27.9266 50.1846 27.535 49.8538 26.7519 49.8538C25.938 49.8538 25.5311 50.1846 25.5311 50.8462V73.3923C25.5311 74.0538 25.938 74.3846 26.7519 74.3846C27.535 74.3846 27.9266 74.0538 27.9266 73.3923Z"/>
+<path d="M56.1431 78.7H48.9566L47.7358 69.8154H44.488L43.2672 78.7H36.0806L41.5166 45.6077H50.7071L56.1431 78.7ZM47.1369 65.2231L46.1004 55.3462L45.1099 65.2231H47.1369Z"/>
+<path d="M71 78.7H57.387V45.6077H64.6426V74.4538H71V78.7Z"/>
+</mask>
+<clipPath id="soloGoalLetterClipIndex">
+<path d="M2.12866 21.1462H8.73939V28.7385C8.73939 29.4923 9.19239 29.8692 10.0984 29.8692C10.9737 29.8692 11.4113 29.4923 11.4113 28.7385V24.8154C11.4113 23.6154 10.6128 22.2077 9.01579 20.5923C5.92925 17.5923 4.00976 15.5769 3.25732 14.5462C2.50488 13.5154 2.12866 12.3846 2.12866 11.1538V7.43846C2.12866 3.14615 4.92344 1 10.513 1C15.519 1 18.022 2.95385 18.022 6.86154V12.5846H11.4113V6.49231C11.4113 5.83077 11.0505 5.5 10.3287 5.5C9.48415 5.5 9.06186 6.13846 9.06186 7.41538L9.20007 9.56154C9.20007 10.7923 10.0139 12.2231 11.6417 13.8538C14.6668 16.7615 16.5863 18.7923 17.4001 19.9462C18.2294 21.1 18.644 22.4077 18.644 23.8692V28.0923C18.644 32.4923 15.8415 34.6923 10.2366 34.6923C4.8313 34.6923 2.12866 32.6923 2.12866 28.6923V21.1462Z"/>
+<path d="M20.1412 28.7385V7.43846C20.1412 3.14615 22.9206 1 28.4794 1C33.9615 1 36.7025 3.13077 36.7025 7.39231V28.6923C36.7025 30.6154 35.9347 32.1 34.3991 33.1462C32.8789 34.1769 30.8903 34.6923 28.4334 34.6923C22.9052 34.6923 20.1412 32.7077 20.1412 28.7385ZM29.6081 29.0846V6.53846C29.6081 5.87692 29.2165 5.54615 28.4334 5.54615C27.6195 5.54615 27.2126 5.87692 27.2126 6.53846V29.0846C27.2126 29.7462 27.6195 30.0769 28.4334 30.0769C29.2165 30.0769 29.6081 29.7462 29.6081 29.0846Z"/>
+<path d="M51.9049 34.3923H38.2919V1.3H45.5475V30.1462H51.9049V34.3923Z"/>
+<path d="M52.9875 28.7385V7.43846C52.9875 3.14615 55.7669 1 61.3258 1C66.8078 1 69.5489 3.13077 69.5489 7.39231V28.6923C69.5489 30.6154 68.7811 32.1 67.2455 33.1462C65.7252 34.1769 63.7366 34.6923 61.2797 34.6923C55.7516 34.6923 52.9875 32.7077 52.9875 28.7385ZM62.4544 29.0846V6.53846C62.4544 5.87692 62.0629 5.54615 61.2797 5.54615C60.4658 5.54615 60.0589 5.87692 60.0589 6.53846V29.0846C60.0589 29.7462 60.4658 30.0769 61.2797 30.0769C62.0629 30.0769 62.4544 29.7462 62.4544 29.0846Z"/>
+<path d="M16.9855 78.7H13.5074L12.563 76.8769C10.966 78.2923 9.27685 79 7.49556 79C5.76034 79 4.2401 78.5538 2.93485 77.6615C1.64495 76.7538 1 75.3154 1 73.3462V51.7462C1 47.4538 3.73336 45.3077 9.20007 45.3077C14.3904 45.3077 16.9855 47.2615 16.9855 51.1692V57.3077H10.4209V50.6154C10.4209 50.0769 10.06 49.8077 9.33827 49.8077C8.61654 49.8077 8.25568 50.0769 8.25568 50.6154V73.5769C8.25568 74.1154 8.61654 74.3846 9.33827 74.3846C10.06 74.3846 10.4209 74.1154 10.4209 73.5769V67.3923H8.92366V62.3154H16.9855V78.7Z"/>
+<path d="M18.4597 73.0462V51.7462C18.4597 47.4538 21.2391 45.3077 26.798 45.3077C32.28 45.3077 35.0211 47.4385 35.0211 51.7V73C35.0211 74.9231 34.2533 76.4077 32.7177 77.4538C31.1974 78.4846 29.2088 79 26.7519 79C21.2238 79 18.4597 77.0154 18.4597 73.0462ZM27.9266 73.3923V50.8462C27.9266 50.1846 27.535 49.8538 26.7519 49.8538C25.938 49.8538 25.5311 50.1846 25.5311 50.8462V73.3923C25.5311 74.0538 25.938 74.3846 26.7519 74.3846C27.535 74.3846 27.9266 74.0538 27.9266 73.3923Z"/>
+<path d="M56.1431 78.7H48.9566L47.7358 69.8154H44.488L43.2672 78.7H36.0806L41.5166 45.6077H50.7071L56.1431 78.7ZM47.1369 65.2231L46.1004 55.3462L45.1099 65.2231H47.1369Z"/>
+<path d="M71 78.7H57.387V45.6077H64.6426V74.4538H71V78.7Z"/>
+</clipPath>
+<g clip-path="url(#soloGoalLetterClipIndex)">
+<rect x="0" y="0" width="76" height="85" fill="#D9D9D9"/>
+<g class="solo-speed-lines" transform="rotate(-25 38 42)">
+<rect class="sl" x="-40" y="-40" width="10" height="200" fill="#F2F2F2"/>
+<rect class="sl" x="-10" y="-40" width="10" height="200" fill="#F2F2F2"/>
+<rect class="sl" x="20" y="-40" width="10" height="200" fill="#F2F2F2"/>
+<rect class="sl" x="50" y="-40" width="10" height="200" fill="#F2F2F2"/>
+<rect class="sl" x="80" y="-40" width="10" height="200" fill="#F2F2F2"/>
+</g>
+</g>
+<path d="M2.12866 21.1462H8.73939V28.7385C8.73939 29.4923 9.19239 29.8692 10.0984 29.8692C10.9737 29.8692 11.4113 29.4923 11.4113 28.7385V24.8154C11.4113 23.6154 10.6128 22.2077 9.01579 20.5923C5.92925 17.5923 4.00976 15.5769 3.25732 14.5462C2.50488 13.5154 2.12866 12.3846 2.12866 11.1538V7.43846C2.12866 3.14615 4.92344 1 10.513 1C15.519 1 18.022 2.95385 18.022 6.86154V12.5846H11.4113V6.49231C11.4113 5.83077 11.0505 5.5 10.3287 5.5C9.48415 5.5 9.06186 6.13846 9.06186 7.41538L9.20007 9.56154C9.20007 10.7923 10.0139 12.2231 11.6417 13.8538C14.6668 16.7615 16.5863 18.7923 17.4001 19.9462C18.2294 21.1 18.644 22.4077 18.644 23.8692V28.0923C18.644 32.4923 15.8415 34.6923 10.2366 34.6923C4.8313 34.6923 2.12866 32.6923 2.12866 28.6923V21.1462Z" stroke="#56493D" stroke-width="2" mask="url(#soloGoalOutlineMaskIndex)"/>
+<path d="M20.1412 28.7385V7.43846C20.1412 3.14615 22.9206 1 28.4794 1C33.9615 1 36.7025 3.13077 36.7025 7.39231V28.6923C36.7025 30.6154 35.9347 32.1 34.3991 33.1462C32.8789 34.1769 30.8903 34.6923 28.4334 34.6923C22.9052 34.6923 20.1412 32.7077 20.1412 28.7385ZM29.6081 29.0846V6.53846C29.6081 5.87692 29.2165 5.54615 28.4334 5.54615C27.6195 5.54615 27.2126 5.87692 27.2126 6.53846V29.0846C27.2126 29.7462 27.6195 30.0769 28.4334 30.0769C29.2165 30.0769 29.6081 29.7462 29.6081 29.0846Z" stroke="#56493D" stroke-width="2" mask="url(#soloGoalOutlineMaskIndex)"/>
+<path d="M51.9049 34.3923H38.2919V1.3H45.5475V30.1462H51.9049V34.3923Z" stroke="#56493D" stroke-width="2" mask="url(#soloGoalOutlineMaskIndex)"/>
+<path d="M52.9875 28.7385V7.43846C52.9875 3.14615 55.7669 1 61.3258 1C66.8078 1 69.5489 3.13077 69.5489 7.39231V28.6923C69.5489 30.6154 68.7811 32.1 67.2455 33.1462C65.7252 34.1769 63.7366 34.6923 61.2797 34.6923C55.7516 34.6923 52.9875 32.7077 52.9875 28.7385ZM62.4544 29.0846V6.53846C62.4544 5.87692 62.0629 5.54615 61.2797 5.54615C60.4658 5.54615 60.0589 5.87692 60.0589 6.53846V29.0846C60.0589 29.7462 60.4658 30.0769 61.2797 30.0769C62.0629 30.0769 62.4544 29.7462 62.4544 29.0846Z" stroke="#56493D" stroke-width="2" mask="url(#soloGoalOutlineMaskIndex)"/>
+<path d="M16.9855 78.7H13.5074L12.563 76.8769C10.966 78.2923 9.27685 79 7.49556 79C5.76034 79 4.2401 78.5538 2.93485 77.6615C1.64495 76.7538 1 75.3154 1 73.3462V51.7462C1 47.4538 3.73336 45.3077 9.20007 45.3077C14.3904 45.3077 16.9855 47.2615 16.9855 51.1692V57.3077H10.4209V50.6154C10.4209 50.0769 10.06 49.8077 9.33827 49.8077C8.61654 49.8077 8.25568 50.0769 8.25568 50.6154V73.5769C8.25568 74.1154 8.61654 74.3846 9.33827 74.3846C10.06 74.3846 10.4209 74.1154 10.4209 73.5769V67.3923H8.92366V62.3154H16.9855V78.7Z" stroke="#56493D" stroke-width="2" mask="url(#soloGoalOutlineMaskIndex)"/>
+<path d="M18.4597 73.0462V51.7462C18.4597 47.4538 21.2391 45.3077 26.798 45.3077C32.28 45.3077 35.0211 47.4385 35.0211 51.7V73C35.0211 74.9231 34.2533 76.4077 32.7177 77.4538C31.1974 78.4846 29.2088 79 26.7519 79C21.2238 79 18.4597 77.0154 18.4597 73.0462ZM27.9266 73.3923V50.8462C27.9266 50.1846 27.535 49.8538 26.7519 49.8538C25.938 49.8538 25.5311 50.1846 25.5311 50.8462V73.3923C25.5311 74.0538 25.938 74.3846 26.7519 74.3846C27.535 74.3846 27.9266 74.0538 27.9266 73.3923Z" stroke="#56493D" stroke-width="2" mask="url(#soloGoalOutlineMaskIndex)"/>
+<path d="M56.1431 78.7H48.9566L47.7358 69.8154H44.488L43.2672 78.7H36.0806L41.5166 45.6077H50.7071L56.1431 78.7ZM47.1369 65.2231L46.1004 55.3462L45.1099 65.2231H47.1369Z" stroke="#56493D" stroke-width="2" mask="url(#soloGoalOutlineMaskIndex)"/>
+<path d="M71 78.7H57.387V45.6077H64.6426V74.4538H71V78.7Z" stroke="#56493D" stroke-width="2" mask="url(#soloGoalOutlineMaskIndex)"/>
+</g>
+<defs>
+<filter id="soloGoalShadowIndex" x="0" y="0" width="76" height="85" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dx="4" dy="5"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_675_78"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_675_78" result="shape"/>
+</filter>
+</defs>
+</svg></a>
+      <svg class="logo-ball" viewBox="0 0 15 15" width="15" height="15" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M7.49997 14.5774C11.4094 14.5774 14.5786 11.4087 14.5786 7.49998C14.5786 3.59121 11.4094 0.422531 7.49997 0.422531C3.59056 0.422531 0.42135 3.59121 0.42135 7.49998C0.42135 11.4087 3.59056 14.5774 7.49997 14.5774Z" fill="white"/>
+        <path d="M10.4049 7.41289C10.1307 7.37405 9.88701 7.59298 9.67279 7.73069C9.21022 8.02612 8.80179 8.36864 8.40749 8.7547C8.16384 8.99364 7.83428 9.31143 7.74718 9.65512C7.70716 9.81402 7.75659 9.99646 7.78837 10.1518C7.84369 10.4225 7.92844 10.6862 8.01318 10.9487C8.10889 11.2437 8.21967 11.5336 8.3451 11.8173C8.40749 11.9597 8.47575 12.101 8.54284 12.2422C8.60523 12.3741 8.64642 12.4517 8.79944 12.4717C8.97128 12.4941 9.14313 12.4682 9.3138 12.4612C9.56568 12.4517 9.81756 12.427 10.0659 12.3846C10.3943 12.3293 10.725 12.2693 11.0393 12.1575C11.33 12.0527 11.6631 11.8903 11.8315 11.6231C12.1928 11.0487 12.4117 10.3967 12.5318 9.73163C12.5671 9.53978 12.6012 9.34439 12.6 9.14783C12.6012 8.9748 12.6165 8.79707 12.4918 8.66407C12.2681 8.42396 12.0033 8.22504 11.729 8.04495C11.323 7.7813 10.8981 7.48351 10.4049 7.41289ZM2.41879 4.63747C2.16337 4.77283 1.96328 5.09533 1.81379 5.33191C1.51483 5.80272 1.27354 6.34651 1.16055 6.89382C1.07462 7.31285 1.26177 7.72127 1.40184 8.10851C1.53837 8.48163 1.77613 8.77706 2.03625 9.07014C2.10217 9.14547 2.18573 9.20197 2.25165 9.27612C2.32698 9.35969 2.42232 9.43855 2.52119 9.49387C2.59181 9.53389 2.65537 9.47975 2.72717 9.46327C2.91667 9.41737 3.05791 9.32085 3.22976 9.23022C3.38395 9.14783 3.54284 9.07838 3.69821 8.99599C4.03131 8.81708 4.42797 8.66995 4.71869 8.42396C4.75636 8.39218 4.80579 8.35216 4.81638 8.30155C4.84346 8.1756 4.80579 8.012 4.79991 7.8837C4.79284 7.70362 4.79049 7.52471 4.78931 7.34463C4.78814 6.93738 4.80344 6.53012 4.80344 6.12287C4.80697 5.89571 4.83522 5.66972 4.82462 5.44255C4.80579 5.10475 4.44091 4.98469 4.16667 4.91642C3.78178 4.82108 3.39454 4.69044 3.00141 4.64218C2.83898 4.62452 2.57062 4.55743 2.41879 4.63747ZM12.4105 3.6217C12.447 3.36628 12.2764 3.05908 12.1528 2.83074C11.908 2.37523 11.5572 1.92796 11.1194 1.5725C10.7851 1.30061 10.2931 1.18996 9.83522 1.14406C9.01483 1.06049 8.38865 1.1111 8.21563 1.13818C8.04143 1.16525 7.87783 1.21821 7.78484 1.33356C7.60122 1.5572 7.56945 1.87735 7.5306 2.15277C7.47411 2.5459 7.42467 2.95079 7.47646 3.34627C7.4847 3.41689 7.49529 3.50988 7.52943 3.57226C7.59416 3.68761 7.7307 3.74528 7.86606 3.80531C8.56756 4.11487 9.90584 4.88111 10.1236 4.98469C10.4484 5.14124 10.7945 4.9329 11.0346 4.76459C11.3677 4.53036 11.7385 4.31026 12.0327 4.04543C12.154 3.93714 12.3882 3.77236 12.4105 3.6217ZM2.33404 12.3776C2.36229 12.4211 2.38936 12.4541 2.43291 12.487C2.50235 12.54 2.56827 12.5942 2.63418 12.6518C3.20975 13.1568 3.88418 13.537 4.55273 13.9018C4.754 14.0125 4.94586 14.1255 5.15066 14.2279C5.37194 14.3373 5.60028 14.4115 5.83804 14.4774C5.99929 14.5221 6.1629 14.5657 6.33004 14.5821C6.48541 14.5975 6.6443 14.6339 6.80085 14.6363C6.8903 14.6375 6.97269 14.6339 7.05979 14.6222C7.01742 14.5539 6.97976 14.4668 6.94327 14.3938C6.88559 14.2797 6.82674 14.1643 6.76789 14.0513C6.69962 13.9207 6.64666 13.7841 6.57721 13.6547C6.52307 13.5558 6.45245 13.4534 6.35476 13.3957C6.22411 13.318 6.09934 13.2415 5.95692 13.1838C5.43668 12.972 4.97057 12.673 4.48682 12.3929C4.242 12.2505 4.00188 12.0986 3.77119 11.9327C3.6476 11.8444 3.52754 11.7526 3.39689 11.6737C3.36982 11.6561 3.34275 11.6349 3.31097 11.6302C3.28272 11.6255 3.23917 11.6266 3.21092 11.6302C3.18503 11.6337 3.15443 11.6384 3.12971 11.6431C2.96022 11.6784 2.7766 11.7232 2.60122 11.762C2.43409 11.7997 2.24694 11.8126 2.08686 11.8738C2.02448 11.8974 2.03154 11.9327 2.05626 11.9868C2.09393 12.0716 2.14925 12.1492 2.20692 12.2199C2.24576 12.2705 2.29402 12.3176 2.33404 12.3776Z" fill="#4E3F31"/>
+        <path d="M4.37029 5.65441C4.33043 5.65444 4.29138 5.6432 4.25764 5.62197C4.2239 5.60075 4.19686 5.57042 4.17963 5.53448C4.1624 5.49854 4.15568 5.45846 4.16026 5.41886C4.16484 5.37927 4.18053 5.34178 4.20551 5.31072C4.26318 5.2401 5.62147 3.57579 8.05084 3.19914C8.0782 3.19497 8.10612 3.19622 8.13299 3.20284C8.15986 3.20945 8.18517 3.2213 8.20747 3.23769C8.22976 3.25408 8.24861 3.27471 8.26294 3.29839C8.27726 3.32207 8.28678 3.34834 8.29096 3.3757C8.29513 3.40305 8.29387 3.43097 8.28726 3.45784C8.28065 3.48471 8.2688 3.51002 8.25241 3.53232C8.23601 3.55461 8.21539 3.57346 8.19171 3.58779C8.16803 3.60211 8.14176 3.61163 8.1144 3.61581C5.85334 3.96774 4.54684 5.56025 4.5339 5.57555C4.49152 5.62734 4.43149 5.65441 4.37029 5.65441ZM3.86888 13.0438C3.80767 13.0438 3.74647 13.0179 3.70527 12.9661C3.6476 12.8955 2.30932 11.2147 2.45409 8.76176C2.46116 8.64523 2.56003 8.55578 2.67655 8.56284C2.79308 8.5699 2.88135 8.66995 2.87429 8.78648C2.74011 11.0781 4.01954 12.6848 4.03248 12.7001C4.10664 12.7907 4.09133 12.9237 4.00188 12.9967C3.96304 13.0273 3.91596 13.0438 3.86888 13.0438ZM5.46021 13.8724C5.35193 13.8724 5.26012 13.79 5.2507 13.6794C5.24129 13.5628 5.32721 13.4604 5.44374 13.451C5.46374 13.4498 7.51412 13.2568 9.07015 11.5784C9.10843 11.5374 9.1614 11.5133 9.21744 11.5113C9.27348 11.5093 9.32802 11.5296 9.36911 11.5678C9.45503 11.6466 9.45974 11.7808 9.37971 11.8667C7.70833 13.6676 5.5685 13.8642 5.47905 13.8724C5.47198 13.8712 5.4661 13.8724 5.46021 13.8724ZM2.52825 5.40135C2.42938 5.40135 2.3411 5.33191 2.32227 5.23069C2.3105 5.17183 2.04449 3.77706 2.6177 2.12452C2.65654 2.01388 2.77542 1.95503 2.88606 1.99387C2.99552 2.03271 3.05438 2.15159 3.01671 2.26223C2.47999 3.80884 2.73305 5.13535 2.73658 5.14947C2.75894 5.26364 2.68479 5.37546 2.56944 5.39782C2.55649 5.40018 2.54237 5.40135 2.52825 5.40135ZM8.66172 1.93973C8.61817 1.93973 8.57344 1.9256 8.53696 1.89735C8.52636 1.89029 7.4282 1.09344 5.80744 0.915714C5.69209 0.903944 5.60734 0.799189 5.62029 0.68384C5.63206 0.567315 5.73681 0.484923 5.85216 0.496694C7.59181 0.686194 8.73823 1.52188 8.78648 1.55719C8.87947 1.62664 8.89948 1.75846 8.83003 1.85263C8.79002 1.9103 8.72646 1.93973 8.66172 1.93973ZM13.9889 5.37311C13.9277 5.37311 13.8665 5.34603 13.8242 5.29424C12.7954 4.02188 11.536 3.53342 11.5242 3.52871C11.4719 3.50889 11.4295 3.46918 11.4064 3.41824C11.3832 3.3673 11.3812 3.30927 11.4007 3.25682C11.4419 3.14735 11.5643 3.09321 11.6725 3.13323C11.729 3.15441 13.052 3.6676 14.1514 5.02824C14.2255 5.11887 14.2102 5.25187 14.1196 5.32485C14.0819 5.3578 14.0348 5.37311 13.9889 5.37311ZM10.2637 8.22621C10.2554 8.22621 10.2448 8.22504 10.2366 8.22386C10.2091 8.22032 10.1826 8.21138 10.1586 8.19756C10.1346 8.18373 10.1135 8.16529 10.0967 8.1433C10.0798 8.12131 10.0675 8.0962 10.0604 8.06943C10.0533 8.04265 10.0516 8.01473 10.0553 7.98728C10.3249 5.96986 10.06 4.47974 10.0565 4.46444C10.0353 4.35027 10.1106 4.23963 10.226 4.21962C10.3413 4.19726 10.4508 4.27494 10.472 4.38911C10.4826 4.45267 10.7521 5.96044 10.4732 8.04377C10.459 8.14971 10.3684 8.22621 10.2637 8.22621ZM8.4322 9.94938C8.42514 9.94938 8.42043 9.94938 8.41337 9.9482C5.79096 9.71633 4.06544 8.23681 3.99246 8.17442C3.95034 8.13763 3.92448 8.08568 3.92051 8.0299C3.91654 7.97411 3.93479 7.91902 3.97128 7.87664C4.04778 7.78836 4.18079 7.77894 4.26907 7.85545C4.28672 7.86957 5.96987 9.30908 8.45103 9.528C8.50498 9.53311 8.5549 9.55876 8.59046 9.59964C8.62602 9.64052 8.64451 9.69352 8.64209 9.74765C8.63967 9.80178 8.61653 9.85291 8.57746 9.89046C8.5384 9.92801 8.48639 9.94911 8.4322 9.94938ZM0.900421 7.53059C0.72269 7.53059 0.528481 7.50823 0.347219 7.43878C0.29489 7.41897 0.252523 7.37926 0.229369 7.32832C0.206214 7.27738 0.204152 7.21935 0.223632 7.16689C0.266005 7.0586 0.386061 7.00328 0.496701 7.0433C0.885119 7.19161 1.40419 7.03977 1.41007 7.0386C1.52071 7.00564 1.63842 7.06802 1.67137 7.18102C1.70551 7.29166 1.64195 7.40936 1.53131 7.44349C1.51365 7.4482 1.23587 7.53059 0.900421 7.53059ZM12.4047 9.33144C12.3246 9.33144 12.2493 9.28553 12.214 9.20903C12.1645 9.10427 12.2116 8.97833 12.3164 8.9289C12.3282 8.92301 13.5546 8.34274 14.488 7.00564C14.5539 6.90912 14.6857 6.88558 14.7811 6.95267C14.8764 7.01976 14.8999 7.15041 14.834 7.24575C13.8336 8.68054 12.5483 9.28554 12.4941 9.31143C12.4635 9.32438 12.4341 9.33144 12.4047 9.33144ZM12.4047 12.8943C12.3576 12.8943 12.3105 12.879 12.2705 12.8484C11.7879 12.4682 11.3206 11.7773 11.3006 11.749C11.2347 11.6502 11.2606 11.516 11.3595 11.4489C11.4572 11.383 11.5925 11.4089 11.6584 11.5089C11.6631 11.5148 12.108 12.1716 12.5377 12.5094C12.6306 12.5836 12.6471 12.7189 12.5741 12.8131C12.5306 12.8649 12.4682 12.8943 12.4047 12.8943Z" fill="#4E3F31"/>
+        <path d="M7.5 15C3.36394 15 0 11.6361 0 7.5C0 3.36511 3.36394 0 7.5 0C11.6361 0 15 3.36511 15 7.49882C15 11.6361 11.6349 15 7.5 15ZM7.5 0.843926C3.83004 0.843926 0.843926 3.83004 0.843926 7.5C0.843926 11.17 3.82886 14.1561 7.49882 14.1561C11.1688 14.1561 14.1549 11.17 14.1549 7.5C14.1561 3.83004 11.1688 0.843926 7.5 0.843926Z" fill="#4E3F31"/>
+      </svg>
+    </div>
+
+      <nav class="menu-panel">
+        <div class="menu-highlight" id="menuHighlight"></div>
+        <svg class="menu-mascot" id="menuMascot" width="28" height="27" viewBox="0 0 28 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clip-path="url(#menuMascotClip)">
+            <g filter="url(#menuMascotFilter)">
+              <path d="M17.7553 6.53716C18.2563 6.53898 18.7376 6.34169 19.0931 5.98868C19.4487 5.63568 19.6495 5.15588 19.6513 4.65484C19.6531 4.1538 19.4558 3.67256 19.1028 3.31699C18.7498 2.96141 18.27 2.76064 17.769 2.75882C17.2679 2.757 16.7867 2.9543 16.4311 3.3073C16.0756 3.66031 15.8748 4.1401 15.873 4.64114C15.8711 5.14218 16.0684 5.62342 16.4214 5.979C16.7744 6.33457 17.2542 6.53535 17.7553 6.53716ZM14.3072 19.6546L15.2668 15.5018L17.2436 17.3982L17.2231 23.0657L19.1122 23.0726L19.1379 15.9882L17.1611 14.0918L17.7382 11.2601C18.3827 12.0041 19.1791 12.6014 20.0737 13.012C20.9683 13.4226 21.9405 13.6368 22.9248 13.6404L22.9317 11.7512C21.2691 11.7735 19.7231 10.8989 18.8782 9.46949L17.9391 7.95473C17.6011 7.38674 16.9979 7.00672 16.3367 7.00432C16.0533 7.00329 15.8641 7.09707 15.5807 7.09604L10.6613 9.15633L10.6452 13.5959L12.5344 13.6027L12.546 10.3911L14.2487 9.73609L12.7096 17.3818L8.08455 16.4204L7.69987 18.3082L14.3072 19.6546ZM5.93597 9.80042C5.68545 9.79951 5.44555 9.69912 5.26905 9.52133C5.09255 9.34355 4.9939 9.10293 4.99481 8.85241C4.99572 8.60189 5.09611 8.36199 5.27389 8.18549C5.45168 8.00898 5.6923 7.91034 5.94282 7.91124L8.77658 7.92152L8.76973 9.81069L5.93597 9.80042ZM6.89425 6.0255C6.64373 6.02459 6.40384 5.9242 6.22733 5.74641C6.05083 5.56862 5.95218 5.32801 5.95309 5.07749C5.954 4.82697 6.05439 4.58707 6.23218 4.41056C6.40996 4.23406 6.65058 4.13541 6.9011 4.13632L11.624 4.15344L11.6172 6.04262L6.89425 6.0255ZM4.97769 13.5753C4.72717 13.5744 4.48727 13.474 4.31077 13.2963C4.13427 13.1185 4.03562 12.8778 4.03653 12.6273C4.03744 12.3768 4.13783 12.1369 4.31561 11.9604C4.4934 11.7839 4.73402 11.6853 4.98454 11.6862L8.76288 11.6999L8.75604 13.589L4.97769 13.5753Z" fill="#FFFEFE"/>
+            </g>
+          </g>
+          <g class="menu-mascot-ball-group">
+            <circle cx="23.9216" cy="22.1216" r="3.5" fill="#471515"/>
+            <path d="M24.3063 25.1946C26.1227 25.1946 27.5952 23.7224 27.5952 21.9063C27.5952 20.0902 26.1227 18.6179 24.3063 18.6179C22.4898 18.6179 21.0173 20.0902 21.0173 21.9063C21.0173 23.7224 22.4898 25.1946 24.3063 25.1946Z" fill="white"/>
+            <path d="M25.6559 21.8658C25.5285 21.8478 25.4153 21.9495 25.3158 22.0135C25.1009 22.1507 24.9111 22.3099 24.7279 22.4892C24.6147 22.6003 24.4616 22.7479 24.4211 22.9076C24.4025 22.9814 24.4255 23.0662 24.4402 23.1384C24.4659 23.2642 24.5053 23.3867 24.5447 23.5086C24.5892 23.6457 24.6406 23.7804 24.6989 23.9122C24.7279 23.9784 24.7596 24.044 24.7908 24.1096C24.8198 24.1709 24.8389 24.207 24.91 24.2163C24.9899 24.2267 25.0697 24.2146 25.149 24.2114C25.266 24.207 25.3831 24.1955 25.4984 24.1758C25.651 24.1501 25.8047 24.1222 25.9507 24.0703C26.0858 24.0216 26.2406 23.9461 26.3188 23.822C26.4867 23.5551 26.5884 23.2521 26.6442 22.9432C26.6606 22.854 26.6764 22.7632 26.6759 22.6719C26.6764 22.5915 26.6835 22.5089 26.6256 22.4471C26.5217 22.3356 26.3986 22.2432 26.2712 22.1595C26.0825 22.037 25.8851 21.8986 25.6559 21.8658ZM21.9454 20.5763C21.8267 20.6392 21.7338 20.789 21.6643 20.8989C21.5254 21.1177 21.4133 21.3703 21.3608 21.6246C21.3209 21.8193 21.4078 22.0091 21.4729 22.189C21.5363 22.3624 21.6468 22.4996 21.7677 22.6358C21.7983 22.6708 21.8371 22.6971 21.8677 22.7315C21.9027 22.7703 21.947 22.807 21.993 22.8327C22.0258 22.8513 22.0553 22.8261 22.0887 22.8185C22.1767 22.7971 22.2424 22.7523 22.3222 22.7102C22.3938 22.6719 22.4677 22.6396 22.5399 22.6014C22.6946 22.5182 22.8789 22.4499 23.014 22.3356C23.0315 22.3208 23.0545 22.3022 23.0594 22.2787C23.072 22.2202 23.0545 22.1442 23.0517 22.0846C23.0484 22.0009 23.0474 21.9178 23.0468 21.8341C23.0463 21.6449 23.0534 21.4557 23.0534 21.2664C23.055 21.1609 23.0681 21.0559 23.0632 20.9503C23.0545 20.7934 22.8849 20.7376 22.7575 20.7059C22.5787 20.6616 22.3988 20.6009 22.2161 20.5785C22.1406 20.5703 22.0159 20.5391 21.9454 20.5763ZM26.5878 20.1043C26.6048 19.9857 26.5255 19.8429 26.4681 19.7368C26.3543 19.5252 26.1913 19.3174 25.9879 19.1522C25.8326 19.0259 25.604 18.9745 25.3913 18.9532C25.0101 18.9143 24.7192 18.9378 24.6388 18.9504C24.5578 18.963 24.4818 18.9876 24.4386 19.0412C24.3533 19.1451 24.3385 19.2939 24.3205 19.4218C24.2942 19.6045 24.2713 19.7926 24.2953 19.9764C24.2992 20.0092 24.3041 20.0524 24.3199 20.0814C24.35 20.135 24.4134 20.1617 24.4763 20.1896C24.8023 20.3335 25.4241 20.6895 25.5252 20.7376C25.6762 20.8103 25.837 20.7135 25.9485 20.6353C26.1033 20.5265 26.2756 20.4242 26.4123 20.3012C26.4686 20.2509 26.5774 20.1743 26.5878 20.1043ZM21.906 24.1725C21.9192 24.1928 21.9317 24.2081 21.952 24.2234C21.9842 24.248 22.0149 24.2732 22.0455 24.3C22.3129 24.5346 22.6263 24.7112 22.9369 24.8807C23.0304 24.9321 23.1195 24.9846 23.2147 25.0322C23.3175 25.0831 23.4236 25.1175 23.5341 25.1482C23.609 25.1689 23.685 25.1892 23.7627 25.1968C23.8349 25.2039 23.9087 25.2209 23.9814 25.222C24.023 25.2225 24.0613 25.2209 24.1017 25.2154C24.082 25.1837 24.0645 25.1432 24.0476 25.1093C24.0208 25.0563 23.9934 25.0027 23.9661 24.9502C23.9344 24.8895 23.9098 24.826 23.8775 24.7659C23.8524 24.72 23.8195 24.6724 23.7742 24.6456C23.7134 24.6095 23.6555 24.5739 23.5893 24.5471C23.3476 24.4487 23.131 24.3098 22.9063 24.1796C22.7925 24.1135 22.6809 24.0429 22.5738 23.9658C22.5163 23.9248 22.4606 23.8821 22.3999 23.8455C22.3873 23.8373 22.3747 23.8275 22.3599 23.8253C22.3468 23.8231 22.3266 23.8236 22.3134 23.8253C22.3014 23.8269 22.2872 23.8291 22.2757 23.8313C22.197 23.8477 22.1117 23.8685 22.0302 23.8865C21.9525 23.904 21.8656 23.91 21.7912 23.9385C21.7622 23.9494 21.7655 23.9658 21.777 23.991C21.7945 24.0303 21.8202 24.0664 21.847 24.0992C21.865 24.1228 21.8874 24.1446 21.906 24.1725Z" fill="#4E3F31"/>
+            <path d="M22.8521 21.0488C22.8336 21.0488 22.8155 21.0436 22.7998 21.0337C22.7841 21.0238 22.7715 21.0098 22.7635 20.9931C22.7555 20.9764 22.7524 20.9577 22.7545 20.9393C22.7567 20.9209 22.764 20.9035 22.7756 20.8891C22.8024 20.8563 23.4335 20.083 24.5622 19.908C24.5749 19.9061 24.5879 19.9066 24.6004 19.9097C24.6129 19.9128 24.6246 19.9183 24.635 19.9259C24.6453 19.9335 24.6541 19.9431 24.6607 19.9541C24.6674 19.9651 24.6718 19.9773 24.6738 19.99C24.6757 20.0027 24.6751 20.0157 24.672 20.0282C24.669 20.0407 24.6635 20.0524 24.6559 20.0628C24.6482 20.0732 24.6387 20.0819 24.6277 20.0886C24.6167 20.0952 24.6044 20.0997 24.5917 20.1016C23.5412 20.2651 22.9342 21.005 22.9281 21.0121C22.9085 21.0362 22.8806 21.0488 22.8521 21.0488ZM22.6192 24.4821C22.5907 24.4821 22.5623 24.47 22.5431 24.446C22.5163 24.4132 21.8945 23.6322 21.9618 22.4925C21.9651 22.4384 22.011 22.3968 22.0652 22.4001C22.1193 22.4034 22.1603 22.4499 22.157 22.504C22.0947 23.5688 22.6892 24.3153 22.6952 24.3224C22.7296 24.3645 22.7225 24.4263 22.681 24.4602C22.6629 24.4744 22.641 24.4821 22.6192 24.4821ZM23.3585 24.8671C23.3082 24.8671 23.2656 24.8288 23.2612 24.7774C23.2568 24.7232 23.2967 24.6757 23.3509 24.6713C23.3602 24.6707 24.3128 24.581 25.0358 23.8012C25.0536 23.7822 25.0782 23.771 25.1042 23.77C25.1303 23.7691 25.1556 23.7786 25.1747 23.7963C25.2146 23.8329 25.2168 23.8953 25.1796 23.9352C24.4031 24.7719 23.4088 24.8632 23.3673 24.8671C23.364 24.8665 23.3613 24.8671 23.3585 24.8671ZM21.9963 20.9312C21.9503 20.9312 21.9093 20.8989 21.9006 20.8519C21.8951 20.8246 21.7715 20.1765 22.0378 19.4087C22.0559 19.3573 22.1111 19.33 22.1625 19.348C22.2134 19.366 22.2407 19.4213 22.2232 19.4727C21.9738 20.1913 22.0914 20.8076 22.0931 20.8142C22.1035 20.8672 22.069 20.9192 22.0154 20.9296C22.0094 20.9307 22.0028 20.9312 21.9963 20.9312ZM24.846 19.3228C24.8258 19.3228 24.805 19.3163 24.7881 19.3032C24.7831 19.2999 24.2729 18.9296 23.5199 18.8471C23.4663 18.8416 23.4269 18.7929 23.4329 18.7393C23.4384 18.6852 23.487 18.6469 23.5406 18.6524C24.3489 18.7404 24.8816 19.1287 24.904 19.1451C24.9472 19.1774 24.9565 19.2386 24.9242 19.2824C24.9056 19.3092 24.8761 19.3228 24.846 19.3228ZM27.3212 20.9181C27.2928 20.9181 27.2643 20.9055 27.2446 20.8814C26.7667 20.2903 26.1815 20.0633 26.176 20.0611C26.1517 20.0519 26.132 20.0335 26.1213 20.0098C26.1105 19.9861 26.1096 19.9592 26.1186 19.9348C26.1378 19.8839 26.1946 19.8588 26.2449 19.8774C26.2712 19.8872 26.8859 20.1257 27.3967 20.7578C27.4311 20.8 27.424 20.8618 27.3819 20.8957C27.3644 20.911 27.3425 20.9181 27.3212 20.9181ZM25.5903 22.2437C25.5865 22.2437 25.5816 22.2432 25.5778 22.2426C25.565 22.241 25.5527 22.2368 25.5415 22.2304C25.5304 22.224 25.5206 22.2154 25.5128 22.2052C25.5049 22.195 25.4992 22.1833 25.4959 22.1709C25.4926 22.1584 25.4918 22.1454 25.4935 22.1327C25.6188 21.1953 25.4957 20.503 25.4941 20.4959C25.4842 20.4428 25.5192 20.3914 25.5728 20.3821C25.6264 20.3718 25.6773 20.4078 25.6871 20.4609C25.692 20.4904 25.8173 21.191 25.6877 22.1589C25.6811 22.2082 25.639 22.2437 25.5903 22.2437ZM24.7394 23.0443C24.7361 23.0443 24.7339 23.0443 24.7306 23.0438C23.5122 22.936 22.7105 22.2486 22.6766 22.2196C22.657 22.2025 22.645 22.1784 22.6431 22.1525C22.6413 22.1266 22.6498 22.101 22.6667 22.0813C22.7023 22.0403 22.7641 22.0359 22.8051 22.0714C22.8133 22.078 23.5953 22.7468 24.7481 22.8485C24.7732 22.8509 24.7964 22.8628 24.8129 22.8818C24.8294 22.9008 24.838 22.9254 24.8369 22.9506C24.8358 22.9758 24.825 22.9995 24.8069 23.017C24.7887 23.0344 24.7646 23.0442 24.7394 23.0443ZM21.2399 21.9205C21.1574 21.9205 21.0671 21.9101 20.9829 21.8778C20.9586 21.8686 20.9389 21.8502 20.9282 21.8265C20.9174 21.8029 20.9164 21.7759 20.9255 21.7515C20.9452 21.7012 21.001 21.6755 21.0524 21.6941C21.2328 21.763 21.474 21.6925 21.4767 21.6919C21.5281 21.6766 21.5828 21.7056 21.5981 21.7581C21.614 21.8095 21.5845 21.8642 21.5331 21.88C21.5249 21.8822 21.3958 21.9205 21.2399 21.9205ZM26.5851 22.7572C26.5479 22.7572 26.5129 22.7359 26.4965 22.7003C26.4735 22.6517 26.4954 22.5932 26.5441 22.5702C26.5495 22.5675 27.1194 22.2978 27.5531 21.6766C27.5837 21.6317 27.6449 21.6208 27.6892 21.652C27.7335 21.6832 27.7445 21.7439 27.7138 21.7882C27.249 22.4548 26.6518 22.7359 26.6267 22.7479C26.6124 22.7539 26.5988 22.7572 26.5851 22.7572ZM26.5851 24.4126C26.5632 24.4126 26.5413 24.4055 26.5228 24.3913C26.2985 24.2146 26.0814 23.8936 26.0721 23.8805C26.0415 23.8346 26.0535 23.7722 26.0995 23.741C26.1449 23.7104 26.2078 23.7225 26.2384 23.7689C26.2406 23.7717 26.4473 24.0768 26.6469 24.2338C26.6901 24.2682 26.6978 24.3311 26.6638 24.3749C26.6436 24.3989 26.6146 24.4126 26.5851 24.4126Z" fill="#4E3F31"/>
+            <path d="M24.3063 25.391C22.3845 25.391 20.8216 23.828 20.8216 21.9063C20.8216 19.9851 22.3845 18.4216 24.3063 18.4216C26.228 18.4216 27.791 19.9851 27.791 21.9057C27.791 23.828 26.2274 25.391 24.3063 25.391ZM24.3063 18.8137C22.6011 18.8137 21.2137 20.2011 21.2137 21.9063C21.2137 23.6114 22.6006 24.9989 24.3057 24.9989C26.0109 24.9989 27.3983 23.6114 27.3983 21.9063C27.3988 20.2011 26.0109 18.8137 24.3063 18.8137Z" fill="#4E3F31"/>
+          </g>
+          <defs>
+            <filter id="menuMascotFilter" x="3.03651" y="2.75881" width="19.8952" height="21.3138" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+              <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+              <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+              <feOffset dx="-1" dy="1"/>
+              <feComposite in2="hardAlpha" operator="out"/>
+              <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.45 0"/>
+              <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_664_126"/>
+              <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_664_126" result="shape"/>
+            </filter>
+            <clipPath id="menuMascotClip">
+              <rect width="22.6702" height="22.6702" fill="white" transform="translate(0 3.9019) rotate(-9.91086)"/>
+            </clipPath>
+          </defs>
+        </svg>
+        <ul id="menuList">
+          <li style="top:9px"><a href="index.html" style="position:absolute;inset:0;display:block;"><img src="assets/HOME ICON_2.svg" alt="" style="left:28px;width:13px;height:16px"><span style="left:57px">หน้าแรก</span></a></li>
+          <li style="top:46px"><img src="assets/NEWS ICON_2.svg" alt="" style="left:27px;width:16px;height:13px"><span style="left:57px">อัพเดทข่าว</span></li>
+          <li style="top:79px"><img src="assets/ARTICLE ICON_2.svg" alt="" style="left:28px;width:13px;height:13px"><span style="left:57px">บทความ</span></li>
+          <li style="top:115px"><img src="assets/SOCIETY ICON_2.svg" alt="" style="left:28px;width:14px;height:13px"><span style="left:56px">บอร์ดโซไซตี้</span></li>
+          <li style="top:148px"><img src="assets/BALL_INTER ICON_2.svg" alt="" style="left:28px;width:14px;height:18px"><span style="left:56px">บอร์ดบอลนอก</span></li>
+          <li style="top:182px"><img src="assets/BALL_THAI ICON_2.svg" alt="" style="left:29px;width:12px;height:17px"><span style="left:56px">บอร์ดบอลไทย</span></li>
+          <li style="top:214px"><img src="assets/all sport icon_2.svg" alt="" style="left:29px;width:14px;height:19px"><span style="left:56px">ออลสปอร์ต</span></li>
+          <li style="top:250px"><img src="assets/games icon_2.svg" alt="" style="left:29px;width:15px;height:15px"><span style="left:56px">บอร์ดเกมส์</span></li>
+          <li style="top:282px"><img src="assets/deal icon_2.svg" alt="" style="left:28px;width:16px;height:16px"><span style="left:56px">เดลล่างมอ</span></li>
+          <li style="top:316px"><img src="assets/Prisoner Icon_2.svg" alt="" style="left:27px;width:15px;height:16px"><span style="left:56px">เรือนจำคนง่าว</span></li>
+          <li style="top:353px"><img src="assets/buy item icon_2.svg" alt="" style="left:28px;width:16px;height:16px"><span style="left:56px;color:#FFC107">ซื้อไอเท็มเว็บ</span></li>
+        </ul>
+      </nav>
+
+      <div class="menu-divider"></div>
+
+      <div class="balance-box">
+        <img src="assets/balance.svg" alt="Balance">
+      </div>
+
+      <!-- Collapsed (icon-only) menu -->
+      <ul class="menu-collapsed">
+        <li><img src="assets/HOME ICON.svg" alt="หน้าแรก"></li>
+        <li><img src="assets/NEWS ICON.svg" alt="อัพเดทข่าว"></li>
+        <li><img src="assets/ARTICLE ICON.svg" alt="บทความ"></li>
+        <li><img src="assets/SOCIETY ICON.svg" alt="บอร์ดโซไซตี้"></li>
+        <li><img src="assets/BALL_INTER ICON.svg" alt="บอร์ดบอลนอก"></li>
+        <li><img src="assets/BALL_THAI ICON.svg" alt="บอร์ดบอลไทย"></li>
+        <li><img src="assets/all sport icon.svg" alt="ออลสปอร์ต"></li>
+        <li><img src="assets/games icon.svg" alt="บอร์ดเกมส์"></li>
+        <li><img src="assets/deal icon.svg" alt="เดลล่างมอ"></li>
+        <li><img src="assets/Prisoner Icon.svg" alt="เรือนจำคนง่าว"></li>
+        <li><img src="assets/buy item icon.svg" alt="ซื้อไอเท็มเว็บ"></li>
+      </ul>
+    </aside>
+
+    <!-- Toggle arrow -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#10094;</button>
+
+    <!-- Header + main content -->
+    <div class="content-area">
+      <header class="header">
+        <a href="index.html" class="wordmark" style="text-decoration:none;">SOLOGOAL</a>
+        <div class="icons">
+          <div class="icon-wrap" id="bellWrap">
+            <button class="icon-btn" id="bellBtn" type="button" aria-label="การแจ้งเตือน">
+              <img class="bell" src="assets/mynaui_bell.svg" alt="Notifications">
+            </button>
+            <div class="dropdown-panel notif-panel" id="notifPanel">
+              <div class="notif-empty">
+                <div class="notif-empty-icon">🔕</div>
+                <div class="notif-empty-text">ไม่มีการแจ้งเตือน</div>
+              </div>
+              <div class="dropdown-footer">
+                <a href="#" class="dropdown-link">อ่านทั้งหมด</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="icon-wrap" id="mailWrap">
+            <button class="icon-btn" id="mailBtn" type="button" aria-label="ข้อความ">
+              <img class="mail" src="assets/mynaui_mail.svg" alt="Messages">
+            </button>
+            <div class="dropdown-panel mail-panel" id="mailPanel">
+              <div class="dropdown-header">
+                <a href="#" class="dropdown-link">ทำเป็นอ่านแล้วทั้งหมด</a>
+                <a href="#" class="dropdown-link">ข้อความใหม่</a>
+              </div>
+              <div class="mail-list">
+                <a class="mail-item" href="#">
+                  <span class="mail-avatar">🧑</span>
+                  <span class="mail-info">
+                    <span class="mail-name">จารสิน</span>
+                    <span class="mail-preview">ผมล้างเครื่องที่นี่ telegram มันรีเซ็ตครับ อย...</span>
+                  </span>
+                  <span class="mail-time">5 วันที่แล้ว</span>
+                </a>
+                <a class="mail-item" href="#">
+                  <span class="mail-avatar">🧑</span>
+                  <span class="mail-info">
+                    <span class="mail-name">Sulyvahn</span>
+                    <span class="mail-preview">ขอบพระคุณครับ</span>
+                  </span>
+                  <span class="mail-time">30 มิ.ย.</span>
+                </a>
+                <a class="mail-item" href="#">
+                  <span class="mail-avatar">🧑</span>
+                  <span class="mail-info">
+                    <span class="mail-name">ATQz</span>
+                    <span class="mail-preview">ขอบคุณครับ</span>
+                  </span>
+                  <span class="mail-time">27 มิ.ย.</span>
+                </a>
+                <a class="mail-item" href="#">
+                  <span class="mail-avatar mail-avatar-accent">⚽</span>
+                  <span class="mail-info">
+                    <span class="mail-name">monease</span>
+                    <span class="mail-preview">https://t.me/+RIojLIdXM8Q5NTFl</span>
+                  </span>
+                  <span class="mail-time">27 มิ.ย.</span>
+                </a>
+                <a class="mail-item" href="#">
+                  <span class="mail-avatar">🧑</span>
+                  <span class="mail-info">
+                    <span class="mail-name">taii</span>
+                    <span class="mail-preview">สวัสดีครับ อยากจะขอเข้ากลุ่ม telegram ทีครับ ข...</span>
+                  </span>
+                  <span class="mail-time">4 มิ.ย.</span>
+                </a>
+              </div>
+              <div class="dropdown-footer">
+                <a href="#" class="dropdown-link">ดูข้อความทั้งหมด</a>
+              </div>
+            </div>
+          </div>
+
+          <svg class="light-mode-btn" id="themeToggle" viewBox="0 0 29 29" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Toggle light mode">
+<path d="M14.5 18.125C15.507 18.125 16.3629 17.7726 17.0677 17.0677C17.7726 16.3629 18.125 15.5069 18.125 14.5C18.125 13.4931 17.7726 12.6372 17.0677 11.9323C16.3629 11.2274 15.507 10.875 14.5 10.875C13.4931 10.875 12.6372 11.2274 11.9323 11.9323C11.2275 12.6372 10.875 13.4931 10.875 14.5C10.875 15.5069 11.2275 16.3629 11.9323 17.0677C12.6372 17.7726 13.4931 18.125 14.5 18.125ZM14.5 20.5417C12.8285 20.5417 11.4037 19.9526 10.2256 18.7745C9.04744 17.5964 8.45837 16.1715 8.45837 14.5C8.45837 12.8285 9.04744 11.4036 10.2256 10.2255C11.4037 9.0474 12.8285 8.45834 14.5 8.45834C16.1716 8.45834 17.5964 9.0474 18.7745 10.2255C19.9526 11.4036 20.5417 12.8285 20.5417 14.5C20.5417 16.1715 19.9526 17.5964 18.7745 18.7745C17.5964 19.9526 16.1716 20.5417 14.5 20.5417ZM6.04171 15.7083H1.20837V13.2917H6.04171V15.7083ZM27.7917 15.7083H22.9584V13.2917H27.7917V15.7083ZM13.2917 6.04167V1.20834H15.7084V6.04167H13.2917ZM13.2917 27.7917V22.9583H15.7084V27.7917H13.2917ZM7.73337 9.36459L4.68233 6.43438L6.40421 4.65209L9.30421 7.67292L7.73337 9.36459ZM22.5959 24.3479L19.6657 21.2969L21.2667 19.6354L24.3177 22.5656L22.5959 24.3479ZM19.6355 7.73334L22.5657 4.68229L24.348 6.40417L21.3271 9.30417L19.6355 7.73334ZM4.65212 22.5958L7.70317 19.6656L9.36462 21.2667L6.43442 24.3177L4.65212 22.5958Z" fill="#FEF7FF"/>
+</svg>
+        </div>
+
+        <div class="auth-links" id="authLinks" style="display:none;">
+          <a class="auth-link" href="auth.html?tab=register">REGISTER</a>
+          <span class="auth-divider"></span>
+          <a class="auth-link" href="auth.html?tab=login">LOGIN</a>
+        </div>
+
+        <div class="profile-chip" id="profileChip" style="display:none;">
+          <div class="profile-chip-text">
+            <span class="profile-chip-name" id="profileChipName">สมาชิก</span>
+            <span class="profile-chip-role" id="profileChipRole"></span>
+          </div>
+          <button class="avatar-btn" id="avatarBtn" type="button" aria-label="เมนูผู้ใช้">
+            <img class="profile-chip-avatar" id="profileChipAvatar" src="assets/default-avatar.png" alt="avatar">
+          </button>
+
+          <div class="dropdown-panel profile-menu-panel" id="profileMenuPanel">
+            <a href="/profile.html" class="profile-menu-item">
+              <span class="profile-menu-icon">👤</span><span>โปรไฟล์</span>
+            </a>
+            <a href="/admin.html" class="profile-menu-item" id="adminMenuItem" style="display:none;">
+              <span class="profile-menu-icon">🛠️</span><span>ระบบแอดมิน</span>
+            </a>
+            <a href="/board.html" class="profile-menu-item">
+              <span class="profile-menu-icon">📋</span><span>เว็บบอร์ด</span>
+            </a>
+            <a href="#" class="profile-menu-item">
+              <span class="profile-menu-icon">🎮</span><span>เล่นเกม</span>
+            </a>
+            <a href="#" class="profile-menu-item">
+              <span class="profile-menu-icon">➕</span><span>ชวนเพื่อน</span>
+            </a>
+            <a href="#" class="profile-menu-item">
+              <span class="profile-menu-icon">✉️</span><span>ติดต่อเรา</span>
+            </a>
+
+            <div class="profile-menu-divider"></div>
+
+            <button type="button" class="profile-menu-item profile-menu-logout" id="logoutMenuBtn">
+              <span class="profile-menu-icon">🚪</span><span>ออกจากระบบ</span>
+            </button>
+
+            <div class="profile-menu-social">
+              <a href="#" target="_blank" rel="noopener" aria-label="Facebook" class="social-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.5 9.9v-7H7.9V12h2.6V9.8c0-2.6 1.6-4 3.9-4 1.1 0 2.3.2 2.3.2v2.5h-1.3c-1.3 0-1.7.8-1.7 1.6V12h2.9l-.5 2.9h-2.4v7A10 10 0 0 0 22 12"/></svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener" aria-label="TikTok" class="social-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16.5 2h-3v13.5a2.5 2.5 0 1 1-2.5-2.5c.2 0 .5 0 .7.1V10a5.5 5.5 0 1 0 4.8 5.4V8.9a7.4 7.4 0 0 0 4.5 1.5V7.4a4.5 4.5 0 0 1-4.5-4.5V2z"/></svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener" aria-label="Twitter / X" class="social-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23 22h-7l-5.5-6.6L4.2 22H1l8.2-9.4L1.4 2H8.6l5 6z"/></svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener" aria-label="Telegram" class="social-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M21.9 4.3 2.6 11.7c-1 .4-1 1.7.1 2l4.7 1.5 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.5 4.9 3.6c.7.5 1.7.1 1.9-.7L23.9 5.4c.2-.9-.7-1.6-1.5-1.1zM8.9 15l-1.1 3.5-.7-3.5 10.5-9.5-8.7 9.5z"/></svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener" aria-label="Instagram" class="social-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.3" cy="6.7" r="1"/></svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener" aria-label="YouTube" class="social-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M23.5 6.5s-.2-1.6-.9-2.3c-.9-.9-1.9-.9-2.3-1C17.4 3 12 3 12 3h0s-5.4 0-8.3.2c-.5 0-1.5.1-2.3 1C.7 4.9.5 6.5.5 6.5S.3 8.3.3 10.2v1.6C.3 13.7.5 15.5.5 15.5s.2 1.6.9 2.3c.9.9 2 .9 2.5 1C5.6 19 12 19 12 19s5.4 0 8.3-.2c.5 0 1.5-.1 2.3-1 .7-.7.9-2.3.9-2.3s.2-1.8.2-3.7v-1.6c0-1.9-.2-3.7-.2-3.7zM9.7 14.1V7.9l6 3.1-6 3.1z"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <script>
+        // เดาสถานะ login แบบ sync จาก token ที่เก็บไว้ใน storage (เร็วกว่ารอ getSession() มาก)
+        // เพื่อลดอาการ "แว้บว่างเปล่า" ก่อนโชว์ REGISTER/LOGIN หรืออวตาร์ตัวจริง
+        (function guessAuthStateEarly() {
+          try {
+            var tokenKey = 'sb-dnrcardbuuwnvuridubb-auth-token';
+            var hasToken = !!(localStorage.getItem(tokenKey) || sessionStorage.getItem(tokenKey));
+            document.getElementById(hasToken ? 'profileChip' : 'authLinks').style.display = 'flex';
+          } catch (e) {
+            document.getElementById('authLinks').style.display = 'flex';
+          }
+        })();
+      </script>
+
+      <main class="main">
+        <div class="ads-banner">
+          <a href="#" target="_blank"><img src="assets/ads_001.png" alt="โฆษณา"></a>
+        </div>
+
+        <div class="announce-box">
+          <div class="announce-row">
+            <span class="announce-icon">🔔</span>
+            <span class="announce-label">ประกาศเว็บ : </span>
+            <a class="announce-link" href="#">LINK 🔗</a>
+          </div>
+          <div class="announce-row">
+            <span class="announce-icon">🔔</span>
+            <span class="announce-label">ประกาศสมาชิก : </span>
+            <a class="announce-link" href="#">LINK 🔗</a>
+          </div>
+        </div>
+
+        <div class="scores-widget">
+          <div class="scores-frame">
+            <div class="scores-tabs" id="scoresTabs">
+              <button class="active" data-comp="ALL">ทั้งหมด</button>
+              <button data-comp="PL">Premier League</button>
+              <button data-comp="PD">La Liga</button>
+              <button data-comp="BL1">Bundesliga</button>
+              <button data-comp="SA">Serie A</button>
+              <button data-comp="FL1">Ligue 1</button>
+              <button data-comp="CL">Champions League</button>
+            </div>
+            <div class="scores-list-wrap">
+              <button class="scores-nav-btn prev" id="scoresPrev" aria-label="เลื่อนซ้าย">&#10094;</button>
+              <div class="scores-list" id="scoresList">
+                <div class="scores-empty">กำลังโหลดผลบอล...</div>
+              </div>
+              <button class="scores-nav-btn next" id="scoresNext" aria-label="เลื่อนขวา">&#10095;</button>
+              <a class="scores-cta" href="fixtures.html">
+                <span>ตารางคะแนน<br>ดาวซัลโว</span>
+                <span class="cta-arrow">&#10142;</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="news-section">
+          <div class="section-title">
+            <div class="bar"></div>
+            <h2>อัพเดทข่าว</h2>
+          </div>
+
+          <div class="news-grid">
+            <div class="news-left-col">
+            <!-- ช่องที่ 1 = ข่าวใหญ่ -->
+            <a class="news-card news-featured" href="#">
+              <div class="news-thumb">
+                <span class="news-thumb-icon">⚽</span>
+              </div>
+              <div class="news-text">
+                <div class="news-top-row">
+                  <span class="news-tag">MATCH RECAPS</span>
+                  <div class="news-meta-stats">
+                    <span>💬 34</span>
+                    <span>👁 890</span>
+                    <span>หลุดเดียวนิวส์ <span class="news-avatar">🧑</span></span>
+                  </div>
+                </div>
+                <div class="news-headline">แชมป์เก่าเปิดหัวโหด!! ไล่ถลุงโคเวนทรี น้องใหม่ไส้แตก 3-0</div>
+              </div>
+            </a>
+
+          <!-- ตารางข่าวล่าสุด (ไม่นับรวมข่าวที่ขึ้นช่อง 1-4) -->
+          <div class="news-recent">
+            <div class="news-recent-header">
+              <h3>ข่าวล่าสุด</h3>
+              <a href="board.html?board=news">ดูข่าวทั้งหมด →</a>
+            </div>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-recent-tag"><span>TALK<br>SPORT</span></span>
+              <span class="news-recent-headline">แมนยูฯ น้องใหม่ ออลลี่ 8-0 คาบาน มัดเปิดลัด</span>
+              <span class="news-recent-stats">
+                <span class="news-recent-views">👁 2,340</span>
+                <span class="news-recent-comments">💬 128</span>
+                <span class="news-recent-date">20.8.26<br>20:20</span>
+                <span class="news-recent-avatar-col"><span class="news-avatar">🧑</span></span><span class="news-recent-poster">แอดมินแดง</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-recent-tag"><span>TRANSFER<br>NEWS</span></span>
+              <span class="news-recent-headline"><span class="subtag">Here We Go!</span> ลิเวอร์พูลคว้าตัวปีกดาวรุ่งจากทีมเดสลิก้า</span>
+              <span class="news-recent-stats">
+                <span class="news-recent-views">👁 890</span>
+                <span class="news-recent-comments">💬 34</span>
+                <span class="news-recent-date">20.8.26<br>20:20</span>
+                <span class="news-recent-avatar-col"><span class="news-avatar">🧑</span></span><span class="news-recent-poster">แอดมินขาว</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-recent-tag tag-yellow"><span>OFFICIAL</span></span>
+              <span class="news-recent-headline">ลือ! แคนเบียร่า มาดริด แตก นักเตะฟาดกันเอง</span>
+              <span class="news-recent-stats">
+                <span class="news-recent-views">👁 3,102</span>
+                <span class="news-recent-comments">💬 210</span>
+                <span class="news-recent-date">20.8.26<br>20:20</span>
+                <span class="news-recent-avatar-col"><span class="news-avatar">🧑</span></span><span class="news-recent-poster">แอดมินฟ้า</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-recent-tag"><span><span class="tag-icon">⚽</span></span></span>
+              <span class="news-recent-headline">OFFICIAL!! แมนฯ ยูไนเต็ด เตรียมเปิดตัวกุนซือใหม่สัปดาห์หน้า</span>
+              <span class="news-recent-stats">
+                <span class="news-recent-views">👁 654</span>
+                <span class="news-recent-comments">💬 19</span>
+                <span class="news-recent-date">20.8.26<br>20:20</span>
+                <span class="news-recent-avatar-col"><span class="news-avatar">🧑</span></span><span class="news-recent-poster">แอดมินดำ</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-recent-tag tag-breaking"><span class="news-blink-dot"></span><span>BREAKING<br>NEWS</span></span>
+              <span class="news-recent-headline">ด่วน! นักเตะทีมชาติไทยบาดเจ็บหนัก หลุดโปรแกรมทัวร์นาเมนต์ใหญ่</span>
+              <span class="news-recent-stats">
+                <span class="news-recent-views">👁 4,520</span>
+                <span class="news-recent-comments">💬 301</span>
+                <span class="news-recent-date">20.8.26<br>20:20</span>
+                <span class="news-recent-avatar-col"><span class="news-avatar">🧑</span></span><span class="news-recent-poster">น้อนบู้</span></span>
+            </a>
+
+            <a class="news-recent-row" href="#">
+              <span class="news-recent-tag"><span>TRANSFER<br>NEWS</span></span>
+              <span class="news-recent-headline"><span class="subtag">Done Deal</span> เชลซีปิดดีลกองกลางฝรั่งเศสสำเร็จ 3 ปี</span>
+              <span class="news-recent-stats">
+                <span class="news-recent-views">👁 1,208</span>
+                <span class="news-recent-comments">💬 76</span>
+                <span class="news-recent-date">20.8.26<br>20:20</span>
+                <span class="news-recent-avatar-col"><span class="news-avatar">🧑</span></span><span class="news-recent-poster">แอดมินแดง</span></span>
+            </a>
+
+          </div>
+            </div><!-- /.news-left-col -->
+
+            <!-- ช่องที่ 2-3 = ข่าวล่าสุด -->
+            <div class="news-side">
+              <a class="news-card" href="#">
+                <div class="news-thumb">
+                  <span class="news-thumb-icon">📰</span>
+                </div>
+                <div class="news-text">
+                  <div class="news-top-row">
+                    <span class="news-tag">TALK SPORT</span>
+                    <div class="news-meta-stats">
+                      <span>💬 —</span>
+                      <span>👁 —</span>
+                      <span>น้อนบู้ <span class="news-avatar">🧑</span></span>
+                    </div>
+                  </div>
+                  <div class="news-headline">ลิเวอร์พูลเปิดฉากเจรจา ทาบทามกองหน้าดาวรุ่งบราซิล เตรียมดันข้อเสนอมกราคมนี้</div>
+                </div>
+              </a>
+
+              <a class="news-card" href="#">
+                <div class="news-thumb">
+                  <span class="news-thumb-icon">🏆</span>
+                </div>
+                <div class="news-text">
+                  <div class="news-top-row">
+                    <span class="news-tag news-tag-yellow">OFFICIAL</span>
+                    <div class="news-meta-stats">
+                      <span>💬 —</span>
+                      <span>👁 —</span>
+                      <span>น้อนบู้ <span class="news-avatar">🧑</span></span>
+                    </div>
+                  </div>
+                  <div class="news-headline">โซดี้กด สวมเสื้อทีมชาติไทยครั้งแรก เตรียมลุยศึกคัดบอลโลกนัดสำคัญ</div>
+                </div>
+              </a>
+
+              <a class="news-card" href="#">
+                <div class="news-thumb">
+                  <span class="news-thumb-icon">🔥</span>
+                </div>
+                <div class="news-text">
+                  <div class="news-top-row">
+                    <span class="news-tag news-tag-breaking"><span class="news-blink-dot"></span>BREAKING NEWS</span>
+                    <div class="news-meta-stats">
+                      <span>💬 —</span>
+                      <span>👁 —</span>
+                      <span>น้อนบู้ <span class="news-avatar">🧑</span></span>
+                    </div>
+                  </div>
+                  <div class="news-headline">ด่วน!! ประธานสโมสรยืนยันเปลี่ยนตัวกุนซือกลางฤดูกาล หลังผลงานไม่เป็นไปตามเป้า</div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- วีดีโอไฮไลท์การแข่งขัน -->
+        <div class="video-section">
+          <div class="section-title">
+            <div class="bar"></div>
+            <h2>MATCH HIGHLIGHTS</h2>
+          </div>
+          <div class="video-carousel-wrap">
+            <button class="video-nav-btn prev" id="videoPrevHighlights" aria-label="เลื่อนซ้าย">&#10094;</button>
+            <div class="video-carousel" id="videoCarouselHighlights">
+              <!-- การ์ดสร้างจาก JS โดยดึงจาก Supabase (home_videos, category=official_highlights) -->
+            </div>
+            <button class="video-nav-btn next" id="videoNextHighlights" aria-label="เลื่อนขวา">&#10095;</button>
+          </div>
+        </div>
+
+        <!-- ข่าวและวิเคราะห์วงการลูกหนัง -->
+        <div class="video-section">
+          <div class="section-title">
+            <div class="bar"></div>
+            <h2>SPORT NEWS</h2>
+          </div>
+          <div class="video-carousel-wrap">
+            <button class="video-nav-btn prev" id="videoPrevNews" aria-label="เลื่อนซ้าย">&#10094;</button>
+            <div class="video-carousel" id="videoCarouselNews">
+              <!-- การ์ดสร้างจาก JS โดยดึงจาก Supabase (home_videos, category=news_analysis) -->
+            </div>
+            <button class="video-nav-btn next" id="videoNextNews" aria-label="เลื่อนขวา">&#10095;</button>
+          </div>
+        </div>
+
+        <!-- อีเวนต์และมินิเกมในเว็บ -->
+        <div class="video-section game-event-section">
+          <div class="section-title">
+            <div class="bar"></div>
+            <h2>GAME EVENT</h2>
+            <a class="game-event-viewall" href="#">ดูทั้งหมด &#10142;</a>
+          </div>
+          <div class="game-event-list">
+            <!-- อีเวนต์ 1: ทายผลบอล -->
+            <div class="game-event-card">
+              <div class="game-event-image">
+                <img src="https://picsum.photos/seed/predict-match/200/183" alt="ทายผลบอล">
+              </div>
+              <div class="game-event-content">
+                <span class="game-event-badge">ทายผลบอล</span>
+                <div class="game-event-dates">
+                  <span>เริ่ม : 20 กย. 2026 12:00 น.</span>
+                  <span>จบ : 20 กย. 2026 12:00 น.</span>
+                </div>
+                <div class="game-event-desc">ทายผลการแข่งขันที่ชอบ ลุ้นรับเหรียญและของรางวัลพิเศษ ร่วมสนุกได้ทุกแมตช์การแข่งขัน</div>
+                <div class="game-event-bottom">
+                  <div class="game-event-rewards">
+                    <span class="game-event-rewards-label">ของรางวัล :</span>
+                    <span class="game-event-reward"><span class="icon">🎁</span> x100</span>
+                    <span class="game-event-reward"><span class="icon">🪙</span> x100</span>
+                    <span class="game-event-reward"><span class="icon">🎉</span> x100</span>
+                    <span class="game-event-reward"><span class="icon">😎</span> x100</span>
+                  </div>
+                  <div class="game-event-actions">
+                    <a href="#" class="game-event-btn">อ่าน</a>
+                    <a href="#" class="game-event-btn">เล่นเกม</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- อีเวนต์ 2: อัพเลเวลนักบอล -->
+            <div class="game-event-card">
+              <div class="game-event-image">
+                <img src="https://picsum.photos/seed/level-up/200/183" alt="อัพเลเวลนักบอล">
+              </div>
+              <div class="game-event-content">
+                <span class="game-event-badge">อัพเลเวลนักบอล</span>
+                <div class="game-event-dates">
+                  <span>เริ่ม : 20 กย. 2026 12:00 น.</span>
+                  <span>จบ : 27 กย. 2026 12:00 น.</span>
+                </div>
+                <div class="game-event-desc">สะสมค่าประสบการณ์ อัพเกรดนักเตะในทีมของคุณให้แข็งแกร่งขึ้น พร้อมลุ้นรางวัลพิเศษ</div>
+                <div class="game-event-bottom">
+                  <div class="game-event-rewards">
+                    <span class="game-event-rewards-label">ของรางวัล :</span>
+                    <span class="game-event-reward"><span class="icon">🎁</span> x50</span>
+                    <span class="game-event-reward"><span class="icon">🪙</span> x200</span>
+                  </div>
+                  <div class="game-event-actions">
+                    <a href="#" class="game-event-btn">อ่าน</a>
+                    <a href="#" class="game-event-btn">เล่นเกม</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 10 กระทู้เดือด เรียงตามยอดวิว -->
+        <div class="hotlist-section">
+          <div class="hotlist">
+            <div class="hotlist-header">
+              <div class="hotlist-icon"><span class="flame">🔥</span><span class="num">10</span></div>
+              <h3>10 กระทู้เดือด</h3>
+              <a class="hotlist-viewall" href="#">ดูทั้งหมด &#10142;</a>
+            </div>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank top1">1</span>
+              <span class="hotlist-title">ทางการ! ลิเวอร์พูลปิดดีลปีกดาวรุ่งจากบุนเดสลีกา</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"><span>🔥HOT</span></span>
+                <span class="hotlist-views">👁 8,940</span>
+                <span class="hotlist-comments">💬 412</span>
+                <span class="hotlist-date">📅 20.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินแดง</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank top2">2</span>
+              <span class="hotlist-title">เรอัล มาดริด ซิวแชมป์ฟรีชิงถ้วยรอบอเมริกา</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"><span>🔥HOT</span></span>
+                <span class="hotlist-views">👁 7,102</span>
+                <span class="hotlist-comments">💬 310</span>
+                <span class="hotlist-date">📅 20.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมิน24</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank top3">3</span>
+              <span class="hotlist-title">ดราม่า! แฟนบอลบุกวิจารณ์คุณชื่อทีมชาติหลังพ่าย</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"><span>🔥HOT</span></span>
+                <span class="hotlist-views">👁 6,530</span>
+                <span class="hotlist-comments">💬 289</span>
+                <span class="hotlist-date">📅 19.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินขาว</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank">4</span>
+              <span class="hotlist-title">อินเตอร์ มิลาน เปิดตัวเบอร์เก้าคนใหม่พร้อมลุยลีก</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"></span>
+                <span class="hotlist-views">👁 5,890</span>
+                <span class="hotlist-comments">💬 201</span>
+                <span class="hotlist-date">📅 20.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินขาว</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank">5</span>
+              <span class="hotlist-title">แมนฯ ยูไนเต็ด เตรียมเปิดตัวกุนซือใหม่สัปดาห์หน้า</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"></span>
+                <span class="hotlist-views">👁 5,120</span>
+                <span class="hotlist-comments">💬 178</span>
+                <span class="hotlist-date">📅 21.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินแดง</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank">6</span>
+              <span class="hotlist-title">ทีมชาติไทยเก็บชัยนัดกระชับมิตรก่อนศึกใหญ่</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"></span>
+                <span class="hotlist-views">👁 4,760</span>
+                <span class="hotlist-comments">💬 165</span>
+                <span class="hotlist-date">📅 19.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินไทย</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank">7</span>
+              <span class="hotlist-title">นาโปลี ต่อสัญญากับกัปตันทีมยาว 3 ปี</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"></span>
+                <span class="hotlist-views">👁 3,980</span>
+                <span class="hotlist-comments">💬 120</span>
+                <span class="hotlist-date">📅 18.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินขาว</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank">8</span>
+              <span class="hotlist-title">เชฟฯ ยูไนเต็ด ปะทะ อันเดอร์สฟิลด์ ศึกลุ้นเลื่อนชั้น</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"></span>
+                <span class="hotlist-views">👁 3,410</span>
+                <span class="hotlist-comments">💬 98</span>
+                <span class="hotlist-date">📅 21.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมิน24</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank">9</span>
+              <span class="hotlist-title">สปอร์ติ้ง ลิสบอน เปิดบ้านรับสตราสบูร์กคืนนี้</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"></span>
+                <span class="hotlist-views">👁 2,890</span>
+                <span class="hotlist-comments">💬 76</span>
+                <span class="hotlist-date">📅 20.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินขาว</span>
+              </span>
+            </a>
+
+            <a class="hotlist-row" href="#">
+              <span class="hotlist-rank">10</span>
+              <span class="hotlist-title">วิเคราะห์บอล: บอลติมอร์ vs ลินคอล์น เร้ด อิมป์ส</span>
+              <span class="hotlist-stats">
+                <span class="hotlist-hot"></span>
+                <span class="hotlist-views">👁 2,340</span>
+                <span class="hotlist-comments">💬 54</span>
+                <span class="hotlist-date">📅 21.07.2026</span>
+                <span class="hotlist-avatar-col"><span class="news-avatar">🧑</span></span>
+                <span class="hotlist-poster">แอดมินขาว</span>
+              </span>
+            </a>
+          </div>
+        </div>
+
+        <!-- บทความ -->
+        <div class="articles-section">
+          <div class="articles-header">
+            <span class="icon">📝</span>
+            <h3>บทความ</h3>
+            <a class="articles-viewall" href="#">ดูทั้งหมด &#10142;</a>
+          </div>
+          <div class="articles-columns">
+            <div class="articles-col">
+              <a class="article-card" href="#">
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-1/160/160" alt=""></div>
+                <div class="article-body">
+                  <span class="article-tag analysis">วิเคราะห์</span>
+                  <div class="article-title">ทำไมลิเวอร์พูลถึงแกร่งขึ้นหลังเปลี่ยนระบบการเล่น</div>
+                  <div class="article-meta">แอดน้อนแดง · 20.07.2026</div>
+                </div>
+              </a>
+              <a class="article-card" href="#">
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-2/160/160" alt=""></div>
+                <div class="article-body">
+                  <span class="article-tag gossip">ซุบซิบ</span>
+                  <div class="article-title">ข่าวลือ! ดาวยิงดังเล็งย้ายซบทีมใหญ่ซัมเมอร์นี้</div>
+                  <div class="article-meta">แอดหมูทอด · 19.07.2026</div>
+                </div>
+              </a>
+              <a class="article-card" href="#">
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-3/160/160" alt=""></div>
+                <div class="article-body">
+                  <span class="article-tag interview">สัมภาษณ์</span>
+                  <div class="article-title">คุยกับดาวรุ่งเส้นทางสู่พรีเมียร์ลีก</div>
+                  <div class="article-meta">แอดบอล24 · 19.07.2026</div>
+                </div>
+              </a>
+              <a class="article-card" href="#">
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-4/160/160" alt=""></div>
+                <div class="article-body">
+                  <span class="article-tag history">ประวัติ</span>
+                  <div class="article-title">ย้อนรอย 10 ปี แชมป์แชมเปียนส์ลีกที่น่าจดจำ</div>
+                  <div class="article-meta">แอดบอลไทย · 18.07.2026</div>
+                </div>
+              </a>
+            </div>
+            <div class="articles-col">
+              <a class="article-card" href="#">
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-5/160/160" alt=""></div>
+                <div class="article-body">
+                  <span class="article-tag review">รีวิว</span>
+                  <div class="article-title">รีวิวรองเท้าสตั๊ดรุ่นใหม่ล่าสุดที่นักเตะระดับโลกใช้</div>
+                  <div class="article-meta">แอดน้อนแดง · 18.07.2026</div>
+                </div>
+              </a>
+              <a class="article-card" href="#">
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-6/160/160" alt=""></div>
+                <div class="article-body">
+                  <span class="article-tag analysis">วิเคราะห์</span>
+                  <div class="article-title">แผนการเล่นแบบ 3 กองหลังกลับมาฮิตอีกครั้งเพราะอะไร</div>
+                  <div class="article-meta">แอดบอล24 · 17.07.2026</div>
+                </div>
+              </a>
+              <a class="article-card" href="#">
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-7/160/160" alt=""></div>
+                <div class="article-body">
+                  <span class="article-tag gossip">ซุบซิบ</span>
+                  <div class="article-title">เปิดโผ! สโมสรไหนสนใจปีกดาวรุ่งไทยบ้าง</div>
+                  <div class="article-meta">แอดหมูทอด · 17.07.2026</div>
+                </div>
+              </a>
+              <a class="article-card" href="#">
+                <div class="article-thumb"><img src="https://picsum.photos/seed/article-8/160/160" alt=""></div>
+                <div class="article-body">
+                  <span class="article-tag review">รีวิว</span>
+                  <div class="article-title">เทียบสเปกลูกฟุตบอลแมตช์บอลลีกใหญ่ 3 รุ่น</div>
+                  <div class="article-meta">แอดบอลไทย · 16.07.2026</div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- ตารางคะแนน -->
+        <div class="standings-section" id="standingsSection">
+          <div class="standings-card">
+            <div class="standings-topbar">
+              <div class="standings-toggle active"><span>🏆</span> ตารางคะแนน</div>
+            </div>
+
+            <div class="league-tabs" id="standingsLeagueTabs">
+              <button class="league-tab active" data-comp="PL">Premier League</button>
+              <button class="league-tab" data-comp="PD">La Liga</button>
+              <button class="league-tab" data-comp="BL1">Bundesliga</button>
+              <button class="league-tab" data-comp="SA">Serie A</button>
+              <button class="league-tab" data-comp="FL1">Ligue 1</button>
+              <button class="league-tab" data-comp="CL">UEFA Champions League</button>
+            </div>
+
+            <h4 class="league-name" id="standingsLeagueName">Premier League</h4>
+
+            <table class="standings-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>ทีม</th>
+                  <th>เล่น</th>
+                  <th>ชนะ</th>
+                  <th>เสมอ</th>
+                  <th>แพ้</th>
+                  <th>ยิงได้</th>
+                  <th>เสีย</th>
+                  <th>ผลต่าง</th>
+                  <th>คะแนน</th>
+                </tr>
+              </thead>
+              <tbody id="homeStandingsBody">
+                <tr><td colspan="10" style="text-align:center;color:#9a9a9a;padding:16px;">กำลังโหลด...</td></tr>
+              </tbody>
+            </table>
+
+            <div class="standings-legend" id="homeStandingsLegend"></div>
+          </div>
+        </div>
+
+        <!-- ดาวซัลโว / แอสซิสต์ (แยกอิสระจากตารางคะแนน มีแท็บลีกของตัวเอง) -->
+        <div class="standings-section">
+          <div class="standings-card">
+            <div class="standings-topbar">
+              <div class="standings-toggle active"><span>⚽</span> ดาวซัลโว</div>
+            </div>
+
+            <div class="league-tabs" id="scorersLeagueTabs">
+              <button class="league-tab active" data-comp="PL">Premier League</button>
+              <button class="league-tab" data-comp="PD">La Liga</button>
+              <button class="league-tab" data-comp="BL1">Bundesliga</button>
+              <button class="league-tab" data-comp="SA">Serie A</button>
+              <button class="league-tab" data-comp="FL1">Ligue 1</button>
+              <button class="league-tab" data-comp="CL">UEFA Champions League</button>
+            </div>
+
+            <div class="leaders-columns">
+              <div class="leaders-col">
+                <h4>ดาวซัลโว</h4>
+                <table class="leaders-table">
+                  <thead><tr><th>No.</th><th>นักเตะ</th><th>ทีม</th><th>ประตู</th></tr></thead>
+                  <tbody id="homeScorersBody">
+                    <tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="leaders-col">
+                <h4>แอสซิสต์</h4>
+                <table class="leaders-table">
+                  <thead><tr><th>No.</th><th>นักเตะ</th><th>ทีม</th><th>แอสซิสต์</th></tr></thead>
+                  <tbody id="homeAssistsBody">
+                    <tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">กำลังโหลด...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- สถิติชุมชน -->
+        <div class="community-stats-section">
+          <div class="community-stats-card">
+            <div class="community-stats-header">
+              <div class="community-stats-icon"><span>📊</span></div>
+              <h3>สถิติชุมชน</h3>
+              <span class="community-stats-updated">
+                <span class="community-stats-dot-live"></span>
+                อัปเดตล่าสุด 2 นาทีที่แล้ว
+              </span>
+            </div>
+
+            <div class="community-stats-grid">
+              <div class="cs-item">
+                <div class="cs-label"><span class="cs-dot-online"></span> ออนไลน์ตอนนี้</div>
+                <div class="cs-value">32</div>
+              </div>
+
+              <div class="cs-item">
+                <div class="cs-label"><span>👥</span> สมาชิกทั้งหมด</div>
+                <div class="cs-value-row">
+                  <span class="cs-value">3,742</span>
+                  <span class="cs-delta">+12</span>
+                </div>
+              </div>
+
+              <div class="cs-item">
+                <div class="cs-label"><span>📝</span> กระทู้ทั้งหมด</div>
+                <div class="cs-value">9,214</div>
+              </div>
+
+              <div class="cs-item">
+                <div class="cs-label"><span>🔥</span> กระทู้ใหม่วันนี้</div>
+                <div class="cs-value">14</div>
+              </div>
+
+              <div class="cs-item">
+                <div class="cs-label"><span>⚙️</span> สถานะเว็บ</div>
+                <div class="cs-status-version">v1.0.0</div>
+                <div class="cs-status-days">ก่อตั้งมา 128 วัน</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ถัดจากนี้ลงไป = สิ่งที่ต้องทำในโปรเซสถัดไป -->
+      </main>
+    </div>
+
+  </div>
+
+  <!-- Modal เล่นวีดีโอ -->
+  <div class="video-modal-overlay" id="videoModalOverlay">
+    <div class="video-modal">
+      <button class="video-modal-close" id="videoModalClose" aria-label="ปิด">&times;</button>
+      <div class="video-modal-player" id="videoModalPlayer"></div>
+    </div>
+  </div>
+
+  <script>
+    // Light/dark mode toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const htmlEl = document.documentElement;
+
+    function applyTheme(isLight) {
+      htmlEl.classList.toggle('light-mode', isLight);
+    }
+
+    const savedTheme = localStorage.getItem('sologoal-theme');
+    applyTheme(savedTheme === 'light');
+
+    themeToggle.addEventListener('click', () => {
+      const isLight = htmlEl.classList.toggle('light-mode');
+      localStorage.setItem('sologoal-theme', isLight ? 'light' : 'dark');
+    });
+
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+
+    toggleBtn.addEventListener('click', () => {
+      const collapsed = sidebar.classList.toggle('collapsed');
+      document.documentElement.style.setProperty('--sidebar-w', collapsed ? '56px' : '198px');
+      toggleBtn.innerHTML = collapsed ? '&#10095;' : '&#10094;';
+    });
+
+    // Sliding menu highlight — appears only while hovering an item
+    const menuList = document.getElementById('menuList');    const highlight = document.getElementById('menuHighlight');
+    const menuItems = menuList.querySelectorAll('li');
+    const menuMascot = document.getElementById('menuMascot');
+
+    function moveHighlightTo(li) {
+      highlight.style.top = (li.offsetTop + (li.offsetHeight - 27) / 2) + 'px';
+      menuMascot.style.top = (li.offsetTop + (li.offsetHeight - 24) / 2) + 'px';
+    }
+
+    menuItems.forEach((li) => {
+      li.addEventListener('mouseenter', () => {
+        moveHighlightTo(li);
+        highlight.style.opacity = '1';
+        menuMascot.classList.add('show');
+      });
+    });
+
+    menuList.addEventListener('mouseleave', () => {
+      highlight.style.opacity = '0';
+      menuMascot.classList.remove('show');
+    });
+
+    // ===== เอฟเฟกต์สุ่มตอนเมาส์ชี้ที่ logo =====
+    (function () {
+      const logoWrap = document.querySelector('.logo-wrap');
+      const logo = logoWrap ? logoWrap.querySelector('.logo-svg') : null;
+      const ball = logoWrap ? logoWrap.querySelector('.logo-ball') : null;
+      if (!logoWrap || !logo) return;
+
+      const FX_CLASSES = ['fx-glow', 'fx-wiggle', 'fx-tilt'];
+      const FX_DURATIONS = { 'fx-glow': 900, 'fx-wiggle': 500, 'fx-tilt': 600, 'fx-sparkle': 750, 'fx-ball': 1600 };
+      let animating = false;
+
+      function clearFx() {
+        FX_CLASSES.forEach((c) => logo.classList.remove(c));
+        if (ball) ball.classList.remove('roll');
+      }
+
+      function spawnSparkles() {
+        const logoRect = logo.getBoundingClientRect();
+        const wrapRect = logoWrap.getBoundingClientRect();
+        const cx = logoRect.left - wrapRect.left + logoRect.width / 2;
+        const cy = logoRect.top - wrapRect.top + logoRect.height / 2;
+        const count = 6;
+        for (let i = 0; i < count; i++) {
+          const s = document.createElement('span');
+          s.className = 'logo-sparkle';
+          const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+          const dist = 26 + Math.random() * 14;
+          s.style.left = cx + 'px';
+          s.style.top = cy + 'px';
+          s.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+          s.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+          logoWrap.appendChild(s);
+          setTimeout(() => s.remove(), 750);
+        }
+      }
+
+      function rollBall() {
+        if (!ball) return;
+        void ball.offsetWidth;
+        ball.classList.add('roll');
+      }
+
+      function playRandomEffect() {
+        if (animating) return;
+        animating = true;
+        clearFx();
+        void logo.offsetWidth; // reflow เพื่อรีสตาร์ท animation ได้ทุกครั้ง
+
+        const pool = ball
+          ? ['fx-glow', 'fx-wiggle', 'fx-tilt', 'fx-sparkle', 'fx-ball']
+          : ['fx-glow', 'fx-wiggle', 'fx-tilt', 'fx-sparkle'];
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+
+        if (pick === 'fx-sparkle') {
+          spawnSparkles();
+        } else if (pick === 'fx-ball') {
+          rollBall();
+        } else {
+          logo.classList.add(pick);
+        }
+
+        setTimeout(() => {
+          clearFx();
+          animating = false;
+        }, FX_DURATIONS[pick] + 50);
+      }
+
+      logoWrap.addEventListener('mouseenter', playRandomEffect);
+    })();
+
+    // ===== แจ้งเตือน / ข้อความ dropdown =====
+    function setupHeaderDropdown(btnId, panelId) {
+      const btn = document.getElementById(btnId);
+      const panel = document.getElementById(panelId);
+
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = panel.classList.contains('open');
+        closeAllHeaderDropdowns();
+        if (!isOpen) {
+          panel.classList.add('open');
+          btn.classList.add('active');
+        }
+      });
+
+      panel.addEventListener('click', (e) => e.stopPropagation());
+    }
+
+    function closeAllHeaderDropdowns() {
+      document.querySelectorAll('.dropdown-panel.open').forEach(p => p.classList.remove('open'));
+      document.querySelectorAll('.icon-btn.active, .avatar-btn.active').forEach(b => b.classList.remove('active'));
+    }
+
+    setupHeaderDropdown('bellBtn', 'notifPanel');
+    setupHeaderDropdown('mailBtn', 'mailPanel');
+    setupHeaderDropdown('avatarBtn', 'profileMenuPanel');
+
+    document.addEventListener('click', closeAllHeaderDropdowns);
+
+    // ===== แสดง REGISTER/LOGIN หรือ profile chip ตามสถานะ login จริง =====
+    // มีการ "เดา" แบบ sync ไปแล้วจาก token ใน storage (ดูสคริปต์เล็กๆ ก่อนหน้านี้ ใต้ </header>)
+    // โค้ดข้างล่างนี้คือการ "ยืนยันผลจริง" — ถ้าเดาถูกจะไม่มีอะไรเปลี่ยน ถ้าเดาผิดค่อยแก้ให้ถูก (เคสหายาก)
+    let sbAuthClient = null;
+
+    (async function initHeaderAuthState() {
+      const SUPABASE_URL_AUTH = 'https://dnrcardbuuwnvuridubb.supabase.co';
+      const SUPABASE_KEY_AUTH = 'sb_publishable_uz4Tj8HDZef7T2OLEzyvUw_wcGsn0ZW';
+      const sbAuth = supabase.createClient(SUPABASE_URL_AUTH, SUPABASE_KEY_AUTH);
+      sbAuthClient = sbAuth;
+
+      const authLinksEl = document.getElementById('authLinks');
+      const chipEl = document.getElementById('profileChip');
+
+      const { data: { session } } = await sbAuth.auth.getSession();
+
+      if (!session) {
+        // ยืนยันแล้วว่าไม่ได้ login จริง (เช่น token หมดอายุ) → เผื่อเดาไว้ผิดก่อนหน้านี้ ต้องแก้กลับ
+        chipEl.style.display = 'none';
+        authLinksEl.style.display = 'flex';
+        return;
+      }
+
+      const nameEl = document.getElementById('profileChipName');
+      const roleEl = document.getElementById('profileChipRole');
+      const avatarEl = document.getElementById('profileChipAvatar');
+      const adminMenuItemEl = document.getElementById('adminMenuItem');
+
+      // ดึง username + avatar จาก profiles (คอลัมน์ที่เปิด public read ได้)
+      const { data: profile } = await sbAuth
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('user_id', session.user.id)
+        .single();
+
+      nameEl.textContent = profile?.username || session.user.user_metadata?.username || 'สมาชิก';
+      if (profile?.avatar_url) avatarEl.src = profile.avatar_url;
+
+      // role (webmaster/admin) ถูกล็อกไว้ด้วย column-level RLS ต้องขอผ่าน edge function เท่านั้น
+      try {
+        const res = await fetch(`${SUPABASE_URL_AUTH}/functions/v1/get-my-role`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+        if (res.ok) {
+          const roleData = await res.json()
+          if (roleData?.role && roleData.role !== 'member') {
+            roleEl.textContent = roleData.role.toUpperCase()
+            // เมนู "ระบบแอดมิน" โชว์เฉพาะ webmaster / admin เท่านั้น
+            if (roleData.role === 'webmaster' || roleData.role === 'admin') {
+              adminMenuItemEl.style.display = 'flex'
+            }
+          }
+        }
+      } catch (e) {
+        // เงียบไว้ — ถ้าดึง role ไม่ได้ ก็แค่ไม่แสดงบรรทัด role/เมนูแอดมินเฉยๆ
+      }
+
+      // ยืนยันแล้วว่า login จริง (เผื่อเดาไว้ผิดก่อนหน้านี้ ต้องแก้กลับด้วยเช่นกัน)
+      authLinksEl.style.display = 'none';
+      chipEl.style.display = 'flex';
+    })();
+
+    // ออกจากระบบ
+    document.getElementById('logoutMenuBtn').addEventListener('click', async () => {
+      if (sbAuthClient) await sbAuthClient.auth.signOut();
+      window.location.href = '/auth.html?tab=login';
+    });
+  </script>
+
+  <script>
+    // Football scores widget
+    const SUPABASE_URL_SCORES = 'https://dnrcardbuuwnvuridubb.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_uz4Tj8HDZef7T2OLEzyvUw_wcGsn0ZW';
+    const POLL_INTERVAL_MS = 10000;
+
+    const scoresTabs = document.getElementById('scoresTabs');
+    const scoresList = document.getElementById('scoresList');
+    let currentComp = 'ALL';
+    let latestMatches = [];
+    let currentPage = 0;
+    const CARDS_PER_PAGE = 5;
+
+    const STATUS_LABEL = {
+      IN_PLAY: 'สด', PAUSED: 'พักครึ่ง', FINISHED: 'จบ',
+      SCHEDULED: 'ยังไม่เริ่ม', TIMED: 'ยังไม่เริ่ม', POSTPONED: 'เลื่อน'
+    };
+
+    function teamDotColor(name) {
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      const hue = Math.abs(hash) % 360;
+      return `hsl(${hue}, 65%, 55%)`;
+    }
+
+    function teamLogoOrDot(crestUrl, name) {
+      if (crestUrl) {
+        return `<img class="score-team-logo" src="${crestUrl}" alt="" onerror="this.outerHTML='<span class=&quot;score-dot&quot; style=&quot;background:${teamDotColor(name)}&quot;></span>'">`;
+      }
+      return `<span class="score-dot" style="background:${teamDotColor(name)}"></span>`;
+    }
+
+    function renderMatches() {
+      const filtered = currentComp === 'ALL'
+        ? latestMatches
+        : latestMatches.filter(m => m.competitionCode === currentComp);
+
+      const totalPages = Math.max(1, Math.ceil(filtered.length / CARDS_PER_PAGE));
+      if (currentPage >= totalPages) currentPage = totalPages - 1;
+      if (currentPage < 0) currentPage = 0;
+
+      const prevBtn = document.getElementById('scoresPrev');
+      const nextBtn = document.getElementById('scoresNext');
+      prevBtn.disabled = currentPage === 0;
+      nextBtn.disabled = currentPage >= totalPages - 1;
+
+      if (!filtered.length) {
+        scoresList.innerHTML = '<div class="scores-empty">ไม่มีแมตช์ในลีกนี้ตอนนี้</div>';
+        return;
+      }
+
+      const pageItems = filtered.slice(currentPage * CARDS_PER_PAGE, currentPage * CARDS_PER_PAGE + CARDS_PER_PAGE);
+
+      scoresList.innerHTML = pageItems.map(m => {
+        const isFinished = m.status === 'FINISHED';
+        const isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED';
+        const isUpcoming = m.status === 'SCHEDULED' || m.status === 'TIMED';
+        const cardClass = isFinished ? 'is-finished' : (isLive ? 'is-live' : '');
+
+        const d = new Date(m.utcDate);
+        const dateStr = d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' });
+        const timeStr = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
+        let timeDisplay;
+        let liveBadge = '';
+        if (isLive) {
+          timeDisplay = `<span class="score-card-time" style="visibility:hidden;">.</span>`;
+          liveBadge = `<span class="score-live-badge">🔴 ${m.minute ? m.minute + "'" : 'สด'}</span>`;
+        } else if (isFinished) {
+          timeDisplay = `<span class="score-card-time">จบแล้ว</span>`;
+        } else {
+          timeDisplay = `<span class="score-card-time">${dateStr} ${timeStr}</span>`;
+        }
+
+        const homeVal = isUpcoming ? '' : (m.homeScore ?? '-');
+        const awayVal = isUpcoming ? '' : (m.awayScore ?? '-');
+
+        return `<div class="score-card ${cardClass}">
+          ${liveBadge}
+          ${timeDisplay}
+          <div class="score-team-row">
+            <span class="score-team-name" title="${m.homeTeam}">${teamLogoOrDot(m.homeCrest, m.homeTeam)}${m.homeTla || m.homeTeam}</span>
+            <span class="score-team-value">${homeVal}</span>
+          </div>
+          <div class="score-team-row">
+            <span class="score-team-name" title="${m.awayTeam}">${teamLogoOrDot(m.awayCrest, m.awayTeam)}${m.awayTla || m.awayTeam}</span>
+            <span class="score-team-value">${awayVal}</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    async function fetchScores() {
+      try {
+        // เรียก Edge Function ตรงๆ แทนอ่านตาราง live_scores เฉยๆ — เพราะฟังก์ชันนี้เช็ค cache สดแค่ 8 วิ
+        // ถ้าเก่ากว่านั้นจะไปดึงข้อมูลใหม่จาก football-data.org ให้เอง ทำให้ widget ได้ข้อมูลสดจริงในกรอบ ~15 วิ
+        // (ไม่ต้องกลัวโควตาหมด เพราะต่อให้มีคนเข้าเว็บพร้อมกันเป็นพัน ฟังก์ชันก็ยังยิง football-data.org แค่ทุก 8 วิสูงสุดอยู่ดี)
+        const res = await fetch(`${SUPABASE_URL_SCORES}/functions/v1/football-scores`, {
+          headers: { 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+        });
+        const data = await res.json();
+        if (Array.isArray(data.matches)) {
+          latestMatches = data.matches;
+          renderMatches();
+        }
+      } catch (e) {
+        // เงียบไว้ ไม่รบกวน UI ถ้าเน็ตมีปัญหาชั่วคราว
+      }
+    }
+
+    scoresTabs.addEventListener('click', (e) => {
+      if (e.target.tagName !== 'BUTTON') return;
+      scoresTabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      currentComp = e.target.dataset.comp;
+      currentPage = 0;
+      renderMatches();
+    });
+
+    document.getElementById('scoresPrev').addEventListener('click', () => {
+      currentPage--;
+      renderMatches();
+    });
+    document.getElementById('scoresNext').addEventListener('click', () => {
+      currentPage++;
+      renderMatches();
+    });
+
+    fetchScores();
+    setInterval(fetchScores, POLL_INTERVAL_MS);
+  </script>
+
+  <script>
+    // วีดีโอไฮไลท์การแข่งขัน + ข่าววงการลูกหนัง (carousel + modal เล่น embed)
+    const SUPABASE_URL_VIDEOS = 'https://dnrcardbuuwnvuridubb.supabase.co';
+    const SUPABASE_ANON_KEY_VIDEOS = 'sb_publishable_uz4Tj8HDZef7T2OLEzyvUw_wcGsn0ZW';
+    const sbVideos = supabase.createClient(SUPABASE_URL_VIDEOS, SUPABASE_ANON_KEY_VIDEOS);
+
+    // แต่ละแถว: { category ที่ query, id ของ carousel/ปุ่ม }
+    const VIDEO_ROWS = [
+      { category: 'official_highlights', carouselId: 'videoCarouselHighlights', prevId: 'videoPrevHighlights', nextId: 'videoNextHighlights' },
+      { category: 'news_analysis', carouselId: 'videoCarouselNews', prevId: 'videoPrevNews', nextId: 'videoNextNews' },
+    ];
+
+    function escapeHtmlVideo(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    async function loadVideoRow(row) {
+      const carousel = document.getElementById(row.carouselId);
+      const { data: videos, error } = await sbVideos
+        .from('home_videos')
+        .select('video_id, title, thumbnail_url, channel_id, video_channels(display_name)')
+        .eq('is_active', true)
+        .eq('category', row.category)
+        .order('published_at', { ascending: false })
+        .limit(30);
+
+      if (error || !videos || !videos.length) return;
+
+      carousel.innerHTML = videos.map(v => `
+        <a class="video-card" href="#" data-video-id="${v.video_id}">
+          <div class="video-thumb">
+            <img src="${v.thumbnail_url}" alt="" loading="lazy">
+            <span class="video-play-icon">▶</span>
+          </div>
+          <div class="video-text">
+            <div class="video-headline">${escapeHtmlVideo(v.title)}</div>
+            <div class="video-channel">${escapeHtmlVideo(v.video_channels?.display_name)}</div>
+          </div>
+        </a>
+      `).join('');
+
+      carousel.querySelectorAll('.video-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          e.preventDefault();
+          openVideoModal(card.dataset.videoId);
+        });
+      });
+
+      updateVideoNavButtons(row);
+    }
+
+    function updateVideoNavButtons(row) {
+      const carousel = document.getElementById(row.carouselId);
+      const prevBtn = document.getElementById(row.prevId);
+      const nextBtn = document.getElementById(row.nextId);
+      prevBtn.disabled = carousel.scrollLeft <= 0;
+      nextBtn.disabled = carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 2;
+    }
+
+    function openVideoModal(videoId) {
+      const overlay = document.getElementById('videoModalOverlay');
+      const player = document.getElementById('videoModalPlayer');
+      player.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      overlay.classList.add('open');
+    }
+
+    function closeVideoModal() {
+      const overlay = document.getElementById('videoModalOverlay');
+      document.getElementById('videoModalPlayer').innerHTML = ''; // หยุดเล่นทันทีที่ปิด
+      overlay.classList.remove('open');
+    }
+
+    document.getElementById('videoModalClose').addEventListener('click', closeVideoModal);
+    document.getElementById('videoModalOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'videoModalOverlay') closeVideoModal();
+    });
+
+    VIDEO_ROWS.forEach(row => {
+      document.getElementById(row.prevId).addEventListener('click', () => {
+        document.getElementById(row.carouselId).scrollBy({ left: -456, behavior: 'smooth' });
+      });
+      document.getElementById(row.nextId).addEventListener('click', () => {
+        document.getElementById(row.carouselId).scrollBy({ left: 456, behavior: 'smooth' });
+      });
+      document.getElementById(row.carouselId).addEventListener('scroll', () => updateVideoNavButtons(row));
+      loadVideoRow(row);
+    });
+  </script>
+
+  <div class="scroll-fab-group">
+    <button class="scroll-fab scroll-fab-up" id="scrollFabUp" aria-label="เลื่อนขึ้นบนสุด">&#8593;</button>
+    <button class="scroll-fab scroll-fab-standings" id="scrollFabStandings" aria-label="ไปที่ตารางคะแนน">🏆</button>
+    <button class="scroll-fab scroll-fab-down" id="scrollFabDown" aria-label="เลื่อนลงล่างสุด">&#8595;</button>
+  </div>
+
+  <script>
+    (function() {
+      // ===== ตารางคะแนน + ดาวซัลโว/แอสซิสต์ (หน้าแรก) =====
+      // ใช้ตารางเดียวกับ fixtures.html: standings_archive, top_scorers_archive, top_assists_archive
+      // อัปเดตโดย cron job อยู่แล้ว หน้านี้แค่อ่านตรง ๆ ผ่าน PostgREST ไม่ผ่าน Edge Function
+      const SUPABASE_URL_STANDINGS = 'https://dnrcardbuuwnvuridubb.supabase.co';
+      const SUPABASE_ANON_KEY_STANDINGS = 'sb_publishable_uz4Tj8HDZef7T2OLEzyvUw_wcGsn0ZW';
+
+      const HOME_ZONES = {
+        PL:  [{from:1,to:4,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:18,to:20,color:'#e11d48',label:'ตกชั้น'}],
+        PD:  [{from:1,to:4,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:6,to:6,color:'#22c55e',label:'คอนเฟอเรนซ์ลีก'},{from:18,to:20,color:'#e11d48',label:'ตกชั้น'}],
+        SA:  [{from:1,to:4,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:6,to:6,color:'#22c55e',label:'คอนเฟอเรนซ์ลีก'},{from:18,to:20,color:'#e11d48',label:'ตกชั้น'}],
+        BL1: [{from:1,to:4,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:6,to:6,color:'#22c55e',label:'คอนเฟอเรนซ์ลีก'},{from:16,to:16,color:'#9ca3af',label:'เพลย์ออฟตกชั้น'},{from:17,to:18,color:'#e11d48',label:'ตกชั้น'}],
+        FL1: [{from:1,to:3,color:'#3b82f6',label:'แชมเปียนส์ลีก'},{from:4,to:4,color:'#7c3aed',label:'รอบคัดเลือกแชมเปียนส์ลีก'},{from:5,to:5,color:'#f97316',label:'ยูโรป้าลีก'},{from:6,to:6,color:'#22c55e',label:'คอนเฟอเรนซ์ลีก'},{from:16,to:18,color:'#e11d48',label:'ตกชั้น'}],
+        CL:  [{from:1,to:8,color:'#3b82f6',label:'ผ่านตรงรอบ 16 ทีม'},{from:9,to:24,color:'#f97316',label:'เพลย์ออฟ'},{from:25,to:36,color:'#e11d48',label:'ตกรอบ'}],
+      };
+      const LEAGUE_NAMES = {
+        PL: 'Premier League', PD: 'La Liga', BL1: 'Bundesliga',
+        SA: 'Serie A', CL: 'UEFA Champions League', FL1: 'Ligue 1'
+      };
+
+      let homeComp = 'PL';
+      let scorersComp = 'PL';
+      let homeStandings = {};
+      let homeScorers = {};
+      let homeAssists = {};
+
+      async function sbHome(path) {
+        try {
+          const res = await fetch(SUPABASE_URL_STANDINGS + '/rest/v1/' + path, {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY_STANDINGS,
+              'Authorization': 'Bearer ' + SUPABASE_ANON_KEY_STANDINGS
+            }
+          });
+          return res.json();
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function homeGetZone(comp, position) {
+        const zones = HOME_ZONES[comp] || [];
+        return zones.find(z => position >= z.from && position <= z.to);
+      }
+
+      function homeInitials(name) {
+        if (!name) return '?';
+        const parts = name.trim().split(/\s+/);
+        const first = parts[0]?.[0] || '';
+        const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+        return (first + last).toUpperCase();
+      }
+
+      // โลโก้ทีมบางครั้งโหลดพลาดเพราะ CDN ของ football-data.org หน่วง/บล็อกชั่วคราว
+      // (โดยเฉพาะตอนหน้าเว็บยิงโหลดรูปพร้อมกันหลายสิบรูปทีเดียว) ลองใหม่ 1 ครั้งก่อนค่อยซ่อนรูปทิ้ง
+      window.handleCrestError = function(imgEl) {
+        const retries = parseInt(imgEl.dataset.crestRetries || '0', 10);
+        if (retries < 2) {
+          imgEl.dataset.crestRetries = String(retries + 1);
+          const baseSrc = imgEl.src.split('?')[0];
+          setTimeout(() => { imgEl.src = baseSrc + '?r=' + Date.now(); }, 500 * (retries + 1));
+        } else {
+          imgEl.style.visibility = 'hidden';
+        }
+      };
+
+      // ชื่อทีมย่อ 3 ตัวอักษร — ดึงมาจาก team_tla จริงในฐานข้อมูล ณ ตอนที่ข้อมูล sync ครบสมบูรณ์แล้ว
+      // (ใช้ query ดึงตรงจากตาราง standings_archive/top_scorers_archive/top_assists_archive)
+      // เขียนตายตัวไว้ในไฟล์นี้เลย ไม่ต้องพึ่งการ sync สำเร็จทุกครั้งอีกต่อไป
+      // แก้ไข/เพิ่มทีมใหม่ได้ตรงนี้เลยถ้าเจอทีมไหนตกหล่นหรือย้ายลีก ไม่ต้องรอระบบไหนทั้งนั้น
+      const TEAM_ABBR = {
+        '1. FC Köln': 'KOE',
+        'Alavés': 'ALA',
+        'Angers SCO': 'ANG',
+        'Arsenal': 'ARS',
+        'Aston Villa': 'AVL',
+        'Atalanta': 'ATA',
+        'Athletic': 'ATH',
+        'Atletico Madrid': 'ATL',
+        'Atlético Madrid': 'ATL',
+        'Augsburg': 'FCA',
+        'Auxerre': 'AJA',
+        'Barcelona': 'FCB',
+        'Bayern': 'FCB',
+        'Bayern Munich': 'FCB',
+        'Bologna': 'BOL',
+        'Bournemouth': 'BOU',
+        'Bremen': 'SVW',
+        'Brentford': 'BRE',
+        'Brest': 'BRE',
+        'Brighton Hove': 'BHA',
+        'Cagliari': 'CAG',
+        'Celta': 'CEL',
+        'Celta Vigo': 'CEL',
+        'Chelsea': 'CHE',
+        'Como 1907': 'COM',
+        'Coventry City': 'COV',
+        'Crystal Palace': 'CRY',
+        'Deportivo': 'DEP',
+        'Dortmund': 'BVB',
+        'Borussia Dortmund': 'BVB',
+        'Elche': 'ELC',
+        'Elversberg': 'ELV',
+        'Espanyol': 'ESP',
+        'Everton': 'EVE',
+        'Fiorentina': 'FIO',
+        'Frankfurt': 'SGE',
+        'Freiburg': 'SCF',
+        'Frosinone': 'FRO',
+        'Fulham': 'FUL',
+        'Genoa': 'GEN',
+        'Getafe': 'GET',
+        'Hamburg': 'HSV',
+        'Hoffenheim': 'TSG',
+        'Hull City': 'HUL',
+        'Inter': 'INT',
+        'Ipswich Town': 'IPS',
+        'Juventus': 'JUV',
+        'Lazio': 'LAZ',
+        'Le Havre': 'HAC',
+        'Le Mans': 'LMF',
+        'Lecce': 'USL',
+        'Leeds United': 'LEE',
+        'Levante': 'LEV',
+        'Leverkusen': 'B04',
+        'Bayer Leverkusen': 'B04',
+        'Lille': 'LIL',
+        'Liverpool': 'LIV',
+        'Lorient': 'FCL',
+        'Mainz': 'M05',
+        'Málaga': 'MAL',
+        'Manchester City': 'MCI',
+        'Manchester United': 'MUN',
+        'Marseille': 'MAR',
+        'Milan': 'MIL',
+        'Monaco': 'ASM',
+        'Monchengladbach': 'BMG',
+        'Monza': 'MON',
+        'Napoli': 'NAP',
+        'Newcastle': 'NEW',
+        'Nice': 'NIC',
+        'Nottingham': 'NOT',
+        'Olympique Lyon': 'LYO',
+        'Osasuna': 'OSA',
+        'Paris FC': 'PFC',
+        'Paris Saint Germain': 'PSG',
+        'Paris Saint-Germain': 'PSG',
+        'Parma': 'PAR',
+        'Rayo Vallecano': 'RAY',
+        'RB Leipzig': 'RBL',
+        'RC Lens': 'RCL',
+        'Real Betis': 'BET',
+        'Real Madrid': 'RMA',
+        'Real Sociedad': 'RSO',
+        'Roma': 'ROM',
+        'Santander': 'SAN',
+        'Sassuolo': 'SAS',
+        'SC Paderborn': 'SCP',
+        'Schalke': 'S04',
+        'Sevilla FC': 'SEV',
+        'Stade Rennais': 'REN',
+        'Strasbourg': 'RCS',
+        'Stuttgart': 'VFB',
+        'Sunderland': 'SUN',
+        'Torino': 'TOR',
+        'Tottenham': 'TOT',
+        'Toulouse': 'TOU',
+        'Troyes': 'ETR',
+        'Udinese': 'UDI',
+        'Union Berlin': 'UNB',
+        'Valencia': 'VAL',
+        'Venezia FC': 'VEN',
+        'Villarreal': 'VIL',
+      };
+      function abbrTeam(r) {
+        // ใช้ dictionary ที่เขียนตายตัวไว้ก่อนเป็นหลัก (เชื่อถือได้ 100% ไม่ต้องพึ่งการ sync)
+        // ถ้าเจอทีมใหม่ที่ไม่อยู่ใน list (เช่น ทีมเลื่อนชั้นมาใหม่ฤดูหน้า) ค่อย fallback ไปดู team_tla จาก DB
+        // ถ้าไม่มีทั้งคู่ค่อยโชว์ชื่อเต็ม
+        if (r.team_name && TEAM_ABBR[r.team_name]) return TEAM_ABBR[r.team_name];
+        const tla = r.team_tla || r.team_short || r.tla;
+        if (tla) return tla;
+        return r.team_name || '';
+      }
+
+      function renderHomeStandings() {
+        const body = document.getElementById('homeStandingsBody');
+        const legend = document.getElementById('homeStandingsLegend');
+        const nameEl = document.getElementById('standingsLeagueName');
+        if (!body) return;
+        nameEl.textContent = LEAGUE_NAMES[homeComp] || homeComp;
+
+        const rows = homeStandings[homeComp] || [];
+        if (!rows.length) {
+          body.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#9a9a9a;padding:16px;">ไม่มีข้อมูลตารางคะแนนลีกนี้</td></tr>';
+          legend.innerHTML = '';
+          return;
+        }
+
+        body.innerHTML = rows.map(r => {
+          const zone = homeGetZone(homeComp, r.position);
+          const zoneClass = zone && zone.color === '#3b82f6' ? 'zone-cl' : zone && zone.color === '#f97316' ? 'zone-el' : zone && zone.color === '#e11d48' ? 'zone-rel' : '';
+          const gd = r.goal_diff > 0 ? '+' + r.goal_diff : r.goal_diff;
+          return `
+            <tr class="${zoneClass}">
+              <td>${r.position}</td>
+              <td><div class="team-cell-inner"><img class="team-logo" src="${r.team_crest || ''}" onerror="handleCrestError(this)"><span>${r.team_name}</span></div></td>
+              <td>${r.played}</td>
+              <td>${r.won}</td>
+              <td>${r.draw}</td>
+              <td>${r.lost}</td>
+              <td>${r.goals_for}</td>
+              <td>${r.goals_against}</td>
+              <td>${gd}</td>
+              <td class="pts-col">${r.points}</td>
+            </tr>`;
+        }).join('');
+
+        const zones = HOME_ZONES[homeComp] || [];
+        legend.innerHTML = zones.map(z => `<span><span class="dot" style="background:${z.color}"></span>${z.label}</span>`).join('');
+      }
+
+      function homePlayerCell(r) {
+        const photo = r.photo_url
+          ? `<img src="${r.photo_url}" onerror="this.outerHTML='<div class=&quot;player-photo-fallback&quot;>${homeInitials(r.player_name)}</div>'">`
+          : `<div class="player-photo-fallback">${homeInitials(r.player_name)}</div>`;
+        return `
+          <td class="leaders-rank">${r.rank}</td>
+          <td><div class="player-cell-inner">${photo}<span class="player-name">${r.player_name || 'ไม่ทราบชื่อ'}</span></div></td>
+          <td><div class="team-mini-inner"><img class="team-logo" src="${r.team_crest || ''}" onerror="handleCrestError(this)">${abbrTeam(r)}</div></td>`;
+      }
+
+      function renderHomeLeaders() {
+        const scorersBody = document.getElementById('homeScorersBody');
+        const assistsBody = document.getElementById('homeAssistsBody');
+        if (!scorersBody || !assistsBody) return;
+
+        // ใช้แท็บลีกของตัวเอง (scorersComp) แยกจากตารางคะแนน (homeComp) โดยสิ้นเชิง
+        const scorerRows = (homeScorers[scorersComp] || []).slice(0, 10);
+        const assistRows = (homeAssists[scorersComp] || []).slice(0, 10);
+
+        scorersBody.innerHTML = scorerRows.length
+          ? scorerRows.map(r => `<tr>${homePlayerCell(r)}<td class="leaders-count">${r.goals ?? 0}</td></tr>`).join('')
+          : '<tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">ยังไม่มีข้อมูลดาวซัลโวลีกนี้</td></tr>';
+
+        assistsBody.innerHTML = assistRows.length
+          ? assistRows.map(r => `<tr>${homePlayerCell(r)}<td class="leaders-count">${r.assists ?? 0}</td></tr>`).join('')
+          : '<tr><td colspan="4" style="text-align:center;color:#9a9a9a;padding:12px;">ยังไม่มีข้อมูลแอสซิสต์ลีกนี้</td></tr>';
+      }
+
+      async function loadHomeStandingsData() {
+        const standings = await sbHome('standings_archive?select=*&order=competition_code.asc,position.asc');
+        if (Array.isArray(standings)) {
+          homeStandings = {};
+          standings.forEach(r => {
+            if (!homeStandings[r.competition_code]) homeStandings[r.competition_code] = [];
+            homeStandings[r.competition_code].push(r);
+          });
+        }
+
+        const scorers = await sbHome('top_scorers_archive?select=*&order=competition_code.asc,rank.asc');
+        if (Array.isArray(scorers)) {
+          homeScorers = {};
+          scorers.forEach(r => {
+            if (!homeScorers[r.competition_code]) homeScorers[r.competition_code] = [];
+            homeScorers[r.competition_code].push(r);
+          });
+        }
+
+        const assists = await sbHome('top_assists_archive?select=*&order=competition_code.asc,rank.asc');
+        if (Array.isArray(assists)) {
+          homeAssists = {};
+          assists.forEach(r => {
+            if (!homeAssists[r.competition_code]) homeAssists[r.competition_code] = [];
+            homeAssists[r.competition_code].push(r);
+          });
+        }
+
+        renderHomeStandings();
+        renderHomeLeaders();
+      }
+
+      const homeLeagueTabs = document.getElementById('standingsLeagueTabs');
+      if (homeLeagueTabs) {
+        homeLeagueTabs.addEventListener('click', (e) => {
+          const btn = e.target.closest('button[data-comp]');
+          if (!btn) return;
+          homeLeagueTabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          homeComp = btn.dataset.comp;
+          renderHomeStandings();
+        });
+      }
+
+      const scorersLeagueTabs = document.getElementById('scorersLeagueTabs');
+      if (scorersLeagueTabs) {
+        scorersLeagueTabs.addEventListener('click', (e) => {
+          const btn = e.target.closest('button[data-comp]');
+          if (!btn) return;
+          scorersLeagueTabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          scorersComp = btn.dataset.comp;
+          renderHomeLeaders();
+        });
+      }
+
+      loadHomeStandingsData();
+    })();
+  </script>
+
+  <script>
+    (function() {
+      const upBtn = document.getElementById('scrollFabUp');
+      const downBtn = document.getElementById('scrollFabDown');
+      const standingsBtn = document.getElementById('scrollFabStandings');
+      const standingsTarget = document.getElementById('standingsSection');
+
+      function atTop() {
+        return window.scrollY <= 4;
+      }
+      function atBottom() {
+        return window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+      }
+      function updateFabs() {
+        upBtn.classList.toggle('is-dimmed', atTop());
+        downBtn.classList.toggle('is-dimmed', atBottom());
+      }
+
+      upBtn.addEventListener('click', function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      downBtn.addEventListener('click', function() {
+        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+      });
+      standingsBtn.addEventListener('click', function() {
+        if (!standingsTarget) return;
+        const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 60;
+        const targetY = standingsTarget.getBoundingClientRect().top + window.scrollY - headerH - 12;
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
+      });
+
+      window.addEventListener('scroll', updateFabs);
+      window.addEventListener('resize', updateFabs);
+      updateFabs();
+    })();
+  </script>
+</body>
+</html>
